@@ -70,7 +70,7 @@ class AuthController extends Controller
     }
 
     public function getUser(Request $request){
-        $user = User::with('employmentBackground', 'educationBackground')->get();
+        $user = User::with('business')->where('id', $request->user()->id)->first();
         return response()->json(['message' => 'authenticated user', 'user' => $user], 200);
     }
 
