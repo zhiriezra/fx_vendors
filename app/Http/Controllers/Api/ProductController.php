@@ -7,7 +7,13 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Auth; 
+
+// Image Intervention
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+
 
 class ProductController extends Controller
 {
@@ -74,6 +80,7 @@ class ProductController extends Controller
                 'type' => $request->type,
                 'manufacturer' => $request->manufacturer,
                 'name' => $request->name,
+                'batch_number' => (string) Str::uuid(),
                 'quantity' => $request->quantity,
                 'unit_price' => $request->unit_price,
                 'agent_price' => $request->agent_price,
@@ -82,19 +89,27 @@ class ProductController extends Controller
                 'stock_date' => $request->stock_date,
 
             ]);
-        }
 
-        if ($request->has('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('product_images', 'public');
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'image_path' => $path
-                ]);
+            if ($request->file('images')) {
+                foreach ($request->file('images') as $image) {
+                    $manager = new ImageManager(new Driver());
+                    $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
+                    $img = $manager->read($request->file('images'));
+                    $img = $img->resize(370,246);
+    
+                    $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
+                    $save_url = 'product_images/'.$name_gen;
+    
+                    // Save image path to the database
+                    $productImage = ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => 'product_images/'.$filename,
+                    ]);
+                }
             }
         }
 
-        if($product){
+        if($product && $productImage){
 
             return response()->json([
                 'status' => 201,
@@ -106,7 +121,70 @@ class ProductController extends Controller
                 'status' => 500,
                 'message' => "Something went wrong!"
             ], 500);
+        } 
+        
+        if($productImage){
+
+            return response()->json([
+                'status' => 201,
+                'message' => "Image Created Successfully"
+            ], 201);
+        }else{
+
+            return response()->json([
+                'status' => 500,
+                'message' => "Something went wrong!"
+            ], 500);
         }   
+
+    }
+
+    public function addImage(Request $request , $id)
+    {
+        $product = Product::find($id);
+        $validator = Validator::make($request->all(), [
+            'images.*' => 'image|max:2048'
+        ]);
+
+        if($validator->fails()){
+
+            return response()->json([
+                'status' => 422,
+                'errors' => $validator->messages()
+            ], 422);
+        }else{
+
+            if ($request->file('images')) {
+                    $manager = new ImageManager(new Driver());
+                    $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
+                    $img = $manager->read($request->file('images'));
+                    $img = $img->resize(370,246);
+    
+                    $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
+                    $save_url = 'product_images/'.$name_gen;
+    
+                    // Save image path to the database
+                    $productImage = ProductImage::insert([
+                        'product_id' => $product->id,
+                        'image_path' => $save_url,
+                    ]);
+                }
+                if($productImage){
+
+                    return response()->json([
+                        'status' => 201,
+                        'message' => "Image Added Successfully"
+                    ], 201);
+                }else{
+        
+                    return response()->json([
+                        'status' => 500,
+                        'message' => "Something went wrong!"
+                    ], 500);
+                }   
+            }            
+       
+        
 
     }
 

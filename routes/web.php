@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+use Intervention\Image\Laravel\Facades\Image;
+
 Route::get('/', function () {
-    return view('welcome');
+    $image = Image::read('example.jpg');
 });
