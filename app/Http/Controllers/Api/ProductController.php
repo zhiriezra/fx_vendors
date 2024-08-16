@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Category;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\support\Facades\Validator;
@@ -122,20 +123,6 @@ class ProductController extends Controller
                 'message' => "Something went wrong!"
             ], 500);
         } 
-        
-        if($productImage){
-
-            return response()->json([
-                'status' => 201,
-                'message' => "Image Created Successfully"
-            ], 201);
-        }else{
-
-            return response()->json([
-                'status' => 500,
-                'message' => "Something went wrong!"
-            ], 500);
-        }   
 
     }
 
@@ -318,5 +305,45 @@ class ProductController extends Controller
             ], 404);
 
         }
+    }
+
+    public function CatRequest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            
+        ]);
+
+        if($validator->fails()){
+
+            return response()->json([
+                'status' => 422,
+                'errors' => $validator->messages()
+            ], 422);
+        }else{
+
+            $category = Category::create([
+                'name' => $request->name,
+                'status' => 0
+
+            ]);
+
+            }
+
+        if($category){
+
+            return response()->json([
+                'status' => 201,
+                'message' => "Request Sent"
+            ], 201);
+        }else{
+
+            return response()->json([
+                'status' => 500,
+                'message' => "Something went wrong!"
+            ], 500);
+        } 
+
+
     }
 }
