@@ -33,6 +33,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/product/{id}/edit', [ProductController::class, 'update'])->name('product.update');
     Route::delete('/product/{id}/delete', [ProductController::class, 'destroy'])->name('product.destroy');
     // Product end
-
+    // category request
     Route::post('/category/request', [ProductController::class, 'CatRequest'])->name('CatRequest');
+
+    //Orders
+    Route::get('/vendor/orders', [OrderController::class, 'index']);
+    Route::post('/vendor/orders/{order}/accept', [OrderController::class, 'accept']);
+    Route::post('/vendor/orders/{order}/decline', [OrderController::class, 'decline']);
 });
