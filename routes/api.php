@@ -25,12 +25,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // Product start
     Route::get('/product', [ProductController::class, 'index'])->name('product.index');
     Route::post('/product', [ProductController::class, 'store'])->name('product.store');
     Route::post('/{id}/addImage', [ProductController::class, 'addImage'])->name('product.addImage');
     Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
     Route::put('/product/{id}/edit', [ProductController::class, 'update'])->name('product.update');
     Route::delete('/product/{id}/delete', [ProductController::class, 'destroy'])->name('product.destroy');
+    // Product end
+    // category request
+    Route::post('/category/request', [ProductController::class, 'CatRequest'])->name('CatRequest');
 
-
+    //Orders
+    Route::get('/vendor/orders', [OrderController::class, 'index']);
+    Route::post('/vendor/orders/{order}/accept', [OrderController::class, 'accept']);
+    Route::post('/vendor/orders/{order}/decline', [OrderController::class, 'decline']);
 });
