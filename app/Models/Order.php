@@ -6,15 +6,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProductImage extends Model
+class Order extends Model
 {
     use HasFactory;
     use SoftDeletes;
 
-    protected $fillable = ['product_id', 'image_path'];
-
     public function product()
     {
-        return $this->belongsTo(Product::class);
+    return $this->belongsTo(Product::class);
     }
+
+    public function agent()
+    {
+        return $this->belongsTo(Agent::class);
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
 }
