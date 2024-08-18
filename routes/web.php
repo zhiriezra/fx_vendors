@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,8 +16,28 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-use Intervention\Image\Laravel\Facades\Image;
-
 Route::get('/', function () {
-    $image = Image::read('example.jpg');
+    return redirect('https://farmex.extensionafrica.com');
+});
+
+Auth::routes();
+
+Route::group(['middleware' => 'auth'], function(){
+
+    Route::group(['prefix' => 'vendor', 'as'=>'vendor.'], function(){
+        
+        Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+
+        //products 
+        Route::get('/product', [ProductController::class, 'index'])->name('product.index');
+        Route::get('/product/create', [ProductController::class, 'create'])->name('product.create');
+        Route::post('/product', [ProductController::class, 'store'])->name('product.store');
+        Route::post('/{id}/addImage', [ProductController::class, 'addImage'])->name('product.addImage');
+        Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
+        Route::get('/product/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
+        Route::get('/product/delete/{id}', [ProductController::class, 'destroy'])->name('product.destroy');
+        
+    });
+
+    
 });
