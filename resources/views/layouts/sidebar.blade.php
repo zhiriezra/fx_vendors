@@ -33,8 +33,7 @@
               <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
             </a>
             <ul class="pc-submenu">
-              <li class="pc-item"><a class="pc-link" href="">list</a></li>
-              <li class="pc-item"><a class="pc-link" href="">Add</a></li>
+              <li class="pc-item"><a class="pc-link" href="">Manage Products</a></li>
             </ul>
           </li>
 
