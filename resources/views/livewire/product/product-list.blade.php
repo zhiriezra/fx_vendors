@@ -24,19 +24,21 @@
                 @forelse($products as $product)
                 <tr wire:key="{{$product->id }} ">
                             <td>
-                                @foreach ($images as $image )
-                                @if ($image->product_id == $product->id)
+                                @php
+                                    // Get the first image associated with this product
+                                    $firstImage = $images->where('product_id', $product->id)->first();
+                                @endphp
+                                @if ($firstImage)
                                 <a href="{{ route('vendor.product.show', $product->id) }}">
 
                                 <div class="d-inline-block align-middle">
-                                    <img src="{{ Storage::url($image->image_path) }}" alt="image" class="img-radius align-top m-r-15" style="width:40px;">
+                                    <img src="{{ Storage::url($firstImage->image_path) }}" alt="image" class="img-radius align-top m-r-15" style="width:40px;">
                                     <div class="d-inline-block">
                                      <h6 class="mt-3">{{ $product->name }}</h6>
                                     <!-- <p class="m-b-0 text-primary">Android developer</p> -->
                                     </div>
                                 </div></a>
                                 @endif
-                                @endforeach
                             </td>
                     <!-- <td><a href="{{ route('vendor.product.show', $product->id) }}"> {{ $product->name }} </a></td> -->
         
@@ -51,9 +53,19 @@
                         <a href="{{ route('vendor.product.edit', $product->id) }}" wire:navigate class="avtar avtar-xs btn-link-info">
                         <i class="ti ti-edit f-20" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"></i>
                         </a>
-                        <a href="#" class="avtar avtar-xs btn-link-danger">
+                        <a href="#" onclick="confirmDeletion(event, @this, {{ $product->id }})" class="avtar avtar-xs btn-link-danger">
                             <i class="ti ti-trash f-20" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete"></i>
                         </a>
+                        
+                        <script>
+                            function confirmDeletion(event, component, id) {
+                                event.preventDefault(); // Prevent the default anchor action
+                        
+                                if (confirm('Are you sure you want to delete this?')) {
+                                    component.call('softDelete', id);
+                                }
+                            }
+                        </script>
                     </td>
                 </tr>
                 @empty

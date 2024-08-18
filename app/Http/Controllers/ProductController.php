@@ -63,7 +63,8 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        //
+        $product_data = Product::find($id); 
+        return view('products.edit', compact('product_data'));
     }
 
     /**
