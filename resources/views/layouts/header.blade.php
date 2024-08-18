@@ -33,7 +33,7 @@
 
         <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
             <div class="dropdown-header d-flex align-items-center justify-content-between">
-              <h5 class="m-0">Profile</h5>
+              <a href="#"><h5 class="m-0">Profile</h5></a> 
             </div>
             <div class="dropdown-body">
               <div class="profile-notification-scroll position-relative" style="max-height: calc(100vh - 225px)">
@@ -44,8 +44,8 @@
                         <img src="{{ asset('dist/assets/images/user/avatar-2.jpg') }}" alt="user-image" class="wid-50 rounded-circle" />
                       </div>
                       <div class="flex-grow-1 mx-3">
-                        {{--<h5 class="mb-0">{{ auth()->user()->firstname }} {{ auth()->user()->lastname }}</h5>
-                        <a class="link-primary" href="tel:{{ auth()->user()->phone }}">{{ auth()->user()->phone }}</a> --}}
+                        <h5 class="mb-0">{{ auth()->user()->firstname }} {{ auth()->user()->lastname }}</h5>
+                        <a class="link-primary" href="tel:{{ auth()->user()->phone }}">{{ auth()->user()->phone }}</a>
                       </div>
                       {{-- <span class="badge bg-primary">PRO</span> --}}
                     </div>
