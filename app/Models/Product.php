@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -45,8 +46,16 @@ class Product extends Model
     protected static function boot()
     {
         parent::boot();
+
         static::creating(function ($model) {
-            $model->batch_number = (string) \Illuminate\Support\Str::uuid();
+            // Generate a random 8-character string
+            $randomString = Str::upper(Str::random(8)); // Uppercase for better readability
+
+            // Defining desired suffix
+            $suffix = '-FEX'; 
+
+            // Combine the random string and suffix
+            $model->batch_number = $randomString . $suffix;
         });
     }
 }
