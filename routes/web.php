@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +37,11 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
         Route::get('/product/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
         Route::get('/product/delete/{id}', [ProductController::class, 'destroy'])->name('product.destroy');
+
+        //profile
+        Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+        Route::get('/profile/first_update', [ProfileController::class, 'create'])->name('profile.create');
+
         
     });
 

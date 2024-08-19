@@ -24,8 +24,9 @@
                 @forelse($products as $product)
                 <tr wire:key="{{$product->id }} ">
                             <td>
+                                <!-- Get the first image associated with this product -->
                                 @php
-                                    // Get the first image associated with this product
+                                    
                                     $firstImage = $images->where('product_id', $product->id)->first();
                                 @endphp
                                 @if ($firstImage)
@@ -38,6 +39,11 @@
                                     <!-- <p class="m-b-0 text-primary">Android developer</p> -->
                                     </div>
                                 </div></a>
+                                @else
+                                <div class="d-inline-block">
+                                    <a href="{{ route('vendor.product.show', $product->id) }}"><h6 class="mt-3">{{ $product->name }}</h6></a> 
+                                   <!-- <p class="m-b-0 text-primary">Android developer</p> -->
+                                </div>
                                 @endif
                             </td>
                     <!-- <td><a href="{{ route('vendor.product.show', $product->id) }}"> {{ $product->name }} </a></td> -->
