@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Product;
 use App\Models\User;
-use App\Models\ProductImage;
 use Auth;
 
-class ProductController extends Controller
+class ProfileController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,8 +15,11 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return view('products.index');
-
+        $user = User::where('id',Auth::id())->first();
+        if($user->profile_completed == 0)
+        return redirect()->route('vendor.profile.create')->with('message', 'Update your profile!');
+        else
+        return view('profile.index');
     }
 
     /**
@@ -30,11 +31,11 @@ class ProductController extends Controller
     {
         $user = User::where('id',Auth::id())->first();
 
-        if($user->vendor->status == 1)
-        return view('products.create');
+        if($user->profile_completed == 0)
+        return view('profile.create');
         else
-        return redirect()->route('vendor.dashboard')->with('warning', 'Access Denied!');
-        return view('products.create');
+        return redirect()->route('vendor.profile.index')->with('message', 'Profile already Updated');
+        
     }
 
     /**
@@ -56,10 +57,7 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = Product::find($id); 
-        $productImage = ProductImage::where('product_id', $product->id)->get();
-     
-        return view('products.show', compact('product', 'productImage'));
+        //
     }
 
     /**
@@ -70,8 +68,7 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $product_data = Product::find($id); 
-        return view('products.edit', compact('product_data'));
+        //
     }
 
     /**

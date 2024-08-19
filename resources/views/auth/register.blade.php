@@ -34,6 +34,14 @@
             </div>
           </div>  
           <div class="mb-3">
+            <input type="email" value="{{ old('middlename') }}" name="middlename" class="form-control" placeholder="Middle Name">
+                  @error('middlename')
+                      <span class="invalid-feedback" role="alert">
+                          <strong>{{ $message }}</strong>
+                      </span>
+                  @enderror
+          </div>
+          <div class="mb-3">
             <input type="email" value="{{ old('email') }}" name="email" class="form-control" placeholder="Email Address">
                   @error('email')
                       <span class="invalid-feedback" role="alert">
@@ -62,7 +70,7 @@
           </div>
           <div class="d-flex mt-1 justify-content-between">
             <div class="form-check">
-              <input class="form-check-input input-primary" type="checkbox" id="customCheckc1" checked="">
+              <input class="form-check-input input-primary" type="checkbox" id="customCheckc1">
               <label class="form-check-label text-muted" for="customCheckc1">I agree to all the Terms & Condition</label>
             </div>
           </div>

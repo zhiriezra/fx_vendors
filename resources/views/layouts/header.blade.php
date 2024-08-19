@@ -33,7 +33,7 @@
 
         <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
             <div class="dropdown-header d-flex align-items-center justify-content-between">
-              <a href="#"><h5 class="m-0">Profile</h5></a> 
+              <a href="{{ route('vendor.profile.index') }} "><h5 class="m-0">Profile</h5></a> 
             </div>
             <div class="dropdown-body">
               <div class="profile-notification-scroll position-relative" style="max-height: calc(100vh - 225px)">

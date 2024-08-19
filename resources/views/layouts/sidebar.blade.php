@@ -11,7 +11,7 @@
           </li>
 
           <li class="pc-item">
-            <a href="" class="pc-link">
+            <a href="{{ route('vendor.dashboard') }} " class="pc-link">
               <span class="pc-micon">
                 <i class="fas fa-tachometer-alt"></i>
               </span>
@@ -33,7 +33,7 @@
               <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
             </a>
             <ul class="pc-submenu">
-              <li class="pc-item"><a class="pc-link" href="">Manage Products</a></li>
+              <li class="pc-item"><a class="pc-link" href="{{ route('vendor.product.index') }} ">Manage Products</a></li>
             </ul>
           </li>
 

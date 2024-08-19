@@ -63,10 +63,10 @@ class ProductCreate extends Component
         $this->subcategories = Category::find($value)->subcategories;
     }
 
-    public function generateBatchNumber()
-    {
-        return strtoupper(Str::random(8)); // Generates a random 8 character string
-    }
+    // public function generateBatchNumber()
+    // {
+    //     return strtoupper(Str::random(8)); // Generates a random 8 character string
+    // }
 
     public function updatedImages()
     {
@@ -81,7 +81,7 @@ class ProductCreate extends Component
         $this->validate();
 
          // Generate batch number
-         $this->batch_number = $this->generateBatchNumber();
+        //  $this->batch_number = $this->generateBatchNumber();
 
          // Ensuring Image is not more than 5
          if (count($this->images) > $this->maxImages) {
