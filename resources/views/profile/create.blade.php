@@ -20,17 +20,13 @@
         </div>
         <!-- [ content Head ] end -->
 
-
         <!-- [ Main Content ] start -->
         <div class="row">
-            <div class="col-12">
-                <div class="card table-card">
+            <div class="col-md-12">
+                <div class="card">
                     <div class="card-header">
-                        <h4>List of Products</h4>
-                        <div class="mt-3 mb-3">
-                            <a class="btn btn-info btn-sm" href="{{ route('vendor.product.create') }} ">Add new product</a>
-                        </div>
-                   
+                        <h4>Update your Profile</h4>
+                        <span class="text-danger">* indicates compulsory fields</span>
                         @if(Session::has('message'))
                             <div class="alert alert-success d-flex align-items-center" role="alert">
                                 <svg class="bi flex-shrink-0 me-2" width="24" height="24">
@@ -39,12 +35,18 @@
                                 <div> {{ Session::get('message') }} </div>
                             </div>
                         @endif
+                        <div class="mt-3">
+                        </div>
                     </div>
-                    @livewire('product.product-list')
+                    <div class="card-body">
+                        <!-- [ form-element ] start -->
+                        @livewire('profile.profile-create')
+                        <!-- [ form-element ] end -->
+                    </div>
                 </div>
             </div>
         </div>
-      <!-- [ Main Content ] end -->
+        <!-- [ Main Content ] end -->
     </div>
 </div>
 @endsection
