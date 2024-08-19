@@ -22,14 +22,40 @@
       <!-- [ Sub Heading ] end -->
       <!-- [ Main Content ] start -->
       <!-- [ Summary ] start -->
+      @if(Session::has('message'))
+      <div class="alert alert-success d-flex align-items-center" role="alert">
+        <svg class="bi flex-shrink-0 me-2" width="24" height="24">
+          <use xlink:href="#check-circle-fill" ></use>
+        </svg>
+        <div> {{ Session::get('message') }} </div>
+      </div>
+      @endif
+      @if(Session::has('warning'))
+      <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <svg class="bi flex-shrink-0 me-2" width="24" height="24">
+          <use xlink:href="#exclamation-triangle-fill" ></use>
+        </svg>
+        <div> {{ Session::get('warning') }} </div>
+      </div>
+      @endif
+      
+      @if($user->vendor && $user->vendor->status == 0)
+      <div class="alert alert-primary d-flex align-items-center" role="alert">
+        <svg class="bi flex-shrink-0 me-2" width="24" height="24">
+          <use xlink:href="#info-fill" ></use>
+        </svg>
+        <div> Awaiting Approval! </div>
+      </div>
+      @endif
       <div class="row">
+    
         <div class="col-md-6 col-sm-6">
           <div class="card statistics-card-1 overflow-hidden bg-brand-color-3">
             <div class="card-body">
               <img src="{{asset('dist/assets/images/widget/img-status-5.svg')}}" alt="img" class="img-fluid img-bg" >
               <h5 class="mb-4 text-white">Products</h5>
               <div class="d-flex align-items-center mt-3">
-                <h3 class="text-white f-w-300 d-flex align-items-center m-b-0"> Products</h3>
+                <h3 class="text-white f-w-300 d-flex align-items-center m-b-0"> {{$products->count()}} Products</h3>
                 <span class="badge bg-light-success ms-2"></span>
               </div>
               <!-- <p class="text-white text-opacity-75 mb-2 text-sm mt-3">23 Requests</p> -->
