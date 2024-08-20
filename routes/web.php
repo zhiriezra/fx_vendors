@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,11 @@ Route::group(['middleware' => 'auth'], function(){
         //profile
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
         Route::get('/profile/first_update', [ProfileController::class, 'create'])->name('profile.create');
+
+        //Order
+        Route::get('/orders/pending', [OrderController::class, 'pending'])->name('orders.pending');
+        Route::get('/orders/accpeted', [OrderController::class, 'accepted'])->name('orders.accepted');
+        Route::get('/orders/rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
 
         
     });
