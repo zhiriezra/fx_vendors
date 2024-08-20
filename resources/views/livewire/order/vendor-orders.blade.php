@@ -22,13 +22,13 @@
                 <!-- Search section start -->
                 @forelse($orders as $order)
                 <tr wire:key="{{$order->id }} ">
-                    <td></td>
+                    <td>{{$order->agent->user->firstname }} {{ $order->agent->user->lastname }}</td>
                     <td>{{ $order->product->name }}</td>
-                    <td>{{ $order->product->quantity }}</td>
                     <td>{{ $order->quantity }}</td>
+                    <td>{{ $order->product->quantity }}</td>
                     <td>
-                        <button wire:click="acceptOrder({{ $order->id }})" class="btn btn-success">Accept</button>
-                        <button wire:click="declineOrder({{ $order->id }})" class="btn btn-danger">Decline</button>
+                        <button wire:click="acceptOrder({{ $order->id }})" class="btn btn-shadow btn-success">Accept</button>
+                        <button wire:click="declineOrder({{ $order->id }})" class="btn btn-shadow btn-danger">Decline</button>
                     </td>
                 </tr>
                 @empty

@@ -13,7 +13,7 @@ class VendorOrders extends Component
     {
         $this->orders = Order::where('vendor_id', auth()->user()->vendor->id)
                         ->where('status', 'pending')
-                        ->with('agent', 'product') 
+                        ->with('agent.user') 
                         ->get();
     }
 

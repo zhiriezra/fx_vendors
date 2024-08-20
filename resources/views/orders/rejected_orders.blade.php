@@ -67,7 +67,7 @@
                                     <!-- Search section start -->
                                     @forelse($orders as $order)
                                     <tr wire:key="{{$order->id }} ">
-                                        <td></td>
+                                        <td>{{$order->agent->user->firstname }} {{ $order->agent->user->lastname }}</td>
                                         <td>{{ $order->product->name }}</td>
                                         <td>{{ $order->quantity }}</td>
                                         <td>{{ \Carbon\Carbon::parse($order->updated_at)->diffForHumans() }} </td>
