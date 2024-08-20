@@ -15,13 +15,13 @@ class OrderController extends Controller
     public function accepted()
     {
         $orders = Order::where('vendor_id', auth()->user()->vendor->id)
-                        ->where('status', 'accepted')->get();
+                        ->where('status', 'accepted')->with(['product', 'agent.user'])->get();
         return view('orders.accepted_orders', compact('orders'));
     } 
     public function rejected()
     {
         $orders = Order::where('vendor_id', auth()->user()->vendor->id)
-                        ->where('status', 'declined')->get();
+                        ->where('status', 'declined')->with(['product', 'agent.user'])->get();
         return view('orders.rejected_orders', compact('orders'));
     } 
 }
