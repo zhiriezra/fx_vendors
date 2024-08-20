@@ -50,4 +50,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Vendor::class);
     }
+
+    public function agent()
+    {
+        return $this->hasOne(Agent::class);
+    }
 }

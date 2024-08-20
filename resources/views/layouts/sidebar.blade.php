@@ -69,8 +69,9 @@
               <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
             </a>
             <ul class="pc-submenu">
-              <li class="pc-item"><a class="pc-link" href="">Manage Orders</a></li>
-              <li class="pc-item"><a class="pc-link" href="#">Farmers</a></li>
+              <li class="pc-item"><a class="pc-link" href="{{ route('vendor.orders.pending') }} ">Pending Orders</a></li>
+              <li class="pc-item"><a class="pc-link" href="{{ route('vendor.orders.accepted') }}">Accpeted Orders</a></li>
+              <li class="pc-item"><a class="pc-link" href="{{ route('vendor.orders.rejected') }}">Rejected Orders</a></li>
             </ul>
           </li>
 
