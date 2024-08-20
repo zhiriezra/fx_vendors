@@ -76,7 +76,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6">No products</td>
+                    <td colspan="4"><h4 style="text-align: center;"><i class="fab fa-product-hunt"></i> 0 Products</h4></td>
                 </tr>
                 @endforelse
 

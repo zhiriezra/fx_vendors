@@ -43,6 +43,10 @@ class Product extends Model
         return $this->belongsTo(Subcategory::class);
     }
 
+    public function orders() {
+        return $this->hasMany(Order::class);
+    }
+
     protected static function boot()
     {
         parent::boot();
