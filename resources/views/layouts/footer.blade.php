@@ -9,8 +9,8 @@
           <a href="#" class="arrow-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,20">
             <div class="d-flex align-items-center">
               <div class="flex-grow-1 me-2">
-                {{-- <h6 class="mb-0">{{ auth()->user()->firstname }} {{ auth()->user()->lastname }}</h6> --}}
-                <small class="text-body">Vendor User</small>
+                <h6 class="mb-0">{{ auth()->user()->firstname }} {{ auth()->user()->lastname }}</h6>
+                <small class="text-body">Vendor</small>
               </div>
               <div class="flex-shrink-0">
                 <div class="btn btn-icon btn-link-secondary avtar">
@@ -21,11 +21,21 @@
           </a>
           <div class="dropdown-menu">
             <ul>
+              <li>
+                <a href="{{ route('vendor.profile.index') }}" class="pc-user-links">
+                  <i class="ph-duotone ph-user"></i>
+                  <span>My Profile</span>
+                </a>
+              </li>
               <li
-                ><a class="pc-user-links">
+                ><a href="{{ route('logout') }}" onclick="event.preventDefault();
+                document.getElementById('logout-form').submit();" class="pc-user-links">
                   <i class="ph-duotone ph-power"></i>
                   <span>Logout</span>
                 </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
               </li>
             </ul>
           </div>

@@ -8,66 +8,65 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">{{ __('Vendor Login') }}</div>
+                <div class="card-header">
+                    <h4 class="f-w-500 mb-1">Vendor login</h4>
+                </div>
 
                 <div class="card-body">
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
-                        <div class="row mb-3">
-                            <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
-
-                            <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-
-                                @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
-
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
-
-                                @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6 offset-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-
-                                    <label class="form-check-label" for="remember">
-                                        {{ __('Remember Me') }}
-                                    </label>
+                        <div class="mb-3">
+                            <input type="email" name="email" value="{{ old('email') }}"  autocomplete="email" class="form-control" id="floatingInput1" placeholder="Email Address" required autofocus>
+                            @error('email')
+                                <div class="text-danger">
+                                    {{ $message }}
                                 </div>
-                            </div>
+                            @enderror
                         </div>
 
-                        <div class="row mb-0">
-                            <div class="col-md-8 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('Login') }}
-                                </button>
+                        <div class="mb-3">
+                            <input type="password" name="password" required autocomplete="current-password" class="form-control" id="floatingInput" placeholder="Password">
+                            @error('password')
+                                <div class="text-danger">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
 
-                                @if (Route::has('password.request'))
-                                    <a class="btn btn-link" href="{{ route('password.request') }}">
-                                        {{ __('Forgot Your Password?') }}
-                                    </a>
-                                @endif
+                        <div class="d-flex mt-1 justify-content-between align-items-center">
+                            <div class="form-check">
+                            <input class="form-check-input input-primary" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                            <label class="form-check-label text-muted" for="customCheckc1">Remember me?</label>
                             </div>
+                            @if (Route::has('password.request'))
+                                <a href="{{ route('password.request') }}">
+                                    <h6 class="text-secondary f-w-400 mb-0">Forgot Password?</h6>
+                                </a>
+                            @endif
+                            
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">Login</button>
                         </div>
                     </form>
+                    <div class="saprator my-3">
+                        <span>Get Support</span>
+                    </div>
+                    <div class="text-center">
+                        <ul class="list-inline mx-auto mt-3 mb-0">
+                            <li class="list-inline-item">
+                                <a href="#" class="avtar avtar-s rounded-circle bg-facebook" target="_blank">
+                                <i class="fa fa-phone text-white"></i>
+                                </a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="https://twitter.com/" class="avtar avtar-s rounded-circle bg-twitter" target="_blank">
+                                <i class="fa fa-envelope text-white"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
