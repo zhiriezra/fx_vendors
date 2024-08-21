@@ -30,6 +30,9 @@ class ProductController extends Controller
     {
         $user = User::where('id',Auth::id())->first();
 
+        if(Auth::user()->profile_completed == 0)
+        return redirect()->route('vendor.profile.create')->with('message', 'Update your profile!');
+        else
         if($user->vendor->status == 1)
         return view('products.create');
         else

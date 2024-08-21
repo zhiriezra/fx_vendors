@@ -57,7 +57,7 @@
                     <small class="text-muted">Orders</small>
                   </div> -->
                   <div class="col-4">
-                    <h5 class="mb-0">40</h5>
+                    <h5 class="mb-0">{{ $orderCount }}</h5>
                     <small class="text-muted">Orders</small>
                   </div>
                 </div>
