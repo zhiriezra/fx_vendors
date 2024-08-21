@@ -28,15 +28,14 @@
                         <h4>Update your Profile</h4>
                         <span class="text-danger">* indicates compulsory fields</span>
                         @if(Session::has('message'))
-                            <div class="alert alert-success d-flex align-items-center" role="alert">
+                            <div class="alert alert-warning d-flex align-items-center mt-3" role="alert">
                                 <svg class="bi flex-shrink-0 me-2" width="24" height="24">
-                                <use xlink:href="#check-circle-fill" ></use>
+                                <use xlink:href="#exclamation-triangle-fill" ></use>
                                 </svg>
                                 <div> {{ Session::get('message') }} </div>
                             </div>
                         @endif
-                        <div class="mt-3">
-                        </div>
+                        
                     </div>
                     <div class="card-body">
                         <!-- [ form-element ] start -->

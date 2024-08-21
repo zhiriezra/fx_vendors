@@ -13,7 +13,12 @@
 
             <div class="col-md-12">
               <div class="page-header-title">
-                <h2 class="mb-0">Admin Dashboard</h2>
+                <h2 class="mb-3">Vendor Dashboard</h2>
+                @if (session('welcome_message'))
+                    
+                       <h4> {{ session('welcome_message') }}</h4>
+                    
+                @endif
               </div>
             </div>
           </div>
@@ -69,8 +74,8 @@
               <img src="{{asset('dist/assets/images/widget/img-status-2.svg')}}" alt="img" class="img-fluid img-bg" >
               <h5 class="mb-4 text-white">Orders</h5>
               <div class="d-flex align-items-center mt-3">
-                <h3 class="text-white f-w-300 d-flex align-items-center m-b-0"> Orders</h3>
-                <span class="badge bg-light-primary ms-2">12 requests</span>
+                <h3 class="text-white f-w-300 d-flex align-items-center m-b-0">{{$orders->count()}} Orders</h3>
+                <span class="badge bg-light-primary ms-2">{{$pend_orders->count()}} pending</span>
               </div>
               <!-- <p class="text-white text-opacity-75 mb-2 text-sm mt-3">20 Requests</p> -->
 
