@@ -30,4 +30,9 @@ class Vendor extends Model
     {
         return $this->belongsTo(Lga::class);
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'vendor_id');
+    }
 }

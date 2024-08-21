@@ -9,12 +9,21 @@
       <div class="card-body">
         <h4 class="f-w-500 mb-1">Vendor Register</h4>
         <p class="mb-3">Already have an Account? <a href="/login" class="link-primary">Log in</a></p>
+        @if ($errors->any())
+            <div class="badge rounded-pill text-bg-danger pb-2">
+                    @foreach ($errors->all() as $error)
+                        {{ $error }}
+                    @endforeach
+            </div>
+        @endif
+        <br>
         <form method="POST" action="{{ route('register') }}">
           @csrf
           <div class="row">
             <div class="col-sm-6">
               <div class="mb-3">
-                <input name="firstname" value="{{ old('firstname') }}" type="text" class="form-control" placeholder="First Name">
+                
+                <input name="firstname" value="{{ old('firstname') }}" type="text" class="form-control" placeholder="First Name" required>
                   @error('firstname')
                       <span class="invalid-feedback" role="alert">
                           <strong>{{ $message }}</strong>
@@ -24,7 +33,7 @@
             </div>
             <div class="col-sm-6">
               <div class="mb-3">
-                <input type="text" value="{{ old('lastname') }}" name="lastname" class="form-control" placeholder="Last Name">
+                <input type="text" value="{{ old('lastname') }}" name="lastname" class="form-control" placeholder="Last Name" required>
                   @error('lastname')
                       <span class="invalid-feedback" role="alert">
                           <strong>{{ $message }}</strong>
@@ -42,7 +51,7 @@
                   @enderror
           </div>
           <div class="mb-3">
-            <input type="email" value="{{ old('email') }}" name="email" class="form-control" placeholder="Email Address">
+            <input type="email" value="{{ old('email') }}" name="email" class="form-control" placeholder="Email Address" required>
                   @error('email')
                       <span class="invalid-feedback" role="alert">
                           <strong>{{ $message }}</strong>
@@ -50,15 +59,15 @@
                   @enderror
           </div>
           <div class="mb-3">
-            <input type="number" value="{{ old('phone') }}" name="phone" class="form-control" placeholder="Phone number">
-                  @error('number')
+            <input type="number" value="{{ old('phone') }}" name="phone" class="form-control" placeholder="Phone number" required>
+                  @error('phone')
                       <span class="invalid-feedback" role="alert">
                           <strong>{{ $message }}</strong>
                       </span>
                   @enderror
           </div>
           <div class="mb-3">
-            <input type="password" name="password" class="form-control" placeholder="Password">
+            <input type="password" name="password" class="form-control" placeholder="Password" required>
               @error('password')
                   <span class="invalid-feedback" role="alert">
                       <strong>{{ $message }}</strong>
@@ -66,7 +75,7 @@
               @enderror
           </div>
           <div class="mb-3">
-            <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password">
+            <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password" required>
           </div>
           <div class="d-flex mt-1 justify-content-between">
             <div class="form-check">

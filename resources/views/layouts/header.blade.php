@@ -33,7 +33,7 @@
 
         <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
             <div class="dropdown-header d-flex align-items-center justify-content-between">
-              <a href="{{ route('vendor.profile.index') }} "><h5 class="m-0">Profile</h5></a> 
+            <h5 class="m-0">Profile</h5>
             </div>
             <div class="dropdown-body">
               <div class="profile-notification-scroll position-relative" style="max-height: calc(100vh - 225px)">
@@ -50,15 +50,29 @@
                       {{-- <span class="badge bg-primary">PRO</span> --}}
                     </div>
                   </li>
+                  <li class="list-group-item">
+                    <a href="{{ route('vendor.profile.index') }}" class="dropdown-item">
+                      <span class="d-flex align-items-center">
+                        <i class="material-icons-two-tone">person</i>
+                        <span>My Profile</span>
+                      </span>
+                    </a>
+                    
+                  </li>
 
                   <li class="list-group-item">
 
-                    <a href="{{ route('logout') }}" class="dropdown-item">
+                    <a href="{{ route('logout') }}" onclick="event.preventDefault();
+                    document.getElementById('logout-form').submit();" class="dropdown-item">
                       <span class="d-flex align-items-center">
                         <i class="ph-duotone ph-power"></i>
                         <span>Logout</span>
                       </span>
                     </a>
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                    
                   </li>
                 </ul>
               </div>

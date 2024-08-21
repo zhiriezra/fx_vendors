@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\Order;
 use Auth;
 
 class HomeController extends Controller
@@ -26,11 +27,14 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $products = Auth::user()->vendor ? Product::where('vendor_id', Auth::user()->vendor->id)->get() : collect();
+        
         $user = User::where('id',Auth::id())->first();
         if(Auth::user()->profile_completed == 0)
         return redirect()->route('vendor.profile.create')->with('message', 'Update your profile!');
         else
-        return view('dashboard', compact('user', 'products'));
+        $products = Auth::user()->vendor ? Product::where('vendor_id', Auth::user()->vendor->id)->get() : collect();
+        $orders = Order::where('vendor_id', auth()->user()->vendor->id)->get();
+        $pend_orders = Order::where('vendor_id', auth()->user()->vendor->id)->where('status', 'pending')->get();
+        return view('dashboard', compact('user', 'products', 'orders', 'pend_orders'));
     }
 }
