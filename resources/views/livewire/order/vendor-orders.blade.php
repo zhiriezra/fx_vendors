@@ -13,8 +13,8 @@
                     <!-- <th scope="col">Image</th> -->
                     <th scope="col">Agent</th>
                     <th scope="col">Product</th>
-                    <th scope="col">Requested Quantity</th>
-                    <th scope="col">Present Quantity</th>
+                    <th scope="col">Quantity</th>
+                    <!-- <th scope="col">Present Quantity</th> -->
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -25,7 +25,7 @@
                     <td>{{$order->agent->user->firstname }} {{ $order->agent->user->lastname }}</td>
                     <td>{{ $order->product->name }}</td>
                     <td>{{ $order->quantity }}</td>
-                    <td>{{ $order->product->quantity }}</td>
+                    <!-- <td>{{ $order->product->quantity }}</td> -->
                     <td>
                         <button wire:click="acceptOrder({{ $order->id }})" class="btn btn-shadow btn-success">Accept</button>
                         <button wire:click="declineOrder({{ $order->id }})" class="btn btn-shadow btn-danger">Decline</button>
