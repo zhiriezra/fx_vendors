@@ -76,12 +76,19 @@
           </li>
 
           <li class="pc-item pc-caption">
-            <label>Accounts</label>
+            <label>Others</label>
             <i class="ph-duotone ph-buildings"></i>
           </li>
           
 
-         
+          <li class="pc-item">
+            <a href="#" class="pc-link">
+              <span class="pc-micon">
+                <i class="fas fa-boxes"></i>
+              </span>
+              <span class="pc-mtext">Category Request</span>
+            </a>
+          </li>
 
           <li class="pc-item pc-caption">
             <label>Records</label>
