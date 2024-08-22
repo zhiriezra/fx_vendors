@@ -30,6 +30,9 @@ Route::group(['middleware' => 'auth'], function(){
         
         Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 
+        //category Requests
+        Route::get('/category_request', [HomeController::class, 'categoryRequest'])->name('category_request');
+
         //products 
         Route::get('/product', [ProductController::class, 'index'])->name('product.index');
         Route::get('/product/create', [ProductController::class, 'create'])->name('product.create');
