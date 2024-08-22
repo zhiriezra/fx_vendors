@@ -37,4 +37,9 @@ class HomeController extends Controller
         $pend_orders = Order::where('vendor_id', auth()->user()->vendor->id)->where('status', 'pending')->get();
         return view('dashboard', compact('user', 'products', 'orders', 'pend_orders'));
     }
+
+    public function categoryRequest()
+    {
+        return view('category_request');
+    }
 }
