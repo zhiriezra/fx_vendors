@@ -19,9 +19,9 @@ class ProfileCreate extends Component
 
     public $firstname,$lastname, $middlename, $email, $phone;
     public $profile_image;
-    public $signature;
+    // public $signature;
     public $profileImagePreview; 
-    public $signaturePreview;
+    // public $signaturePreview;
     public $dob;
     public $gender;
     public $marital_status;
@@ -69,11 +69,11 @@ class ProfileCreate extends Component
         $this->profileImagePreview = $this->profile_image->temporaryUrl();
     }
 
-    public function updatedSignature()
-    {
-        // Generate a preview of the uploaded signature
-        $this->signaturePreview = $this->signature->temporaryUrl();
-    }
+    // public function updatedSignature()
+    // {
+    //     // Generate a preview of the uploaded signature
+    //     $this->signaturePreview = $this->signature->temporaryUrl();
+    // }
 
     public function create()
     {
@@ -105,7 +105,6 @@ class ProfileCreate extends Component
             'account_no' => 'required',
             'tin' => 'required',
             'profile_image' => 'nullable|image|max:1024',
-            'signature' => 'required|image|max:1024'
                
         ]);
 
@@ -117,22 +116,22 @@ class ProfileCreate extends Component
             $img = $manager->read($this->profile_image);
             $img = $img->resize(715,703);
 
-            $img->toJpeg(80)->save(base_path('public/storage/profile_img/'.$name_gen));
+            $img->toJpeg(80)->save(base_path('public/storage/profile_images/'.$name_gen));
             $save_url = 'profile_img/'.$name_gen;
 
         }
-        if ($this->signature) {
+        // if ($this->signature) {
                 
-            $manager = new ImageManager(new Driver());
+        //     $manager = new ImageManager(new Driver());
 
-            $sig_name_gen = hexdec(uniqid()).'.'.$this->signature->getClientOriginalExtension();
-            $img = $manager->read($this->signature);
-            $img = $img->resize(715,303);
+        //     $sig_name_gen = hexdec(uniqid()).'.'.$this->signature->getClientOriginalExtension();
+        //     $img = $manager->read($this->signature);
+        //     $img = $img->resize(715,303);
 
-            $img->toJpeg(80)->save(base_path('public/storage/profile_sign/'.$sig_name_gen));
-            $save_prof_url = 'profile_sign/'.$sig_name_gen;
+        //     $img->toJpeg(80)->save(base_path('public/storage/profile_sign/'.$sig_name_gen));
+        //     $save_prof_url = 'profile_sign/'.$sig_name_gen;
 
-        }
+        // }
 
         $vendor = Vendor::create([
             'user_id' => Auth::id(), 
@@ -166,7 +165,7 @@ class ProfileCreate extends Component
             'email' => $this->email,
             'phone' => $this->phone,
             'profile_image'=> $save_url,
-            'signature'=> $save_prof_url,
+            // 'signature'=> $save_prof_url,
             'profile_completed' => 1,
         ]);
 

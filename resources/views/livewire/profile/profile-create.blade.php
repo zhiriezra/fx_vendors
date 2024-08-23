@@ -320,7 +320,7 @@
             </div>
         </div>
         
-        <div class="row g-4 pb-3">
+        {{-- <div class="row g-4 pb-3">
             <div class="col-md-6">
                 <!-- Profile Picture Upload -->
                 <div class="form-group">
@@ -338,7 +338,7 @@
                     </div>
                 @endif
             </div>
-        </div>
+        </div> --}}  
     </div>
     <button class="btn btn-primary" type="submit">Submit</button>
 </form>
