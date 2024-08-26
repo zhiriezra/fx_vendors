@@ -19,7 +19,7 @@ use App\Http\Controllers\OrderController;
 */
 
 Route::get('/', function () {
-    return redirect('https://farmex.extensionafrica.com');
+    return redirect('/login');
 });
 
 Auth::routes();
@@ -27,13 +27,13 @@ Auth::routes();
 Route::group(['middleware' => 'auth'], function(){
 
     Route::group(['prefix' => 'vendor', 'as'=>'vendor.'], function(){
-        
+
         Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 
         //category Requests
         Route::get('/category_request', [HomeController::class, 'categoryRequest'])->name('category_request');
 
-        //products 
+        //products
         Route::get('/product', [ProductController::class, 'index'])->name('product.index');
         Route::get('/product/create', [ProductController::class, 'create'])->name('product.create');
         Route::post('/product', [ProductController::class, 'store'])->name('product.store');
@@ -51,8 +51,8 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/orders/accpeted', [OrderController::class, 'accepted'])->name('orders.accepted');
         Route::get('/orders/rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
 
-        
+
     });
 
-    
+
 });
