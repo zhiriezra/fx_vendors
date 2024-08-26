@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Vendor;
 use App\Models\User;
 use App\Models\State;
-use App\Models\lga;
+use App\Models\Lga;
 // Image Intervention
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -104,7 +104,7 @@ class ProfileCreate extends Component
             'account_name' => 'required',
             'account_no' => 'required',
             'tin' => 'required',
-            'profile_image' => 'nullable|image|max:1024',
+            'profile_image' => 'required|image|max:1024',
                
         ]);
 
@@ -117,7 +117,7 @@ class ProfileCreate extends Component
             $img = $img->resize(715,703);
 
             $img->toJpeg(80)->save(base_path('public/storage/profile_images/'.$name_gen));
-            $save_url = 'profile_img/'.$name_gen;
+            $save_url = 'profile_images/'.$name_gen;
 
         }
         // if ($this->signature) {
