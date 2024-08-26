@@ -5,7 +5,7 @@ namespace App\Http\Livewire\Product;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Category;
-use App\Models\Subcategory;
+use App\Models\SubCategory;
 use App\Models\Vendor;
 use App\Models\Product;
 use App\Models\ProductImage;
