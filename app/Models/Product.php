@@ -40,7 +40,7 @@ class Product extends Model
 
     public function subcategory()
     {
-        return $this->belongsTo(Subcategory::class);
+        return $this->belongsTo(SubCategory::class);
     }
 
     public function orders() {
@@ -56,7 +56,7 @@ class Product extends Model
             $randomString = Str::upper(Str::random(8)); // Uppercase for better readability
 
             // Defining desired suffix
-            $suffix = '-FEX'; 
+            $suffix = '-FEX';
 
             // Combine the random string and suffix
             $model->batch_number = $randomString . $suffix;
