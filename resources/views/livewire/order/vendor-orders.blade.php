@@ -13,6 +13,7 @@
                     <!-- <th scope="col">Image</th> -->
                     <th scope="col">Agent</th>
                     <th scope="col">Product</th>
+                    <th scope="col">Farmer</th>
                     <th scope="col">Quantity</th>
                     <!-- <th scope="col">Present Quantity</th> -->
                     <th scope="col">Action</th>
@@ -24,16 +25,17 @@
                 <tr wire:key="{{$order->id }} ">
                     <td>{{$order->agent->user->firstname }} {{ $order->agent->user->lastname }}</td>
                     <td>{{ $order->product->name }}</td>
+                    <td>{{ $order->farmer->fname }} {{ $order->farmer->lname }} </td>
                     <td>{{ $order->quantity }}</td>
                     <!-- <td>{{ $order->product->quantity }}</td> -->
                     <td>
-                        <button wire:click="acceptOrder({{ $order->id }})" class="btn btn-shadow btn-success">Accept</button>
-                        <button wire:click="declineOrder({{ $order->id }})" class="btn btn-shadow btn-danger">Decline</button>
+                        <button wire:navigate wire:click="acceptOrder({{ $order->id }})" class="btn btn-shadow btn-success">Accept</button>
+                        <button wire:navigate wire:click="declineOrder({{ $order->id }})" class="btn btn-shadow btn-danger">Decline</button>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Pending Orders</h5 ></td>
+                    <td colspan="5"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Pending Orders</h5 ></td>
                 </tr>
                 @endforelse 
 

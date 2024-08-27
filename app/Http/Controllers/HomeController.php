@@ -28,14 +28,18 @@ class HomeController extends Controller
     public function index()
     {
         
+        
+        
         $user = User::where('id',Auth::id())->first();
         if(Auth::user()->profile_completed == 0)
         return redirect()->route('vendor.profile.create')->with('message', 'Update your profile!');
         else
         $products = Auth::user()->vendor ? Product::where('vendor_id', Auth::user()->vendor->id)->get() : collect();
-        $orders = Order::where('vendor_id', auth()->user()->vendor->id)->get();
-        $pend_orders = Order::where('vendor_id', auth()->user()->vendor->id)->where('status', 'pending')->get();
-        return view('dashboard', compact('user', 'products', 'orders', 'pend_orders'));
+       
+        $orderCount = $user->vendor->orders()->get();
+        
+        $orderSupplied = $user->vendor->orders()->where('status', 'supplied')->get();       
+        return view('dashboard', compact('user', 'products', 'orderCount', 'orderSupplied'));
     }
 
     public function categoryRequest()
