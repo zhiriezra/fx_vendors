@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 use App\Models\Order;
+use App\Models\User;
+use Auth;
 
 use Illuminate\Http\Request;
 
@@ -14,14 +16,16 @@ class OrderController extends Controller
 
     public function accepted()
     {
-        $orders = Order::where('vendor_id', auth()->user()->vendor->id)
-                        ->where('status', 'accepted')->with(['product', 'agent.user'])->get();
+        $user = User::where('id',Auth::id())->first();
+        $orders = $user->vendor->orders()->where('status', 'accepted')->with(['product', 'agent.user'])->get();
+       
         return view('orders.accepted_orders', compact('orders'));
     } 
-    public function rejected()
+    public function supplied()
     {
-        $orders = Order::where('vendor_id', auth()->user()->vendor->id)
-                        ->where('status', 'declined')->with(['product', 'agent.user'])->get();
-        return view('orders.rejected_orders', compact('orders'));
+        $user = User::where('id',Auth::id())->first();
+        $orders = $user->vendor->orders()->where('status', 'supplied')->with(['product', 'agent.user'])->get();
+
+        return view('orders.supplied_orders', compact('orders'));
     } 
 }

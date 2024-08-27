@@ -26,7 +26,7 @@
             <div class="col-12">
                 <div class="card table-card">
                     <div class="card-header">
-                        <h4>List of Orders</h4>
+                        <h4>Supplied Orders</h4>
                         @if(Session::has('message'))
                             <div class="alert alert-success d-flex align-items-center" role="alert">
                                 <svg class="bi flex-shrink-0 me-2" width="24" height="24">
@@ -59,6 +59,7 @@
                                         <!-- <th scope="col">Image</th> -->
                                         <th scope="col">Agent</th>
                                         <th scope="col">Product</th>
+                                        <th scope="col">Farmer</th>
                                         <th scope="col">Quantity</th>
                                         <th scope="col">Date</th>
                                     </tr>
@@ -69,6 +70,7 @@
                                     <tr wire:key="{{$order->id }} ">
                                         <td>{{$order->agent->user->firstname }} {{ $order->agent->user->lastname }}</td>
                                         <td>{{ $order->product->name }}</td>
+                                        <td>{{ $order->farmer->fname }} {{ $order->farmer->lname }} </td>
                                         <td>{{ $order->quantity }}</td>
                                         <td>{{ \Carbon\Carbon::parse($order->updated_at)->diffForHumans() }} </td>
                                     </tr>

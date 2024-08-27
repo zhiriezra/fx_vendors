@@ -71,7 +71,7 @@
             <ul class="pc-submenu">
               <li class="pc-item"><a class="pc-link" href="{{ route('vendor.orders.pending') }} ">Pending Orders</a></li>
               <li class="pc-item"><a class="pc-link" href="{{ route('vendor.orders.accepted') }}">Accpeted Orders</a></li>
-              <!-- <li class="pc-item"><a class="pc-link" href="{{ route('vendor.orders.rejected') }}">Rejected Orders</a></li> -->
+              <li class="pc-item"><a class="pc-link" href="{{ route('vendor.orders.supplied') }}">Supplies</a></li>
             </ul>
           </li>
 

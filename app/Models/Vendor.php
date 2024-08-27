@@ -33,6 +33,6 @@ class Vendor extends Model
 
     public function orders()
     {
-        return $this->hasMany(Order::class, 'vendor_id');
+        return $this->hasManyThrough(Order::class, Product::class, 'vendor_id', 'product_id', 'id', 'id');
     }
 }
