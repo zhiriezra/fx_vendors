@@ -59,6 +59,7 @@
                                         <!-- <th scope="col">Image</th> -->
                                         <th scope="col">Agent</th>
                                         <th scope="col">Product</th>
+                                        <th scope="col">Farmer</th>
                                         <th scope="col">Quantity</th>
                                         <th scope="col">Date</th>
                                        
@@ -70,12 +71,13 @@
                                     <tr wire:key="{{$order->id }} ">
                                         <td>{{$order->agent->user->firstname }} {{ $order->agent->user->lastname }}</td>
                                         <td>{{ $order->product->name }}</td>
+                                        <td>{{ $order->farmer->fname }} {{ $order->farmer->lname }} </td>
                                         <td>{{ $order->quantity }}</td>
                                         <td> {{ \Carbon\Carbon::parse($order->updated_at)->diffForHumans() }} </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="4"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Orders Accepted</h5></td>
+                                        <td colspan="5"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Orders Accepted</h5></td>
                                     </tr>
                                     @endforelse 
                     

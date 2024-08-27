@@ -4,6 +4,8 @@ namespace App\Http\Livewire\Order;
 
 use Livewire\Component;
 use App\Models\Order;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class VendorOrders extends Component
 {
@@ -11,10 +13,8 @@ class VendorOrders extends Component
 
     public function mount()
     {
-        $this->orders = Order::where('vendor_id', auth()->user()->vendor->id)
-                        ->where('status', 'pending')
-                        ->with('agent.user') 
-                        ->get();
+        $user = User::where('id',Auth::id())->first();
+        $this->orders = $user->vendor->orders()->where('status', 'pending')->get();
     }
 
     public function acceptOrder($orderId)
