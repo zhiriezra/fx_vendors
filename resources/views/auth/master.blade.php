@@ -48,25 +48,6 @@
   <div class="auth-main v2">
     <div class="bg-overlay bg-dark"></div>
     <div class="auth-wrapper">
-      <div class="auth-sidecontent">
-        <div class="auth-sidefooter">
-          <img class="img-fluid" src="{{ asset('assets/farmex-logo-white.png')}}" alt="">
-          <hr class="mb-3 mt-4" />
-          <div class="row">
-            <div class="col my-1">
-              <p class="m-0">Made with ♥ for all African Farmers</p>
-            </div>
-            <div class="col-auto my-1">
-              <ul class="list-inline footer-link mb-0">
-                <li class="list-inline-item"><a href="/">Home</a></li>
-                <li class="list-inline-item"><a href="/login" target="">Login</a></li>
-                <li class="list-inline-item"><a href="#" target="_blank">Support</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-      </div>
 
       @yield('content')
 
