@@ -3,12 +3,31 @@
 @section('title', 'Home: FarmEx')
 
 @section('content')
+<div class="auth-sidecontent">
+  <div class="auth-sidefooter">
+    <img class="img-fluid" src="{{ asset('assets/farmex-logo-white.png')}}" alt="">
+    <hr class="mb-3 mt-4" />
+    <div class="row">
+      <div class="col my-1">
+        <p class="m-0">Made with ♥ for all African Farmers</p>
+      </div>
+      <div class="col-auto my-1">
+        <ul class="list-inline footer-link mb-0">
+          <li class="list-inline-item"><a href="/">Home</a></li>
+          <li class="list-inline-item"><a href="{{ route('login')}}" target="">Login</a></li>
+          <li class="list-inline-item"><a href="#" target="_blank">Support</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 <div class="auth-form">
     <div class="card my-5 mx-3">
       <div class="card-body">
         <h4 class="f-w-500 mb-1">Vendor Register</h4>
-        <p class="mb-3">Already have an Account? <a href="/login" class="link-primary">Log in</a></p>
+        <p class="mb-3">Already have an Account? <a href="{{ route('login')}}" class="link-primary">Log in</a></p>
         @if ($errors->any())
             <div class="badge rounded-pill text-bg-danger pb-2">
                     @foreach ($errors->all() as $error)
