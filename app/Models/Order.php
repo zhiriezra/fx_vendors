@@ -26,4 +26,14 @@ class Order extends Model
         return $this->belongsTo(Vendor::class);
     }
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function farmer()
+    {
+        return $this->belongsTo(Farmer::class);
+    }
+
 }
