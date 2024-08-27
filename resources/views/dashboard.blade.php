@@ -74,8 +74,8 @@
               <img src="{{asset('dist/assets/images/widget/img-status-2.svg')}}" alt="img" class="img-fluid img-bg" >
               <h5 class="mb-4 text-white">Orders</h5>
               <div class="d-flex align-items-center mt-3">
-                <h3 class="text-white f-w-300 d-flex align-items-center m-b-0">{{$orders->count()}} Orders</h3>
-                <span class="badge bg-light-primary ms-2">{{$pend_orders->count()}} pending</span>
+                <h3 class="text-white f-w-300 d-flex align-items-center m-b-0">{{$orderCount->count()}} Orders</h3>
+                <span class="badge bg-light-primary ms-2">{{ $orderSupplied->count() }} pending</span>
               </div>
               <!-- <p class="text-white text-opacity-75 mb-2 text-sm mt-3">20 Requests</p> -->
 
