@@ -3,6 +3,24 @@
 @section('title', 'Home: FarmEx')
 
 @section('content')
+<div class="auth-sidecontent">
+    <div class="auth-sidefooter">
+      <img class="img-fluid" src="{{ asset('assets/farmex-logo-white.png')}}" alt="">
+      <hr class="mb-3 mt-4" />
+      <div class="row">
+        <div class="col my-1">
+          <p class="m-0">Made with ♥ for all African Farmers</p>
+        </div>
+        <div class="col-auto my-1">
+          <ul class="list-inline footer-link mb-0">
+            <li class="list-inline-item"><a href="/">Home</a></li>
+            <li class="list-inline-item"><a href="/register" target="">Register</a></li>
+            <li class="list-inline-item"><a href="#" target="_blank">Support</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+</div>
 
 <div class="container">
     <div class="row justify-content-center">
@@ -10,7 +28,9 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="f-w-500 mb-1">Vendor login</h4>
+                    <p class="mb-3">Don't have an Account? <a href="{{ route('register')}} " class="link-primary">Register</a></p>
                 </div>
+                
 
                 <div class="card-body">
                     <form method="POST" action="{{ route('login') }}">
