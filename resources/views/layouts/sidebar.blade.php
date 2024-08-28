@@ -59,7 +59,7 @@
             <label>Orders</label>
             <i class="ph-duotone ph-chart-pie"></i>
           </li>
-          
+
           <li class="pc-item pc-hasmenu">
             <a href="#!" class="pc-link">
               <span class="pc-micon">
@@ -79,7 +79,7 @@
             <label>Others</label>
             <i class="ph-duotone ph-buildings"></i>
           </li>
-          
+
 
           <li class="pc-item">
             <a href="#" class="pc-link">
@@ -108,6 +108,15 @@
               <li class="pc-item"><a class="pc-link" href="#">Agent</a></li>
               <li class="pc-item"><a class="pc-link" href="#">Farmers</a></li>
             </ul>
+          </li>
+
+          <li class="pc-item">
+            <a href="{{ route('vendor.wallet.index') }} " class="pc-link">
+              <span class="pc-micon">
+                <i class="fas fa-wallet"></i>
+              </span>
+              <span class="pc-mtext">Wallet</span>
+            </a>
           </li>
 
 
