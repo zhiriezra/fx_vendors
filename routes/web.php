@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\WalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,7 +52,8 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/orders/accpeted', [OrderController::class, 'accepted'])->name('orders.accepted');
         Route::get('/orders/supplied', [OrderController::class, 'supplied'])->name('orders.supplied');
 
-
+        // Wallet routes
+        Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     });
 
 
