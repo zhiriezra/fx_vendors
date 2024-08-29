@@ -27,7 +27,7 @@
                     <td>{{ $order->product->name }}</td>
                     <td>{{ $order->farmer->fname }} {{ $order->farmer->lname }} </td>
                     <td>{{ $order->quantity }}</td>
-                    <td>₦{{ $order->product->agent_price }}</td>
+                    <td>₦{{ number_format($order->product->agent_price, 2) }}</td>
                     <!-- <td>{{ $order->product->quantity }}</td> -->
                     <td>
                         <button wire:navigate wire:click="acceptOrder({{ $order->id }})" class="btn btn-shadow btn-success">Accept</button>

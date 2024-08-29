@@ -29,8 +29,8 @@
                         <tbody>
                             <tr>
                                 <td>{{ $product->manufacturer }}</td>
-                                <td>{{ $product->category->name }}</td>
-                                <td>{{ $product->subcategory->name }}</td>
+                                <td>{{ $product->category ? $product->category->name : 'No category' }}</td>
+                                <td>{{ $product->subcategory ? $product->subcategory->name : 'No Subcategory' }}</td>
                             </tr>
                         </tbody>
 
@@ -44,8 +44,8 @@
                         <tbody>
                             <tr>
                                 <td>{{ $product->quantity }}</td>
-                                <td>₦{{ $product->unit_price }}</td>
-                                <td>₦{{ $product->agent_price }}</td>
+                                <td>₦{{ number_format($product->unit_price, 2) }}</td>
+                                <td>₦{{ number_format($product->agent_price, 2) }}</td>
                             </tr>
                         </tbody>
 
