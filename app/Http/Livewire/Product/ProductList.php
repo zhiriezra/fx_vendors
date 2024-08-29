@@ -6,21 +6,21 @@ use Livewire\Component;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Support\Facades\Auth;
+use Livewire\WithPagination;
 
 class ProductList extends Component
 {
 
-    public $products = [];
+    use WithPagination;
+
+    // Set the pagination theme to Bootstrap
+    protected $paginationTheme = 'bootstrap';
+
+
     public $images;
 
     public function mount()
     {
-        $vendor = Auth::user()->vendor;
-        if ($vendor) {
-            $this->products = Product::where('vendor_id', $vendor->id)->with(['category', 'subcategory'])->get();
-        } else {
-            session()->flash('error', 'Vendor profile not found.');
-        }
 
         $this->images = ProductImage::get();
     }
@@ -38,9 +38,12 @@ class ProductList extends Component
 
     public function render()
     {
+        $vendor = Auth::user()->vendor;
+        $products = Product::where('vendor_id', $vendor->id)->with(['category', 'subcategory'])->paginate(20);
+
         return view('livewire.product.product-list',[
             'images' => $this->images,
-            'products' => $this->products
+            'products' => $products
         ]);
     }
 }
