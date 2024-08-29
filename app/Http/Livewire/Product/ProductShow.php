@@ -59,8 +59,7 @@ class ProductShow extends Component
                 $img = $img->resize(370,246);
 
                 $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-                $save_url = 'product_images/'.$name_gen;
-
+                $save_url = url('storage/product_images/'.$name_gen);
                 // Save image path to the database
                 $productImage = ProductImage::create([
                     'product_id' => $this->product->id,

@@ -49,7 +49,7 @@ class ProductCreate extends Component
         'agent_price' => 'required|numeric|min:0',
         'description' => 'nullable|string',
         'stock_date' => 'required|date',
-        'images.*' => 'image|max:1024', // 1MB Max per image
+        'images.*' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB Max per image
     ];
 
     public function mount()
@@ -114,7 +114,7 @@ class ProductCreate extends Component
                 $img = $img->resize(370,246);
 
                 $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-                $save_url = 'product_images/'.$name_gen;
+                $save_url = url('storage/product_images/'.$name_gen);
 
                 // Save image path to the database
                 $productImage = ProductImage::create([
