@@ -61,6 +61,7 @@
                                         <th scope="col">Product</th>
                                         <th scope="col">Farmer</th>
                                         <th scope="col">Quantity</th>
+                                        <th scope="col">Agent Price</th>
                                         <th scope="col">Date</th>
                                     </tr>
                                 </thead>
@@ -72,11 +73,12 @@
                                         <td>{{ $order->product->name }}</td>
                                         <td>{{ $order->farmer->fname }} {{ $order->farmer->lname }} </td>
                                         <td>{{ $order->quantity }}</td>
+                                        <td>₦{{ $order->product->agent_price }}</td>
                                         <td>{{ \Carbon\Carbon::parse($order->updated_at)->diffForHumans() }} </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="4"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Rejected Orders</h5></td>
+                                        <td colspan="6"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Rejected Orders</h5></td>
                                     </tr>
                                     @endforelse 
                     
