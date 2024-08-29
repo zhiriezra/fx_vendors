@@ -84,6 +84,9 @@
                 
             </tbody>
         </table>
+        <div class="mx-4">
+            {{ $products->links() }}
+        </div>
     </div>
     
     
