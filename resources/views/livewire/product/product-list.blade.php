@@ -48,8 +48,8 @@
                             </td>
                     <!-- <td><a href="{{ route('vendor.product.show', $product->id) }}"> {{ $product->name }} </a></td> -->
         
-                    <td>{{ $product->category->name ?? 'N/A' }}</td>
-                    <td>₦{{ $product->agent_price }}</td>
+                    <td>{{ $product->category ? $product->category->name : 'No category' }}</td>
+                    <td>₦{{ number_format($product->agent_price, 2) }}</td>
                     <td>{{ $product->quantity }}</td>
                     <td>{{ $product->stock_date }}</td>
                     <td>
@@ -84,6 +84,9 @@
                 
             </tbody>
         </table>
+        <div class="mx-4">
+            {{ $products->links() }}
+        </div>
     </div>
     
     
