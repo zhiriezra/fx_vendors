@@ -86,7 +86,7 @@
         <div class="col-md-6">
             <div class="form-floating mb-0">
             <input type="number" step="0.01" class="form-control" id="floatingInput" placeholder="Unit Price" wire:model="unit_price">
-            <label for="floatingInput">Unit Price</label>
+            <label for="floatingInput">Unit Price (₦)</label>
             @error('unit_price')
                 <span class="text-danger">{{ $message }} </span>
             @enderror
@@ -95,7 +95,7 @@
         <div class="col-md-6">
             <div class="form-floating mb-0">
             <input type="number" step="0.01" class="form-control" id="floatingInput" placeholder="Agent Price" wire:model="agent_price">
-            <label for="floatingInput">Agent Price</label>
+            <label for="floatingInput">Agent  (₦)</label>
             @error('agent_price')
                 <span class="text-danger">{{ $message }} </span>
             @enderror

@@ -44,8 +44,8 @@
                         <tbody>
                             <tr>
                                 <td>{{ $product->quantity }}</td>
-                                <td>{{ $product->unit_price }}</td>
-                                <td>{{ $product->agent_price }}</td>
+                                <td>₦{{ $product->unit_price }}</td>
+                                <td>₦{{ $product->agent_price }}</td>
                             </tr>
                         </tbody>
 
@@ -112,8 +112,8 @@
                                     @foreach ($productImage as $image )
                                         @if ($image->product_id == $product->id)
                                             <div class="col-xl-3 col-md-4 col-sm-6">
-                                                <a class="card-gallery" data-fslightbox="gallery" href="{{ Storage::url($image->image_path) }}">
-                                                    <img class="img-fluid" src="{{ Storage::url($image->image_path) }}" alt="Card image" >
+                                                <a class="card-gallery" data-fslightbox="gallery" href="{{ $image->image_path }}">
+                                                    <img class="img-fluid" src="{{ $image->image_path }}" alt="Card image" >
                     
                                                 </a>
                                                 <div class="pt-2" style="text-align: center;">
