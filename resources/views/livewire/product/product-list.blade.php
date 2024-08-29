@@ -13,7 +13,7 @@
                     <!-- <th scope="col">Image</th> -->
                     <th scope="col">Product</th>
                     <th scope="col">Category</th>
-                    <th scope="col">Unit Price</th>
+                    <th scope="col">Agent Price</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Stock Date</th>
                     <th>Action</th>
@@ -33,7 +33,7 @@
                                 <a href="{{ route('vendor.product.show', $product->id) }}">
 
                                 <div class="d-inline-block align-middle">
-                                    <img src="{{ Storage::url($firstImage->image_path) }}" alt="image" class="img-radius align-top m-r-15" style="width:40px;">
+                                    <img src="{{ $firstImage->image_path }}" alt="image" class="img-radius align-top m-r-15" style="width:40px;">
                                     <div class="d-inline-block">
                                      <h6 class="mt-3">{{ $product->name }}</h6>
                                     <!-- <p class="m-b-0 text-primary">Android developer</p> -->
@@ -49,7 +49,7 @@
                     <!-- <td><a href="{{ route('vendor.product.show', $product->id) }}"> {{ $product->name }} </a></td> -->
         
                     <td>{{ $product->category->name ?? 'N/A' }}</td>
-                    <td>{{ $product->unit_price }}</td>
+                    <td>₦{{ $product->agent_price }}</td>
                     <td>{{ $product->quantity }}</td>
                     <td>{{ $product->stock_date }}</td>
                     <td>
