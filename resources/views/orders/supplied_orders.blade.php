@@ -73,7 +73,7 @@
                                         <td>{{ $order->product->name }}</td>
                                         <td>{{ $order->farmer->fname }} {{ $order->farmer->lname }} </td>
                                         <td>{{ $order->quantity }}</td>
-                                        <td>₦{{ $order->product->agent_price }}</td>
+                                        <td>₦{{ number_format($order->product->agent_price, 2) }}</td>
                                         <td>{{ \Carbon\Carbon::parse($order->updated_at)->diffForHumans() }} </td>
                                     </tr>
                                     @empty

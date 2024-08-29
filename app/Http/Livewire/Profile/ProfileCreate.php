@@ -104,7 +104,7 @@ class ProfileCreate extends Component
             'account_name' => 'required',
             'account_no' => 'required',
             'tin' => 'required',
-            'profile_image' => 'required|image|max:1024',
+            'profile_image' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048'
                
         ]);
 
@@ -117,7 +117,7 @@ class ProfileCreate extends Component
             $img = $img->resize(715,703);
 
             $img->toJpeg(80)->save(base_path('public/storage/profile_images/'.$name_gen));
-            $save_url = 'profile_images/'.$name_gen;
+            $save_url =  url('storage/profile_images/'.$name_gen);
 
         }
         // if ($this->signature) {
