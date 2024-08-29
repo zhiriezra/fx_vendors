@@ -22,18 +22,18 @@ class VendorOrders extends Component
         $order = Order::find($orderId);
         $product = $order->product;
 
-        if ($product->quantity >= $order->requested_quantity) {
+        if ($product->quantity >= $order->quantity) {
             // Deduct the product quantity
-            $product->quantity -= $order->requested_quantity;
+            $product->quantity -= $order->quantity;
             $product->save();
-
+    
             // Mark the order as accepted
             $order->status = 'accepted';
             $order->save();
-
+    
             session()->flash('message', 'Order accepted successfully!');
         } else {
-            session()->flash('error', 'Not enough quantity available!');
+            session()->flash('message', 'Not enough product quantity');
         }
 
         // Refresh orders

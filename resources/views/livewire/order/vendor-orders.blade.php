@@ -15,7 +15,7 @@
                     <th scope="col">Product</th>
                     <th scope="col">Farmer</th>
                     <th scope="col">Quantity</th>
-                    <!-- <th scope="col">Present Quantity</th> -->
+                    <th scope="col">Agent Price</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -27,6 +27,7 @@
                     <td>{{ $order->product->name }}</td>
                     <td>{{ $order->farmer->fname }} {{ $order->farmer->lname }} </td>
                     <td>{{ $order->quantity }}</td>
+                    <td>₦{{ $order->product->agent_price }}</td>
                     <!-- <td>{{ $order->product->quantity }}</td> -->
                     <td>
                         <button wire:navigate wire:click="acceptOrder({{ $order->id }})" class="btn btn-shadow btn-success">Accept</button>
@@ -35,7 +36,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Pending Orders</h5 ></td>
+                    <td colspan="6"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Pending Orders</h5 ></td>
                 </tr>
                 @endforelse 
 
