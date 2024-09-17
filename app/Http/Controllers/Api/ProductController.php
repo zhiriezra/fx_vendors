@@ -99,12 +99,12 @@ class ProductController extends Controller
                     $img = $img->resize(370,246);
     
                     $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-                    $save_url = 'product_images/'.$name_gen;
+                    $save_url = url('storage/product_images/'.$name_gen);
     
                     // Save image path to the database
                     $productImage = ProductImage::create([
                         'product_id' => $product->id,
-                        'image_path' => 'product_images/'.$filename,
+                        'image_path' => $save_url,
                     ]);
                 }
             }
