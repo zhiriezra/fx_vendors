@@ -45,9 +45,9 @@ class User extends Authenticatable implements Wallet
         return $this->belongsTo(UserType::class, 'user_type_id');
     }
 
-    public function business(){
-        return $this->hasOne(BusinessInfo::class);
-    }
+    // public function business(){
+    //     return $this->hasOne(BusinessInfo::class);
+    // }
 
     public function vendor()
     {
