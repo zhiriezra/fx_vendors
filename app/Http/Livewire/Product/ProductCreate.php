@@ -40,7 +40,7 @@ class ProductCreate extends Component
 
     protected $rules = [
         'category_id' => 'required',
-        'subcategory_id' => 'required',
+        'sub_category_id' => 'required',
         'type' => 'required|string|max:255',
         'manufacturer' => 'required|string|max:255',
         'name' => 'required|string|max:255',
@@ -91,7 +91,7 @@ class ProductCreate extends Component
 
         $product = Product::create([
             'category_id' => $this->category_id,
-            'subcategory_id' => $this->subcategory_id,
+            'sub_category_id' => $this->subcategory_id,
             'vendor_id' => $this->vendor->id,
             'type' => $this->type,
             'manufacturer' => $this->manufacturer,

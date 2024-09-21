@@ -7,6 +7,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\WalletController;
+use Illuminate\Support\Facades\Auth;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -49,7 +51,7 @@ Route::group(['middleware' => 'auth'], function(){
 
         //Order
         Route::get('/orders/pending', [OrderController::class, 'pending'])->name('orders.pending');
-        Route::get('/orders/accpeted', [OrderController::class, 'accepted'])->name('orders.accepted');
+        Route::get('/orders/accepted', [OrderController::class, 'accepted'])->name('orders.accepted');
         Route::get('/orders/supplied', [OrderController::class, 'supplied'])->name('orders.supplied');
 
         // Wallet routes

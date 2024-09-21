@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -12,73 +16,62 @@ class OrderController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index($vendor_id)
     {
-        $vendor = $request->user()->vendor;
+        $products = Product::where('vendor_id', $vendor_id)->pluck('id');
+        $orders = Order::whereIn('product_id', $products)->with(['product', 'agent.user'])->get();
 
-        $orders = Order::where('vendor_id', $vendor->id)
-            ->with(['product', 'agent.user'])
-            ->get();
-            if($orders){
-
-                return response()->json([
-                    'status' => 200,
-                    'orders' => $orders
-                ], 200);
-            }else{
-    
-                return response()->json([
-                    'status' => 500,
-                    'message' => "Something went wrong!"
-                ], 500);
-            }
-    }
-
-    public function accept(Request $request, Order $order)
-    {
-        $this->authorize('update', $order);
-
-        $order->status = 'accepted';
-        $order->save();
-        if($order){
-
-            return response()->json([
-                'status' => 201,
-                'message' => "Order accepted."
-            ], 201);
+        if($orders){
+            return response()->json(['status' => true, 'orders' => $orders], 200);
         }else{
-
-            return response()->json([
-                'status' => 500,
-                'message' => "Something went wrong!"
-            ], 500);
-        }
-
-    }
-
-    public function decline(Request $request, Order $order)
-    {
-        $this->authorize('update', $order);
-
-        $order->status = 'declined';
-        $order->save();
-
-        if($order){
-
-            return response()->json([
-                'status' => 201,
-                'message' => "Order declined."
-            ], 201);
-        }else{
-
-            return response()->json([
-                'status' => 500,
-                'message' => "Something went wrong!"
-            ], 500);
-
+            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
     }
 
+    public function accept($order_id)
+    {
+        $order = Order::find($order_id);
+
+        if($order){
+
+            $order->status = 'accepted';
+            $order->save();
+            return response()->json(['status' => 201, 'message' => "Order accepted."], 201);
+
+        }
+
+        return response()->json([ 'status' => 500, 'message' => "Something went wrong!"], 500);
+    }
+
+    public function decline($order_id)
+    {
+        $order = Order::find($order_id);
+
+        if($order){
+
+            $order->status = 'declined';
+            $order->save();
+            return response()->json(['status' => 201, 'message' => "Order declined."], 201);
+
+        }
+
+        return response()->json([ 'status' => 500, 'message' => "Something went wrong!"], 500);
+    }
+
+    public function supplied($order_id)
+    {
+        $order = Order::find($order_id);
+
+        if($order){
+
+            $order->status = 'supplied';
+            $order->save();
+            return response()->json(['status' => 201, 'message' => "Order supplied."], 201);
+
+        }
+
+        return response()->json([ 'status' => 500, 'message' => "Something went wrong!"], 500);
+    }
 
     /**
      * Remove the specified resource from storage.

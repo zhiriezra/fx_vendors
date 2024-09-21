@@ -47,6 +47,10 @@ class Product extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function product_images() {
+        return $this->hasMany(ProductImage::class);
+    }
+
     protected static function boot()
     {
         parent::boot();
