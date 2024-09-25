@@ -30,7 +30,7 @@ class AuthController extends Controller
             'password' => 'required|min:4',
         ]);
 
-        User::create([
+        $user = User::create([
             'user_type_id' => 2,
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
@@ -40,7 +40,7 @@ class AuthController extends Controller
 
         ]);
 
-        return response()->json(['message' => 'Successfully created user!', 'status_code' => 201], 201);
+        return response()->json(['message' => 'Successfully created user!', 'status_code' => 201, 'token' => $user->createToken('auth-token')->plainTextToken], 201);
     }
 
     public function loginEmail(Request $request){
