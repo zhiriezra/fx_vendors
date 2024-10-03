@@ -25,7 +25,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::where('vendor_id', Auth::id())->get();
+        $products = Product::where('vendor_id', Auth::user()->vendor->id)->get();
 
         if($products){
 
@@ -230,6 +230,16 @@ class ProductController extends Controller
             ], 404);
 
         }
+    }
+
+    public function categories(){
+        $categories = Category::where('status', 1)->with('subcategories')->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
+        return $categories;
+    }
+
+    public function category($id){
+        $categories = Category::where(['status' => 1, 'id' => $id])->with('subcategories')->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
+        return $categories;
     }
 
     public function CatRequest(Request $request)
