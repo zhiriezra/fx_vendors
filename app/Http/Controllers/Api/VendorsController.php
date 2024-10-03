@@ -50,7 +50,6 @@ class VendorsController extends Controller
                 'state_id' => $request->state_id,
                 'lga_id' => $request->lga_id,
                 'community' => $request->community,
-
                 'business_name' => $request->business_name,
                 'business_address' => $request->business_address,
                 'registration_no' => $request->registration_no,
@@ -71,6 +70,6 @@ class VendorsController extends Controller
             $user->save();
         }
 
-        return response()->json(['message' => 'success', 'status_code' => 201, 'data' => 'updated'], 201);
+        return response()->json(['status' => true, 'message' => 'success', 'data' => 'Business information updated'], 201);
     }
 }

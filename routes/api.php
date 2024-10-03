@@ -35,12 +35,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/add-product', [ProductController::class, 'store']);
     Route::post('/product/add-image', [ProductController::class, 'addImage']);
     Route::post('/product/delete-image', [ProductController::class, 'deleteImage']);
+    Route::get('/products', [ProductController::class, 'index']);
     Route::get('/product/{id}', [ProductController::class, 'show']);
     Route::post('/product/update', [ProductController::class, 'update']);
     Route::delete('/product/{id}/delete', [ProductController::class, 'destroy']);
     // Product end
 
     // category request
+    Route::get('/product-categories', [ProductController::class, 'categories']);
+    Route::get('/product-category/{id}', [ProductController::class, 'category']);
+
     Route::post('/category/request', [ProductController::class, 'CatRequest'])->name('CatRequest');
 
     //Orders
