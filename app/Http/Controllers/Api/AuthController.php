@@ -25,7 +25,7 @@ class AuthController extends Controller
         $this->validate($request, [
             'firstname' => 'required',
             'lastname' => 'required',
-            'email' => 'nullable|email',
+            'email' => 'nullable|email|unique:users,email,except,id',
             'phone' => 'required|digits:11|unique:users,phone,except,id',
             'password' => 'required|min:4',
         ]);
@@ -40,7 +40,7 @@ class AuthController extends Controller
 
         ]);
 
-        return response()->json(['message' => 'Successfully created user!', 'status_code' => 201, 'token' => $user->createToken('auth-token')->plainTextToken], 201);
+        return response()->json(['message' => 'Successfully created user!', 'status' => true, 'user' => $user, 'token' => $user->createToken('auth-token')->plainTextToken], 201);
     }
 
     public function loginEmail(Request $request){
@@ -56,7 +56,7 @@ class AuthController extends Controller
         if($user){
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
                 $user->tokens()->delete(); // Delete old tokens
-                return response()->json(['token' => $user->createToken('auth-token')->plainTextToken]);
+                return response()->json(['user' => $user,'token' => $user->createToken('auth-token')->plainTextToken]);
             }else{
                 return response()->json(['status'=> false, 'message' => 'Invalid Email address or Password', 'status_code' => 401], 401);
             }
@@ -105,7 +105,7 @@ class AuthController extends Controller
     {
         $request->user()->tokens()->delete();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json(['status' => true, 'message' => 'Successfully logged out']);
     }
 
 }
