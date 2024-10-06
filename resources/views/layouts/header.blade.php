@@ -53,7 +53,6 @@
                   <li class="list-group-item">
                     <a href="{{ route('vendor.profile.index') }}" class="dropdown-item">
                       <span class="d-flex align-items-center">
-                        <i class="material-icons-two-tone">person</i>
                         <span>My Profile</span>
                       </span>
                     </a>

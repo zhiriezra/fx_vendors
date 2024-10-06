@@ -1,12 +1,13 @@
 <div class="card-body pt-3">
     <div class="table-responsive">
-        <div class="datatable-top">
-            <button class="btn btn-light-primary mb-1 btn-sm csv">Export PDF</button>
+        <!-- <div class="datatable-top">
             <button class="btn btn-light-primary mb-1 btn-sm csv">Export Excel</button>
             <div class="datatable-search">
                 <input wire:model.live="search" class="datatable-input" placeholder="Search..." type="search" title="Search within table" aria-controls="pc-dt-satetime-sorting">
             </div>
-        </div>
+        </div> -->
+        <br>
+        <br>
         <table class="table table-hover " id="pc-dt-simple">
             <thead>
                 <tr>
