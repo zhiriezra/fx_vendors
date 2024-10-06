@@ -12,7 +12,7 @@
 
                     <div class="col-md-12">
                         <div class="page-header-title">
-                            <h2 class="mb-0">Vendor's Dashboard</h2>
+                            <h2 class="mb-0">Manage Products</h2>
                         </div>
                     </div>
                 </div>
