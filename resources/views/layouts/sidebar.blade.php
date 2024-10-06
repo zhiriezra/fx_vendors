@@ -23,41 +23,18 @@
             <i class="ph-duotone ph-chart-pie"></i>
           </li>
 
-          <li class="pc-item pc-hasmenu">
-
-            <a href="#!" class="pc-link">
+          <li class="pc-item">
+            <a href="{{ route('vendor.product.index') }}" class="pc-link">
               <span class="pc-micon">
-                <i class="fas fa-chart-line"></i>
+                <i class="fas fa-cannabis"></i>
               </span>
-              <span class="pc-mtext">Products</span>
-              <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+              <span class="pc-mtext">Manage Products</span>
             </a>
-            <ul class="pc-submenu">
-              <li class="pc-item"><a class="pc-link" href="{{ route('vendor.product.index') }} ">Manage Products</a></li>
-            </ul>
           </li>
-
-          {{-- <li class="pc-item pc-hasmenu">
-            <a href="#!" class="pc-link">
-              <span class="pc-micon">
-                <i class="fas fa-building"></i>
-              </span>
-
-              <span class="pc-mtext">Company</span>
-              <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-
-            </a>
-            <ul class="pc-submenu">
-              <li class="pc-item"><a class="pc-link" href="">Dashboard</a></li>
-              <li class="pc-item"><a class="pc-link" href="">List</a></li>
-              <li class="pc-item"><a class="pc-link" href="#">Add</a></li>
-              <li class="pc-item"><a class="pc-link" href="#">Requests</a></li>
-            </ul>
-          </li> --}}
 
           <li class="pc-item pc-caption">
             <label>Orders</label>
-            <i class="ph-duotone ph-chart-pie"></i>
+            <i class="fas fa-gifts"></i>
           </li>
 
           <li class="pc-item pc-hasmenu">
@@ -82,7 +59,7 @@
 
 
           <li class="pc-item">
-            <a href="#" class="pc-link">
+            <a href="{{ route('vendor.category_request') }} " class="pc-link">
               <span class="pc-micon">
                 <i class="fas fa-boxes"></i>
               </span>
