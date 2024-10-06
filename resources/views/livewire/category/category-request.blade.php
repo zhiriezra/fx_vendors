@@ -6,14 +6,14 @@
         </div>     
     @endif
     <!-- [ form-element ] start -->
-    <div class="col-md-6">
+    <div class="col-md-12">
       <div class="card">
         <div class="card-body">
           <h5>Category Requests</h5>
           <hr>
           <form wire:submit.prevent="saveCategory">
             <div class="row g-4">
-              <div class="col-md-12">
+              <div class="col-md-6">
                 <div class="form-floating mb-4">
                   <input type="text" class="form-control" id="floatingInput" placeholder="Category Name" wire:model="name">
                   <label for="floatingInput">Category Name</label>
