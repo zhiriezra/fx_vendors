@@ -8,13 +8,13 @@ use App\Models\Category;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
-use Auth; 
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 // Image Intervention
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-
+use PDO;
 
 class ProductController extends Controller
 {
@@ -25,22 +25,15 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::where('vendor_id', Auth::id())->get();
+        $products = Product::where('vendor_id', Auth::user()->vendor->id)->get();
 
         if($products){
 
-            return response()->json([
-                'status' => 200,
-                'products' => $products
-            ], 200);
+            return response()->json(['status' => true, 'products' => $products], 200);
         }else{
-
-            return response()->json([
-                'status' => 500,
-                'message' => "Something went wrong!"
-            ], 500);
+            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
-        
+
     }
 
     /**
@@ -51,10 +44,10 @@ class ProductController extends Controller
      */
 
     public function store(Request $request)
-    {        
-        $validator = Validator::make($request->all(), [
+    {
+        $this->validate($request, [
             'category_id' => 'required',
-            'subcategory_id' => 'required',
+            'sub_category_id' => 'required',
             'type' => 'required',
             'manufacturer' => 'required',
             'name' => 'required',
@@ -66,115 +59,75 @@ class ProductController extends Controller
             'images.*' => 'image|max:2048'
         ]);
 
-        if($validator->fails()){
+        $product = Product::create([
+            'category_id' => $request->category_id,
+            'sub_category_id' => $request->sub_category_id,
+            'vendor_id' => auth()->user()->vendor->id,
+            'type' => $request->type,
+            'manufacturer' => $request->manufacturer,
+            'name' => $request->name,
+            'batch_number' => (string) Str::uuid(),
+            'quantity' => $request->quantity,
+            'unit_price' => $request->unit_price,
+            'agent_price' => $request->agent_price,
+            'description' => $request->description,
+            'quantity' => $request->quantity,
+            'stock_date' => $request->stock_date,
 
-            return response()->json([
-                'status' => 422,
-                'errors' => $validator->messages()
-            ], 422);
+        ]);
+
+        if($product){
+            return response()->json(['status' => true, 'message' => "Product Created Successfully"], 201);
         }else{
 
-            $product = Product::create([
-                'category_id' => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
-                'vendor_id' => Auth::id(),
-                'type' => $request->type,
-                'manufacturer' => $request->manufacturer,
-                'name' => $request->name,
-                'batch_number' => (string) Str::uuid(),
-                'quantity' => $request->quantity,
-                'unit_price' => $request->unit_price,
-                'agent_price' => $request->agent_price,
-                'description' => $request->description,
-                'quantity' => $request->quantity,
-                'stock_date' => $request->stock_date,
-
-            ]);
-
-            if ($request->file('images')) {
-                foreach ($request->file('images') as $image) {
-                    $manager = new ImageManager(new Driver());
-                    $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
-                    $img = $manager->read($request->file('images'));
-                    $img = $img->resize(370,246);
-    
-                    $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-                    $save_url = url('storage/product_images/'.$name_gen);
-    
-                    // Save image path to the database
-                    $productImage = ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $save_url,
-                    ]);
-                }
-            }
+            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
-
-        if($product && $productImage){
-
-            return response()->json([
-                'status' => 201,
-                'message' => "Product Created Successfully"
-            ], 201);
-        }else{
-
-            return response()->json([
-                'status' => 500,
-                'message' => "Something went wrong!"
-            ], 500);
-        } 
 
     }
 
-    public function addImage(Request $request , $id)
+    public function addImage(Request $request)
     {
-        $product = Product::find($id);
-        $validator = Validator::make($request->all(), [
+        $this->validate($request, [
+            'product_id' => 'required',
             'images.*' => 'image|max:2048'
         ]);
 
-        if($validator->fails()){
 
-            return response()->json([
-                'status' => 422,
-                'errors' => $validator->messages()
-            ], 422);
+        if($request->file('images')) {
+            $manager = new ImageManager(new Driver());
+            $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
+            $img = $manager->read($request->file('images'));
+            $img = $img->resize(370,246);
+
+            $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
+            $save_url = 'product_images/'.$name_gen;
+
+            // Save image path to the database
+            $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
+        }
+        if($productImage){
+            return response()->json(['status' => true, 'message' => "Image Added Successfully"], 201);
         }else{
 
-            if ($request->file('images')) {
-                    $manager = new ImageManager(new Driver());
-                    $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
-                    $img = $manager->read($request->file('images'));
-                    $img = $img->resize(370,246);
-    
-                    $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-                    $save_url = 'product_images/'.$name_gen;
-    
-                    // Save image path to the database
-                    $productImage = ProductImage::insert([
-                        'product_id' => $product->id,
-                        'image_path' => $save_url,
-                    ]);
-                }
-                if($productImage){
-
-                    return response()->json([
-                        'status' => 201,
-                        'message' => "Image Added Successfully"
-                    ], 201);
-                }else{
-        
-                    return response()->json([
-                        'status' => 500,
-                        'message' => "Something went wrong!"
-                    ], 500);
-                }   
-            }            
-       
-        
+            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
+        }
 
     }
 
+    public function deleteImage(Request $request){
+        $this->validate($request, [
+            'image_id' => 'required|exists:product_images,id'
+        ]);
+
+        $image = ProductImage::find($request->image_id);
+
+        if($image){
+            $image->delete();
+            return response()->json(['status' => true, 'message' => 'Deleted successfully'], 204);
+        }else{
+            return response()->json(['status' => false, 'message' => 'Image not found'], 404);
+        }
+    }
     /**
      * Display the specified resource.
      *
@@ -183,15 +136,12 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = Product::with('product_images')->find($id);
 
         if($product){
 
-            return response()->json([
-                'status' => 200,
-                'product' => $product
-            ], 200);
-            
+            return response()->json(['status' => 200, 'product' => $product], 200);
+
         }else{
             return response()->json([
                 'status' => 404,
@@ -208,12 +158,14 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
 
-        $validator = Validator::make($request->all(), [
+
+        $this->validate($request, [
+            'product_id' => 'required',
             'category_id' => 'required',
-            'subcategory_id' => 'required',
+            'sub_category_id' => 'required',
             'type' => 'required',
             'manufacturer' => 'required',
             'name' => 'required',
@@ -225,59 +177,32 @@ class ProductController extends Controller
             'images.*' => 'image|max:2048'
         ]);
 
-        if($validator->fails()){
 
-            return response()->json([
-                'status' => 422,
-                'errors' => $validator->messages()
-            ], 422);
-        }else
-        
-        {
+        $product = Product::find($request->product_id);
 
-            $product = Product::find($id);
-            if($product){
+        if($product){
 
-                $product -> update([
-                    'category_id' => $request->category_id,
-                    'subcategory_id' => $request->subcategory_id,
-                    'vendor_id' => Auth::id(),
-                    'type' => $request->type,
-                    'manufacturer' => $request->manufacturer,
-                    'name' => $request->name,
-                    'quantity' => $request->quantity,
-                    'unit_price' => $request->unit_price,
-                    'agent_price' => $request->agent_price,
-                    'description' => $request->description,
-                    'quantity' => $request->quantity,
-                    'stock_date' => $request->stock_date,
-    
-                ]);
+            $product->update([
+                'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_id,
+                'vendor_id' => Auth::user()->vendor->id,
+                'type' => $request->type,
+                'manufacturer' => $request->manufacturer,
+                'name' => $request->name,
+                'quantity' => $request->quantity,
+                'unit_price' => $request->unit_price,
+                'agent_price' => $request->agent_price,
+                'description' => $request->description,
+                'quantity' => $request->quantity,
+                'stock_date' => $request->stock_date,
+            ]);
 
-                if ($request->has('images')) {
-                    foreach ($request->file('images') as $image) {
-                        $path = $image->store('product_images', 'public');
-                        ProductImage::create([
-                            'product_id' => $product->id,
-                            'image_path' => $path
-                        ]);
-                    }
-                }    
+            return response()->json(['status' => 201,'message' => "Product Updated Successfully"], 201);
 
-                return response()->json([
-                    'status' => 201,
-                    'message' => "Product Updated Successfully"
-                ], 201);
-            }else
-            
-            {
-                return response()->json([
-                    'status' => 404,
-                    'message' => "Product Not Found!"
-                ], 404);
-            }
+        }else{
+
+            return response()->json(['status' => 404,'message' => "Product Not Found!"], 404);
         }
-
    }
 
     /**
@@ -291,7 +216,7 @@ class ProductController extends Controller
         $product = Product::find($id);
 
         if($product){
-            
+
             $product->delete();
             return response()->json([
                 'status' => 200,
@@ -307,11 +232,21 @@ class ProductController extends Controller
         }
     }
 
+    public function categories(){
+        $categories = Category::where('status', 1)->with('subcategories')->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
+        return $categories;
+    }
+
+    public function category($id){
+        $categories = Category::where(['status' => 1, 'id' => $id])->with('subcategories')->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
+        return $categories;
+    }
+
     public function CatRequest(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            
+
         ]);
 
         if($validator->fails()){
@@ -342,7 +277,7 @@ class ProductController extends Controller
                 'status' => 500,
                 'message' => "Something went wrong!"
             ], 500);
-        } 
+        }
 
 
     }
