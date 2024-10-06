@@ -8,7 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Auth;
-
+use App\Exports\ProductsExport;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +44,8 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
         Route::get('/product/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
         Route::get('/product/delete/{id}', [ProductController::class, 'destroy'])->name('product.destroy');
+        //export
+        Route::get('/export-products', [ProductsExport::class, 'exportExcel'])->name('export.products');
 
         //profile
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
@@ -53,6 +55,7 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/orders/pending', [OrderController::class, 'pending'])->name('orders.pending');
         Route::get('/orders/accepted', [OrderController::class, 'accepted'])->name('orders.accepted');
         Route::get('/orders/supplied', [OrderController::class, 'supplied'])->name('orders.supplied');
+        
 
         // Wallet routes
         Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
