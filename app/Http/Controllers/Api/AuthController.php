@@ -46,7 +46,13 @@ class AuthController extends Controller
 
         ]);
 
-        return response()->json(['status' => true, 'message' => 'Successfully created user!', 'data' => ['user' => $user, 'token' => $user->createToken('auth-token')->plainTextToken]], 201);
+        if($user){
+            return response()->json(['status' => true, 'message' => 'Successfully created user!', 'data' => ['user' => $user, 'token' => $user->createToken('auth-token')->plainTextToken]], 201);
+        }else{
+            return response()->json(['status' => false, 'message' => 'Something went wrong, please try again'], 500);
+
+        }
+
     }
 
     public function loginEmail(Request $request){
