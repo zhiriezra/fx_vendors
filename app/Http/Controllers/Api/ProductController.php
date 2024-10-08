@@ -28,8 +28,7 @@ class ProductController extends Controller
         $products = Product::where('vendor_id', Auth::user()->vendor->id)->get();
 
         if($products){
-
-            return response()->json(['status' => true, 'products' => $products], 200);
+            return response()->json(['status' => true, 'message' => 'Product list', 'data' => $products], 200);
         }else{
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
@@ -45,7 +44,7 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'category_id' => 'required',
             'sub_category_id' => 'required',
             'type' => 'required',
@@ -58,6 +57,11 @@ class ProductController extends Controller
             'stock_date' => 'required|date',
             'images.*' => 'image|max:2048'
         ]);
+
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->errors()], 422);
+        }
 
         $product = Product::create([
             'category_id' => $request->category_id,
@@ -77,7 +81,7 @@ class ProductController extends Controller
         ]);
 
         if($product){
-            return response()->json(['status' => true, 'message' => "Product Created Successfully"], 201);
+            return response()->json(['status' => true, 'message' => "Product Created Successfully", "data" => ["product" => $product]], 201);
         }else{
 
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
@@ -106,18 +110,21 @@ class ProductController extends Controller
             $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
         }
         if($productImage){
-            return response()->json(['status' => true, 'message' => "Image Added Successfully"], 201);
+            return response()->json(['status' => true, 'message' => "Image Added Successfully", 'data' => $productImage], 201);
         }else{
-
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
 
     }
 
     public function deleteImage(Request $request){
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'image_id' => 'required|exists:product_images,id'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->errors()], 422);
+        }
 
         $image = ProductImage::find($request->image_id);
 
@@ -140,7 +147,7 @@ class ProductController extends Controller
 
         if($product){
 
-            return response()->json(['status' => 200, 'product' => $product], 200);
+            return response()->json(['status' => 200, "data" => ['product' => $product]], 200);
 
         }else{
             return response()->json([
@@ -162,7 +169,7 @@ class ProductController extends Controller
     {
 
 
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'product_id' => 'required',
             'category_id' => 'required',
             'sub_category_id' => 'required',
@@ -177,6 +184,9 @@ class ProductController extends Controller
             'images.*' => 'image|max:2048'
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->errors()], 422);
+        }
 
         $product = Product::find($request->product_id);
 
@@ -197,11 +207,11 @@ class ProductController extends Controller
                 'stock_date' => $request->stock_date,
             ]);
 
-            return response()->json(['status' => 201,'message' => "Product Updated Successfully"], 201);
+            return response()->json(['status' => true,'message' => "Product Updated Successfully"], 201);
 
         }else{
 
-            return response()->json(['status' => 404,'message' => "Product Not Found!"], 404);
+            return response()->json(['status' => false,'message' => "Product Not Found!"], 404);
         }
    }
 
@@ -233,13 +243,21 @@ class ProductController extends Controller
     }
 
     public function categories(){
-        $categories = Category::where('status', 1)->with('subcategories')->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
-        return $categories;
+        $categories = Category::where('status', 1)->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
+        if($categories){
+            return response()->json(['status' => true, 'message' => "Category list", "data" => ["categories" => $categories]], 200);
+        }else{
+            return response()->json(['status' => false, 'message' => "No available categories!"], 404);
+        }
     }
 
     public function category($id){
-        $categories = Category::where(['status' => 1, 'id' => $id])->with('subcategories')->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
-        return $categories;
+        $category = Category::where(['status' => 1, 'id' => $id])->with('subcategories')->first()->makeHidden(['created_at', 'deleted_at','updated_at']);
+        if($category){
+            return response()->json(['status' => true, 'message' => "Category", "data" => ["category" => $category]], 200);
+        }else{
+            return response()->json(['status' => false, 'message' => "Can not find category!"], 404);
+        }
     }
 
     public function CatRequest(Request $request)
@@ -250,33 +268,20 @@ class ProductController extends Controller
         ]);
 
         if($validator->fails()){
-
-            return response()->json([
-                'status' => 422,
-                'errors' => $validator->messages()
-            ], 422);
+            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->messages() ], 422);
         }else{
 
             $category = Category::create([
                 'name' => $request->name,
                 'status' => 0
-
             ]);
 
-            }
+        }
 
         if($category){
-
-            return response()->json([
-                'status' => 201,
-                'message' => "Request Sent"
-            ], 201);
+            return response()->json(['status' => true, 'message' => "Request Sent successfully", "data" => $category], 201);
         }else{
-
-            return response()->json([
-                'status' => 500,
-                'message' => "Something went wrong!"
-            ], 500);
+            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
 
 
