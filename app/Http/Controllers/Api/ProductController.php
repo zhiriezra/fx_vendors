@@ -28,7 +28,7 @@ class ProductController extends Controller
         $products = Product::where('vendor_id', Auth::user()->vendor->id)->get();
 
         if($products){
-            return response()->json(['status' => true, 'message' => 'Product list', 'data' => $products], 200);
+            return response()->json(['status' => true, 'message' => 'Product list', 'data' => ['products' => $products]], 200);
         }else{
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
