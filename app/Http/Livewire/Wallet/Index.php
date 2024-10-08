@@ -9,7 +9,7 @@ class Index extends Component
     public $balance;
 
     public function render()
-    {
+    {u
         return view('livewire.wallet.index');
     }
 
