@@ -73,8 +73,9 @@ class VendorsController extends Controller
             $user = User::find(auth()->id());
             $user->profile_completed = 1;
             $user->save();
+            return response()->json(['status' => true, 'message' => 'Business information updated', 'data' => ['vendor' => $vendor]], 201);
+        }else{
+            return response()->json(['status' => false, 'message' => 'Could not update business information, please try again'], 500);
         }
-
-        return response()->json(['status' => true, 'message' => 'Business information updated', 'data' => ['vendor' => $vendor]], 201);
     }
 }
