@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class VendorsController extends Controller
 {
     public function updateBusiness(Request $request){
 
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'identification_mode' => 'required',
             'identification_no' => 'required|digits:10',
             'dob' => 'required',
@@ -34,6 +35,10 @@ class VendorsController extends Controller
             'tin' => 'required|digits:11'
 
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->errors()], 422);
+        }
 
         $vendor = Vendor::updateOrCreate(
             ['user_id' => auth()->id()],
