@@ -70,6 +70,6 @@ class VendorsController extends Controller
             $user->save();
         }
 
-        return response()->json(['status' => true, 'message' => 'Business information updated'], 201);
+        return response()->json(['status' => true, 'message' => 'Business information updated', 'data' => ['vendor' => $vendor]], 201);
     }
 }
