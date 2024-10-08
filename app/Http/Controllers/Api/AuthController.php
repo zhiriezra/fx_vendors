@@ -69,19 +69,21 @@ class AuthController extends Controller
 
         // Look for user
         $user = User::where(['email' => $request->email, 'user_type_id' => 2])->first();
-        $userDetails = [
-            'firstname' => $user->firstname,
-            'lastname' => $user->lastname,
-            'email' => $user->email,
-            'phone' => $user->phone,
-            'profile_completed' => $user->profile_completed,
-            'signature' => $user->signature,
-            'profile_image' => $user->profile_image,
-            'active' => $user->active,
-        ];
 
         if($user){
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+
+                $userDetails = [
+                    'firstname' => $user->firstname,
+                    'lastname' => $user->lastname,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'profile_completed' => $user->profile_completed,
+                    'signature' => $user->signature,
+                    'profile_image' => $user->profile_image,
+                    'active' => $user->active,
+                ];
+                
                 $user->tokens()->delete(); // Delete old tokens
 
                 return response()->json(['status' => true, 'message' => 'Successfully Logged in!', 'data' => ['user' => $userDetails, 'token' => $user->createToken('auth-token')->plainTextToken]], 200);
