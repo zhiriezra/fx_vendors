@@ -130,7 +130,7 @@ class ProductController extends Controller
 
         if($image){
             $image->delete();
-            return response()->json(['status' => true, 'message' => 'Deleted successfully'], 200);
+            return response()->json(['status' => true, 'message' => 'Deleted successfully'], 204);
         }else{
             return response()->json(['status' => false, 'message' => 'Image not found'], 404);
         }
