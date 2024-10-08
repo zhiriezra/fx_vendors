@@ -22,9 +22,9 @@ class OrderController extends Controller
         $orders = Order::whereIn('product_id', $products)->with(['product', 'agent.user'])->get();
 
         if($orders){
-            return response()->json(['status' => true, 'orders' => $orders], 200);
+            return response()->json(['status' => true, 'message' => 'My Orders list', 'data' => ['orders' => $orders]], 200);
         }else{
-            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
+            return response()->json(['status' => false, 'message' => "Can not find any orders!"], 404);
         }
     }
 
@@ -36,11 +36,11 @@ class OrderController extends Controller
 
             $order->status = 'accepted';
             $order->save();
-            return response()->json(['status' => 201, 'message' => "Order accepted."], 201);
+            return response()->json(['status' => true, 'message' => "Order accepted.", 'data' => ['order' => $order]], 201);
 
         }
 
-        return response()->json([ 'status' => 500, 'message' => "Something went wrong!"], 500);
+        return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
     }
 
     public function decline($order_id)
@@ -51,11 +51,11 @@ class OrderController extends Controller
 
             $order->status = 'declined';
             $order->save();
-            return response()->json(['status' => 201, 'message' => "Order declined."], 201);
+            return response()->json(['status' => true, 'message' => "Order declined.", 'data' => ['order' => $order]], 201);
 
         }
 
-        return response()->json([ 'status' => 500, 'message' => "Something went wrong!"], 500);
+        return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
     }
 
     public function supplied($order_id)
@@ -66,11 +66,11 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
-            return response()->json(['status' => 201, 'message' => "Order supplied."], 201);
+            return response()->json(['status' => true, 'message' => "Order supplied.", 'data' => ['order' => $order]], 201);
 
         }
 
-        return response()->json([ 'status' => 500, 'message' => "Something went wrong!"], 500);
+        return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
     }
 
     /**
