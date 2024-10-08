@@ -110,7 +110,7 @@ class ProductController extends Controller
             $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
         }
         if($productImage){
-            return response()->json(['status' => true, 'message' => "Image Added Successfully", 'data' => $productImage], 201);
+            return response()->json(['status' => true, 'message' => "Image Added Successfully", 'data' => ['image' => $productImage]], 201);
         }else{
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
@@ -207,7 +207,7 @@ class ProductController extends Controller
                 'stock_date' => $request->stock_date,
             ]);
 
-            return response()->json(['status' => true,'message' => "Product Updated Successfully"], 201);
+            return response()->json(['status' => true,'message' => "Product Updated Successfully", "data" => ['product' => $product]], 201);
 
         }else{
 
