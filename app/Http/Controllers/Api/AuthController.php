@@ -27,18 +27,20 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
+            'middlename' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email,except,id',
             'phone' => 'required|digits:11|unique:users,phone,except,id',
             'password' => 'required|min:4',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' =>  $validator->errors()->first(), 'data' => null], 422);
+            return response()->json(['status' => false, 'message' =>  $validator->errors()->first()], 422);
         }
 
         $user = User::create([
             'user_type_id' => 2,
             'firstname' => $request->firstname,
+            'middlename' => $request->middlename,
             'lastname' => $request->lastname,
             'email' => $request->email,
             'phone' => $request->phone,
@@ -64,7 +66,7 @@ class AuthController extends Controller
 
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => 'Invalid credentials', 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
         }
 
         // Look for user
