@@ -33,7 +33,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => 'Invalid credentials', 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'message' =>  $validator->errors()->first(), 'data' => null], 422);
         }
 
         $user = User::create([
@@ -83,7 +83,7 @@ class AuthController extends Controller
                     'profile_image' => $user->profile_image,
                     'active' => $user->active,
                 ];
-                
+
                 $user->tokens()->delete(); // Delete old tokens
 
                 return response()->json(['status' => true, 'message' => 'Successfully Logged in!', 'data' => ['user' => $userDetails, 'token' => $user->createToken('auth-token')->plainTextToken]], 200);
