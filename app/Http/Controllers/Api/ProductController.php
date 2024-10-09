@@ -60,7 +60,7 @@ class ProductController extends Controller
 
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
         }
 
         $product = Product::create([
@@ -91,11 +91,14 @@ class ProductController extends Controller
 
     public function addImage(Request $request)
     {
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'product_id' => 'required',
             'images.*' => 'image|max:2048'
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
 
         if($request->file('images')) {
             $manager = new ImageManager(new Driver());
@@ -123,7 +126,7 @@ class ProductController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
         }
 
         $image = ProductImage::find($request->image_id);
@@ -147,13 +150,10 @@ class ProductController extends Controller
 
         if($product){
 
-            return response()->json(['status' => 200, "data" => ['product' => $product]], 200);
+            return response()->json(['status' => true, 'message' => "Product detail", "data" => ['product' => $product]], 200);
 
         }else{
-            return response()->json([
-                'status' => 404,
-                'message' => "Product Not Found!"
-            ], 404);
+            return response()->json(['status' => 404, 'message' => "Product Not Found!"], 404);
 
         }
     }
@@ -268,7 +268,7 @@ class ProductController extends Controller
         ]);
 
         if($validator->fails()){
-            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->messages() ], 422);
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
         }else{
 
             $category = Category::create([
