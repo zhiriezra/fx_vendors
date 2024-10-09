@@ -37,7 +37,7 @@ class VendorsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => 'Invalid details provided', 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
         }
 
         $vendor = Vendor::updateOrCreate(
