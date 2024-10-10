@@ -49,7 +49,7 @@ class AuthController extends Controller
         ]);
 
         if($user){
-            return response()->json(['status' => true, 'message' => 'Successfully created user!', 'data' => ['user' => $user, 'token' => $user->createToken('auth-token')->plainTextToken]], 201);
+            return response()->json(['status' => true, 'message' => 'Successfully created user!', 'data' => ['user' => $user, 'token' => $user->createToken('auth-token')->plainTextToken]], 200);
         }else{
             return response()->json(['status' => false, 'message' => 'Something went wrong, please try again'], 500);
 
@@ -137,7 +137,7 @@ class AuthController extends Controller
     {
         $request->user()->tokens()->delete();
 
-        return response()->json(['status' => true, 'message' => 'Successfully logged out', 201]);
+        return response()->json(['status' => true, 'message' => 'Successfully logged out', 200]);
     }
 
 }

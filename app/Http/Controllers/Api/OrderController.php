@@ -36,7 +36,7 @@ class OrderController extends Controller
 
             $order->status = 'accepted';
             $order->save();
-            return response()->json(['status' => true, 'message' => "Order accepted.", 'data' => ['order' => $order]], 201);
+            return response()->json(['status' => true, 'message' => "Order accepted.", 'data' => ['order' => $order]], 200);
 
         }
 
@@ -51,7 +51,7 @@ class OrderController extends Controller
 
             $order->status = 'declined';
             $order->save();
-            return response()->json(['status' => true, 'message' => "Order declined.", 'data' => ['order' => $order]], 201);
+            return response()->json(['status' => true, 'message' => "Order declined.", 'data' => ['order' => $order]], 200);
 
         }
 
@@ -66,7 +66,7 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
-            return response()->json(['status' => true, 'message' => "Order supplied.", 'data' => ['order' => $order]], 201);
+            return response()->json(['status' => true, 'message' => "Order supplied.", 'data' => ['order' => $order]], 200);
 
         }
 
