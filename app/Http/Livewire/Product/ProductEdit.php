@@ -33,15 +33,14 @@ class ProductEdit extends Component
     public function mount($product_data)
     {
         //Load Categories and Sub Categories
-        $this->categories = Category::all();
-        $this->subcategories = Subcategory::all();
+        $this->categories = Category::where('status', 1)->get();
 
         // Load the product based on the product ID
         $this->product = $product_data;
 
         // Populate the fields with existing product data
         $this->category_id = $this->product->category_id;
-        $this->subcategory_id = $this->product->subcategory_id;
+        $this->subcategory_id = $this->product->sub_category_id;
         $this->type = $this->product->type;
         $this->manufacturer = $this->product->manufacturer;
         $this->name = $this->product->name;
@@ -50,6 +49,13 @@ class ProductEdit extends Component
         $this->agent_price = $this->product->agent_price;
         $this->description = $this->product->description;
         $this->stock_date = $this->product->stock_date;
+        $this->subcategories = SubCategory::where('category_id', $this->category_id)->get();
+    }
+
+    public function updatedCategoryId($value)
+    {
+        $this->subcategories = SubCategory::where('category_id', $value)->get();
+        $this->subcategory_id = null;
     }
 
     public function updateProduct()
@@ -59,7 +65,7 @@ class ProductEdit extends Component
         // Update the product
         $this->product->update([
             'category_id' => $this->category_id,
-            'subcategory_id' => $this->subcategory_id,
+            'sub_category_id' => $this->subcategory_id,
             'type' => $this->type,
             'manufacturer' => $this->manufacturer,
             'name' => $this->name,
