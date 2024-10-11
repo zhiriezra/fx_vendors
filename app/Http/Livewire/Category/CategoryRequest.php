@@ -21,13 +21,13 @@ class CategoryRequest extends Component
             'name' => $this->name,
         ]);
         // Optional flash message
-        session()->flash('message', 'Category Request sent to admin successfully!');
+        session()->flash('message', 'Category Request Sent Successfully!');
 
         // Reset the form after save
         $this->reset(['name']);
 
         // Optional flash message
-        session()->flash('message', 'Category Request sent to admin successfully!');
+        session()->flash('message', 'Category Request Sent Successfully!');
     }
 
     public function render()
