@@ -40,7 +40,7 @@ class ProductCreate extends Component
 
     protected $rules = [
         'category_id' => 'required',
-        'sub_category_id' => 'required',
+        'subcategory_id' => 'required',
         'type' => 'required|string|max:255',
         'manufacturer' => 'required|string|max:255',
         'name' => 'required|string|max:255',
@@ -54,7 +54,7 @@ class ProductCreate extends Component
 
     public function mount()
     {
-        $this->categories = Category::all();
+        $this->categories = Category::where('status', 1)->get();
         $this->vendor = Vendor::where('user_id', Auth::id())->first();
     }
 
