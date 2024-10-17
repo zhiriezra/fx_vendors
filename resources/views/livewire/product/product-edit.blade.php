@@ -1,5 +1,5 @@
 <form wire:submit.prevent="updateProduct">
-    
+
     <div class="row g-4 pb-3">
         <div class="col-md-6">
             <div class="form-floating mb-0">
@@ -9,12 +9,12 @@
                 <span class="text-danger">{{ $message }} </span>
             @enderror
             </div>
-            
+
         </div>
         <div class="col-md-6">
             <div class="form-floating mb-0">
                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" wire:model="description"></textarea>
-                <label for="floatingPassword">Desciption</label>
+                <label for="floatingPassword">Description</label>
                 @error('description')
                 <span class="text-danger">{{ $message }} </span>
                 @enderror
