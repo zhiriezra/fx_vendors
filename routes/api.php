@@ -21,12 +21,18 @@ use App\Http\Controllers\Api\VendorsController;
 Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login-email', [AuthController::class, 'loginEmail']);
+// Route::post('/forg')
 
 Route::post('/verify-otp', [AuthController::class, 'verifyOTP']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', [AuthController::class, 'getUser']);
+
+    // Profile Image and Signature upload
+    Route::post('/upload-profile-image', [AuthController::class, 'uploadProfileImage']);
+    Route::post('/upload-signature', [AuthController::class, 'uploadSignature']);
+    
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::post('update-business', [VendorsController::class, 'updateBusiness']);
