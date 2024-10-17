@@ -8,6 +8,7 @@ use App\Services\OTPService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use PDO;
@@ -138,6 +139,59 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
 
         return response()->json(['status' => true, 'message' => 'Successfully logged out', 200]);
+    }
+
+    public function uploadProfileImage(Request $request){
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'profile_image' => 'required|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max size
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        if ($request->file('profile_image')) {
+
+            $image = $request->file('profile_image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $imagePath = $image->storeAs('vendor_images', $imageName, 'public');
+
+            // Store image path or URL in the database if needed
+            $user = User::find($request->user()->id);
+            $user->profile_image = env('APP_URL').'/'.$imagePath;
+            $user->save();
+
+            return response()->json(['status'=> true, 'message' => 'Profile image uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)] ], 200);
+        }
+
+    }
+
+    public function uploadSignature(Request $request){
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'signature' => 'required|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max size
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        if ($request->file('signature')) {
+
+            $image = $request->file('signature');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $imagePath = $image->storeAs('vendor_signatures', $imageName, 'public');
+
+            // Store image path or URL in the database if needed
+            $user = User::find($request->user()->id);
+            $user->signature = env('APP_URL').'/'.$imagePath;
+            $user->profile_completed = 1;
+            $user->save();
+
+            return response()->json(['status'=> true, 'message' => 'Signature uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)] ], 200);
+        }
+
     }
 
 }
