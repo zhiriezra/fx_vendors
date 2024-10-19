@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class VendorOrders extends Component
 {
+
     public $orders;
 
     public function mount()
@@ -30,8 +31,7 @@ class VendorOrders extends Component
             // Mark the order as accepted
             $order->status = 'accepted';
             $order->save();
-    
-            session()->flash('message', 'Order accepted successfully!');
+            return redirect()->route('vendor.orders.accepted')->with('message', 'Order accepted successfully!');
         } else {
             session()->flash('message', 'Not enough product quantity');
         }
