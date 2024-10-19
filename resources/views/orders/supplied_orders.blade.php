@@ -62,6 +62,7 @@
                                         <th scope="col">Quantity</th>
                                         <th scope="col">Agent Price</th>
                                         <th scope="col">Date</th>
+                                        <th scope="col">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -74,10 +75,19 @@
                                         <td>{{ $order->quantity }}</td>
                                         <td>₦{{ number_format($order->product->agent_price, 2) }}</td>
                                         <td>{{ \Carbon\Carbon::parse($order->updated_at)->diffForHumans() }} </td>
+                                        <th>
+                                            @if($order->status == 'completed')
+                                                <span class="badge text-bg-success">Confirmed</span>
+                                            @else
+                                                <span class="badge text-bg-info">Awating Confirmation</span>
+                                            @endif
+                                            
+                                            
+                                        </th>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="6"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Rejected Orders</h5></td>
+                                        <td colspan="6"><h5 style="text-align: center;"><i class="fas fa-shopping-cart"></i> 0 Supplied Orders</h5></td>
                                     </tr>
                                     @endforelse 
                     
