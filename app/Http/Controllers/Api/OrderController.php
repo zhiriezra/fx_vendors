@@ -18,11 +18,11 @@ class OrderController extends Controller
      */
     public function index($vendor_id)
     {
-        $products = Product::where('vendor_id', $vendor_id)->pluck('id');
-        $orders = Order::whereIn('product_id', $products)->with(['product', 'agent.user'])->get();
+        $user = auth()->user();
+        $orders = $user->vendor->orders()->with(['product', 'agent.user'])->get();
 
         if($orders){
-            return response()->json(['status' => true, 'message' => 'My Orders list', 'data' => ['orders' => $orders]], 200);
+            return response()->json(['status' => true, 'message' => 'My Orders list', 'data' => ['orders' => $orders, 'total' => $orders->count()]], 200);
         }else{
             return response()->json(['status' => false, 'message' => "Can not find any orders!"], 404);
         }
@@ -30,7 +30,7 @@ class OrderController extends Controller
 
     public function accept($order_id)
     {
-        $order = Order::find($order_id);
+        $order = Order::with('product')->find($order_id);
 
         if($order){
 
@@ -45,7 +45,7 @@ class OrderController extends Controller
 
     public function decline($order_id)
     {
-        $order = Order::find($order_id);
+        $order = Order::with('product')->find($order_id);
 
         if($order){
 
@@ -60,7 +60,7 @@ class OrderController extends Controller
 
     public function supplied($order_id)
     {
-        $order = Order::find($order_id);
+        $order = Order::with('product')->find($order_id);
 
         if($order){
 
