@@ -24,7 +24,7 @@ class OrderController extends Controller
     public function supplied()
     {
         $user = User::where('id',Auth::id())->first();
-        $orders = $user->vendor->orders()->where('status', 'supplied')->with(['product', 'agent.user'])->get();
+        $orders = $user->vendor->orders()->whereIn('status',['supplied', 'completed'])->with(['product', 'agent.user'])->get();
 
         return view('orders.supplied_orders', compact('orders'));
     }
