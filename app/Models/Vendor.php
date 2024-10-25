@@ -35,4 +35,9 @@ class Vendor extends Model
     {
         return $this->hasManyThrough(Order::class, Product::class, 'vendor_id', 'product_id', 'id', 'id');
     }
+
+    public function payoutsRequests()
+    {
+        return $this->hasMany(PayoutRequest::class);
+    }
 }
