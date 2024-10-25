@@ -8,6 +8,7 @@ use App\Services\OTPService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -192,6 +193,26 @@ class AuthController extends Controller
             return response()->json(['status'=> true, 'message' => 'Signature uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)] ], 200);
         }
 
+    }
+
+    public function forgotPassword(Request $request){
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        if($status == Password::RESET_LINK_SENT){
+            return response()->json(['status' => true, 'message' => __($status)], 200);
+        }
+
+        throw ValidationException::withMessages([
+            'email' => [trans($status)]
+        ]);
     }
 
 }
