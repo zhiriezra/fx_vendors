@@ -31,9 +31,4 @@ class Agent extends Model
         return $this->hasMany(Farmer::class);
     }
 
-    public function farmVisitations()
-    {
-        return $this->hasMany(FarmVisitation::class);
-
-    }
 }

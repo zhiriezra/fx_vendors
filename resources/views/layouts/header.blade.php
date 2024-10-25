@@ -56,7 +56,7 @@
                         <span>My Profile</span>
                       </span>
                     </a>
-                    
+
                   </li>
 
                   <li class="list-group-item">
@@ -71,7 +71,7 @@
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                         @csrf
                     </form>
-                    
+
                   </li>
                 </ul>
               </div>
