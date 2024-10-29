@@ -1,11 +1,19 @@
 <div class="card-body pt-3">
     <div class="table-responsive">
-        <!-- <div class="datatable-top">
-            <button class="btn btn-light-primary mb-1 btn-sm csv">Export Excel</button>
-            <div class="datatable-search">
+        <div class="datatable-top">
+            
+                <button wire:click="exportExcel" class="btn btn-light-primary mb-1 btn-sm csv">
+                    <span wire:loading.remove wire:target="exportExcel">Export Orders</span>
+                    <span wire:loading wire:target="exportExcel">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Exporting...
+                    </span>
+                </button>
+
+            <!-- <div class="datatable-search">
                 <input wire:model.live="search" class="datatable-input" placeholder="Search..." type="search" title="Search within table" aria-controls="pc-dt-satetime-sorting">
-            </div>
-        </div> -->
+            </div> -->
+        </div>
         <br>
         <br>
         <table class="table table-hover " id="pc-dt-simple">

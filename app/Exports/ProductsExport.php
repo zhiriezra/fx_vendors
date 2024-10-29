@@ -18,7 +18,7 @@ class ProductsExport implements FromCollection, WithHeadings
         $userId = Auth::user()->vendor->id;
 
             return Product::leftJoin('categories', 'products.category_id', '=', 'categories.id')
-            ->leftJoin('sub_categories', 'products.subcategory_id', '=', 'sub_categories.id')
+            ->leftJoin('sub_categories', 'products.sub_category_id', '=', 'sub_categories.id')
             ->where('vendor_id', $userId)
             ->select(
                 'products.name',
