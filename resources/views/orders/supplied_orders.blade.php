@@ -46,12 +46,12 @@
                     </div>
                     <div class="card-body pt-3">
                         <div class="table-responsive">
-                            <div class="datatable-top">
+                            <!-- <div class="datatable-top">
                                 <button class="btn btn-light-primary mb-1 btn-sm csv">Export Excel</button>
                                 <div class="datatable-search">
                                     <input wire:model.live="search" class="datatable-input" placeholder="Search..." type="search" title="Search within table" aria-controls="pc-dt-satetime-sorting">
                                 </div>
-                            </div>
+                            </div> -->
                             <table class="table table-hover " id="pc-dt-simple">
                                 <thead>
                                     <tr>
@@ -79,7 +79,7 @@
                                             @if($order->status == 'completed')
                                                 <span class="badge text-bg-success">Confirmed</span>
                                             @else
-                                                <span class="badge text-bg-info">Awating Confirmation</span>
+                                                <span class="badge text-bg-info">Awaiting  Confirmation</span>
                                             @endif
                                             
                                             
