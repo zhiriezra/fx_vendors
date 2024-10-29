@@ -67,6 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/order/{order_id}/accept', [OrderController::class, 'accept']);
     Route::get('/order/{order_id}/decline', [OrderController::class, 'decline']);
     Route::get('/order/{order_id}/supplied', [OrderController::class, 'supplied']);
+    Route::get('/orders/pending', [OrderController::class, 'pendingOrders']);
+    Route::get('/orders/accepted', [OrderController::class, 'acceptedOrders']);
+    Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
+    Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
+
 
     // Wallet
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
@@ -78,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders-pending', [StatsController::class, 'pending']);
     Route::get('/orders-accepted', [StatsController::class, 'accepted']);
     Route::get('/orders-total', [StatsController::class, 'total']);
+
+    //This should replace the above four request
+    Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
 
 
 });
