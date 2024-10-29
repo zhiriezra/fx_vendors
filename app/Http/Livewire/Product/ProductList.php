@@ -54,9 +54,6 @@ class ProductList extends Component
                     ->orWhere('manufacturer', 'like', '%' . $this->search . '%')
                     ->orWhereHas('category', function($search) {
                         $search->where('name', 'like', '%' . $this->search . '%');
-                    })
-                    ->orWhereHas('subcategory', function($search) {
-                        $search->where('name', 'like', '%' . $this->search . '%');
                     });
             })->paginate(20); 
 
