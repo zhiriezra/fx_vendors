@@ -1,9 +1,38 @@
 <div class="card-body pt-3">
     <div class="table-responsive">
+      
         <div class="datatable-top">
-            <button wire:click="exportExcel" class="btn btn-light-primary mb-1 btn-sm csv">Export Excel</button>
+          <div class="next d-flex align-items-center">
+            <button wire:click="exportExcel" class="btn btn-light-primary mb-1 btn-sm csv">
+                <span wire:loading.remove wire:target="exportExcel">Export Excel</span>
+                <span wire:loading wire:target="exportExcel">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Exporting...
+                </span>
+            </button>
+          </div>
             <div class="datatable-search">
-                <input wire:model.live="search" class="datatable-input" placeholder="Search..." type="search" title="Search within table" aria-controls="pc-dt-satetime-sorting">
+                <!-- Search Loader start -->
+            <div class="position-relative">
+              <input 
+                  wire:model.live="search" 
+                  class="datatable-input pe-5" 
+                  placeholder="Search..." 
+                  type="search" 
+                  title="Search within table" 
+                  aria-controls="pc-dt-satetime-sorting"
+              >
+              <div 
+                  wire:loading 
+                  wire:target="search" 
+                  class="position-absolute top-50 end-0 translate-middle-y me-2"
+              >
+                  <div class="spinner-border spinner-border-sm text-primary" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                  </div>
+              </div>
+          </div>
+          <!-- Search Loader Ends -->
             </div>
         </div>
         
