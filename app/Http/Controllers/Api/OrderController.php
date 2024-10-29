@@ -28,6 +28,21 @@ class OrderController extends Controller
         }
     }
 
+    public function pendingOrders()
+    {
+        $vendorId = auth()->user()->vendor->id;
+
+        $pending_orders = Order::where('status', 'pending')->whereHas('product', function($query) use ($vendorId) {
+            $query->where('vendor_id', $vendorId);
+        })->get();
+
+        if($pending_orders){
+            return response()->json(['status' => true, 'message' => "List of pending orders.", 'data' => ['order' => $pending_orders]], 200);
+        }
+
+        return response()->json([ 'status' => false, 'message' => "No pending orders found!"], 500);
+    }
+
     public function accept($order_id)
     {
         $order = Order::with('product')->find($order_id);
@@ -41,6 +56,21 @@ class OrderController extends Controller
         }
 
         return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
+    }
+
+    public function acceptedOrders()
+    {
+        $vendorId = auth()->user()->vendor->id;
+
+        $accepted_orders = Order::where('status', 'accepted')->whereHas('product', function($query) use ($vendorId) {
+            $query->where('vendor_id', $vendorId);
+        })->get();
+
+        if($accepted_orders){
+            return response()->json(['status' => true, 'message' => "List of accepted orders.", 'data' => ['order' => $accepted_orders]], 200);
+        }
+
+        return response()->json([ 'status' => false, 'message' => "No accepted orders found!"], 500);
     }
 
     public function decline($order_id)
@@ -58,6 +88,21 @@ class OrderController extends Controller
         return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
     }
 
+    public function declinedOrders()
+    {
+        $vendorId = auth()->user()->vendor->id;
+
+        $declined_orders = Order::where('status', 'declined')->whereHas('product', function($query) use ($vendorId) {
+            $query->where('vendor_id', $vendorId);
+        })->get();
+
+        if($declined_orders){
+            return response()->json(['status' => true, 'message' => "List of declined orders.", 'data' => ['order' => $declined_orders]], 200);
+        }
+
+        return response()->json([ 'status' => false, 'message' => "No declined orders found!"], 500);
+    }
+
     public function supplied($order_id)
     {
         $order = Order::with('product')->find($order_id);
@@ -71,6 +116,21 @@ class OrderController extends Controller
         }
 
         return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
+    }
+
+    public function suppliedOrders()
+    {
+        $vendorId = auth()->user()->vendor->id;
+
+        $supplied_orders = Order::where('status', 'supplied')->whereHas('product', function($query) use ($vendorId) {
+            $query->where('vendor_id', $vendorId);
+        })->get();
+
+        if($supplied_orders){
+            return response()->json(['status' => true, 'message' => "List of supplied orders.", 'data' => ['order' => $supplied_orders]], 200);
+        }
+
+        return response()->json([ 'status' => false, 'message' => "No supplied orders found!"], 500);
     }
 
     /**
