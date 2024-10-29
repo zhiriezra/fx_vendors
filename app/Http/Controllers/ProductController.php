@@ -59,9 +59,9 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = Product::find($id); 
+        $product = Product::find($id);
         $productImage = ProductImage::where('product_id', $product->id)->get();
-     
+
         return view('products.show', compact('product', 'productImage'));
     }
 
@@ -73,7 +73,7 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $product_data = Product::find($id); 
+        $product_data = Product::find($id);
         return view('products.edit', compact('product_data'));
     }
 
