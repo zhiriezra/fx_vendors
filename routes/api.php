@@ -84,5 +84,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders-accepted', [StatsController::class, 'accepted']);
     Route::get('/orders-total', [StatsController::class, 'total']);
 
+    //This should replace the above four request
+    Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
+
 
 });
