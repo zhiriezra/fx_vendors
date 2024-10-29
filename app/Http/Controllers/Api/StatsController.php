@@ -65,4 +65,50 @@ class StatsController extends Controller
 
         return response()->json(['status' => false, 'message' => 'Vendor not found']);
     }
+
+    //This should replace the above. One end point for all request should be better
+
+    public function dashboardStats()
+    {
+        $vendor = auth()->user()->vendor;
+
+        if ($vendor) {
+
+            $products = $vendor->products()
+                ->withCount([
+                    'orders as confirmed_orders_count' => function ($query) {
+                        $query->where('status', 'confirmed');
+                    },
+                    'orders as pending_orders_count' => function ($query) {
+                        $query->where('status', 'pending');
+                    },
+                    'orders as accepted_orders_count' => function ($query) {
+                        $query->where('status', 'accepted');
+                    },
+                    'orders'
+                ])
+                ->get();
+
+
+            $totalConfirmedOrders = $products->sum('confirmed_orders_count');
+            $totalPendingOrders = $products->sum('pending_orders_count');
+            $totalAcceptedOrders = $products->sum('accepted_orders_count');
+            $totalOrders = $products->sum('orders_count');
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Categories of Orders',
+                'data' => [
+                    'totalConfirmedOrders' => $totalConfirmedOrders,
+                    'totalPendingOrders' => $totalPendingOrders,
+                    'totalAcceptedOrders' => $totalAcceptedOrders,
+                    'total_orders' => $totalOrders
+                ]
+            ]);
+        }
+
+        return response()->json(['status' => false, 'message' => 'Vendor not found']);
+    }
+
+
 }
