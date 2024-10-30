@@ -100,9 +100,9 @@ class ProductController extends Controller
             $data = [
                 'id' => $product->id,
                 'image' => $image->image_path,
-                'category_id' => $product->category_id,
-                'sub_category_id' => $product->sub_category_id,
-                'vendor_id' => $product->vendor_id,
+                'category' => $product->category->name,
+                'sub_category' => $product->subcategory->name,
+                'vendor' => $product->vendor->business_name,
                 'type' => $product->type,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
