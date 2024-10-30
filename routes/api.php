@@ -79,12 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
 
     // Dashboard stats
-    Route::get('/orders-supplied', [StatsController::class, 'supplied']);
-    Route::get('/orders-pending', [StatsController::class, 'pending']);
-    Route::get('/orders-accepted', [StatsController::class, 'accepted']);
-    Route::get('/orders-total', [StatsController::class, 'total']);
-
-    //This should replace the above four request
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
 
 
