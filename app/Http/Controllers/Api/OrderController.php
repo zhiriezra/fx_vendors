@@ -91,7 +91,7 @@ class OrderController extends Controller
 
         }
 
-        return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
+        return response()->json([ 'status' => false, 'message' => "order not found"], 404);
     }
 
     public function acceptedOrders()
@@ -147,7 +147,7 @@ class OrderController extends Controller
 
         }
 
-        return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
+        return response()->json([ 'status' => false, 'message' => "Order not found!"], 400);
     }
 
     public function declinedOrders()
@@ -201,7 +201,7 @@ class OrderController extends Controller
 
         }
 
-        return response()->json([ 'status' => false, 'message' => "Something went wrong!"], 500);
+        return response()->json([ 'status' => false, 'message' => "Order not found!"], 400);
     }
 
     public function suppliedOrders()
