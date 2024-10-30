@@ -13,7 +13,7 @@ class WalletController extends Controller
     public function getBalance(Request $request){
         $balance = $request->user()->balance;
 
-        return response()->json(['status' => true, 'message' => 'User wallet balance', 'data' =>['data' => $balance]], 200);
+        return response()->json(['status' => true, 'message' => 'User wallet balance', 'data' =>['balance' => $balance]], 200);
     }
 
     public function requestWithdrawal(Request $request){
