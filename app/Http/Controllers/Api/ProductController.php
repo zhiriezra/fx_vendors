@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Storage;
 // Image Intervention
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -87,24 +87,13 @@ class ProductController extends Controller
             $imagePath = $image->storeAs('product_images', $imageName, 'public');
 
             // Store image path or URL in the database if needed
-            $image = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => env('APP_URL').'/'.$imagePath]);
+            $image = ProductImage::create([
+                'product_id' => $product->id,
+                'image_path' => env('APP_URL').Storage::url($imagePath)
+            ]);
 
         }
 
-        // if($request->file('images')) {
-        //     $manager = new ImageManager(new Driver());
-        //     $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
-        //     $img = $manager->read($request->file('images'));
-        //     $img = $img->resize(370,246);
-
-        //     $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-        //     $save_url = env('APP_URL').'/'.'product_images/'.$name_gen;
-
-            // Save image path to the database
-        //     ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
-        // }
-
-        // $image = ProductImage::where('product_id', $product->id)->first();
 
         if($product){
 
