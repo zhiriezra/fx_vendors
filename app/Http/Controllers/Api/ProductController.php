@@ -80,8 +80,42 @@ class ProductController extends Controller
 
         ]);
 
+        if($request->file('images')) {
+            $manager = new ImageManager(new Driver());
+            $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
+            $img = $manager->read($request->file('images'));
+            $img = $img->resize(370,246);
+
+            $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
+            $save_url = env('APP_URL').'/'.'product_images/'.$name_gen;
+
+            // Save image path to the database
+            ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
+        }
+
+        $image = ProductImage::where('product_id', $product->id)->first();
+
         if($product){
-            return response()->json(['status' => true, 'message' => "Product Created Successfully", "data" => ["product" => $product]], 200);
+
+            $data = [
+                'id' => $product->id,
+                'image' => $image->image_path,
+                'category_id' => $product->category_id,
+                'sub_category_id' => $product->sub_category_id,
+                'vendor_id' => $product->vendor_id,
+                'type' => $product->type,
+                'manufacturer' => $product->manufacturer,
+                'name' => $product->name,
+                'batch_number' => $product->batch_number,
+                'quantity' => $product->quantity,
+                'agent_price' => $product->agent_price,
+                'description' => $product->description,
+                'stock_date' => $product->stock_date,
+                'created_at' => $product->created_at,
+                'updated_at' => $product->updated_at
+            ];
+
+            return response()->json(['status' => true, 'message' => "Product Created Successfully", "data" => ["product" => $data]], 200);
         }else{
 
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
