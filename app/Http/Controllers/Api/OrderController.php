@@ -19,8 +19,19 @@ class OrderController extends Controller
     public function index($vendor_id)
     {
         $user = auth()->user();
-        $orders = $user->vendor->orders()->with(['product', 'agent.user'])->get();
-
+        $orders = $user->vendor->orders()->with(['product', 'agent.user'])->get()->map(function($order){
+            return [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
+        });
         if($orders){
             return response()->json(['status' => true, 'message' => 'My Orders list', 'data' => ['orders' => $orders, 'total' => $orders->count()]], 200);
         }else{
@@ -32,12 +43,24 @@ class OrderController extends Controller
     {
         $vendorId = auth()->user()->vendor->id;
 
-        $pending_orders = Order::where('status', 'pending')->whereHas('product', function($query) use ($vendorId) {
+        $orders = Order::where('status', 'pending')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get();
+        })->get()->map(function($order){
+            return [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
+        });
 
-        if($pending_orders){
-            return response()->json(['status' => true, 'message' => "List of pending orders.", 'data' => ['order' => $pending_orders]], 200);
+        if($orders){
+            return response()->json(['status' => true, 'message' => "List of pending orders.", 'data' => ['order' => $orders]], 200);
         }
 
         return response()->json([ 'status' => false, 'message' => "No pending orders found!"], 500);
@@ -51,6 +74,19 @@ class OrderController extends Controller
 
             $order->status = 'accepted';
             $order->save();
+
+            $order = [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
+
             return response()->json(['status' => true, 'message' => "Order accepted.", 'data' => ['order' => $order]], 200);
 
         }
@@ -62,12 +98,25 @@ class OrderController extends Controller
     {
         $vendorId = auth()->user()->vendor->id;
 
-        $accepted_orders = Order::where('status', 'accepted')->whereHas('product', function($query) use ($vendorId) {
+        $orders = Order::where('status', 'accepted')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get();
+        })->get()
+        ->map(function($order){
+            return [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
+        });
 
-        if($accepted_orders){
-            return response()->json(['status' => true, 'message' => "List of accepted orders.", 'data' => ['order' => $accepted_orders]], 200);
+        if($orders){
+            return response()->json(['status' => true, 'message' => "List of accepted orders.", 'data' => ['order' => $orders]], 200);
         }
 
         return response()->json([ 'status' => false, 'message' => "No accepted orders found!"], 500);
@@ -81,6 +130,19 @@ class OrderController extends Controller
 
             $order->status = 'declined';
             $order->save();
+
+            $order = [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
+
             return response()->json(['status' => true, 'message' => "Order declined.", 'data' => ['order' => $order]], 200);
 
         }
@@ -92,12 +154,24 @@ class OrderController extends Controller
     {
         $vendorId = auth()->user()->vendor->id;
 
-        $declined_orders = Order::where('status', 'declined')->whereHas('product', function($query) use ($vendorId) {
+        $orders = Order::where('status', 'declined')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get();
+        })->get()->map(function($order){
+            return [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
+        });
 
-        if($declined_orders){
-            return response()->json(['status' => true, 'message' => "List of declined orders.", 'data' => ['order' => $declined_orders]], 200);
+        if($orders){
+            return response()->json(['status' => true, 'message' => "List of declined orders.", 'data' => ['order' => $orders]], 200);
         }
 
         return response()->json([ 'status' => false, 'message' => "No declined orders found!"], 500);
@@ -111,6 +185,18 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
+
+            $order = [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
             return response()->json(['status' => true, 'message' => "Order supplied.", 'data' => ['order' => $order]], 200);
 
         }
@@ -122,25 +208,27 @@ class OrderController extends Controller
     {
         $vendorId = auth()->user()->vendor->id;
 
-        $supplied_orders = Order::where('status', 'supplied')->whereHas('product', function($query) use ($vendorId) {
+        $orders = Order::where('status', 'supplied')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get();
+        })->get()->map(function($order){
+            return [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => $order->created_at,
+                'updated_date' => $order->updated_at,
+                'status' => $order->status
+            ];
+        });
 
-        if($supplied_orders){
-            return response()->json(['status' => true, 'message' => "List of supplied orders.", 'data' => ['order' => $supplied_orders]], 200);
+        if($orders){
+            return response()->json(['status' => true, 'message' => "List of supplied orders.", 'data' => ['order' => $orders]], 200);
         }
 
         return response()->json([ 'status' => false, 'message' => "No supplied orders found!"], 500);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }
