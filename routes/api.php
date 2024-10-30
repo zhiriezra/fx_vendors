@@ -63,7 +63,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/category/request', [ProductController::class, 'CatRequest'])->name('CatRequest');
 
     //Orders
-    Route::get('/orders/{vendor_id}', [OrderController::class, 'index']);
     Route::get('/order/{order_id}/accept', [OrderController::class, 'accept']);
     Route::get('/order/{order_id}/decline', [OrderController::class, 'decline']);
     Route::get('/order/{order_id}/supplied', [OrderController::class, 'supplied']);
@@ -71,6 +70,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/accepted', [OrderController::class, 'acceptedOrders']);
     Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
     Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
+    Route::get('/orders/{vendor_id}', [OrderController::class, 'index']);
+
 
 
     // Wallet

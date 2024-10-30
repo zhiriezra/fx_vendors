@@ -94,7 +94,6 @@ class ProductController extends Controller
 
         }
 
-
         if($product){
 
             $data = [
