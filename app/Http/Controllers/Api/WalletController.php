@@ -52,7 +52,7 @@ class WalletController extends Controller
 
     }
 
-    public function withdrawalRequests(Request $request){
+    public function withdrawalRequests(){
         $payoutRequests = PayoutRequest::where('vendor_id', auth()->user()->vendor->id)->get();
 
         return response()->json(['status' => true, 'message' => 'Withdrawal requests', 'data' => ['requests' => $payoutRequests]], 200);
