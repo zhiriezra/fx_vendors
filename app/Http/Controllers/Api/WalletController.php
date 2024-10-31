@@ -28,7 +28,7 @@ class WalletController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
         }
 
-        $todayWithdrawal = PayoutRequest::where('vendor_id', auth()->user()->vendor->id)->whereDate('created_at', Carbon::today())->exists();
+        $todayWithdrawal = PayoutRequest::where(['vendor_id' => auth()->user()->vendor->id, 'status' => 'pending'])->whereDate('created_at', Carbon::today())->exists();
 
         if($todayWithdrawal) {
             return response()->json(['status' => false, 'message' => 'You have a pending withdrawal request today.'], 400);
@@ -41,7 +41,7 @@ class WalletController extends Controller
             ]);
 
             if($payoutRequest){
-                return response()->json(['status' => true, 'message' => 'Withdrawal request successful, funds will be disbursed within 24 hours', 'data' => ['Withdrawal' => $payoutRequest]], 200);
+                return response()->json(['status' => true, 'message' => 'Withdrawal request successful, funds will be disbursed within 24 hours', 'data' => ['withdrawal_request' => $payoutRequest]], 200);
             }
 
             return response()->json(['status' => false, 'message' => 'There was an error processing your withdrawal, please try again'], 400);
