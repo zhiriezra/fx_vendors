@@ -10,9 +10,9 @@
                 <h4 class="f-w-500 mb-1">Reset your password</h4>
                 {{-- <p class="mb-3">Don't have an Account? <a href="../pages/register-v2.html" class="link-primary ms-1">Create Account</a></p> --}}
 
-                @if (session()->has('message'))
+                @if (session()->has('status'))
                     <div class="alert alert-success">
-                        {{ session('message') }}
+                        {{ session('status') }}
                     </div>
                 @endif
 
