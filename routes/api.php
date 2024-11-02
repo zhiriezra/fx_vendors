@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload-profile-image', [AuthController::class, 'uploadProfileImage']);
     Route::post('/upload-signature', [AuthController::class, 'uploadSignature']);
     Route::post('/update-password', [AuthController::class, 'changePassword']);
+    Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
+
 
 
     Route::post('/logout', [AuthController::class, 'logout']);
