@@ -18,7 +18,7 @@ class NotificationController extends Controller
         $user->fcm_token = $request->fcm_token;
         $user->save();
 
-        return response()->json(['status' => true, 'message' => 'success', 'fcm_token' => $user->fcm_token], 200);
+        return response()->json(['status' => true, 'message' => 'success', 'data' => ['fcm_token' => $user->fcm_token]], 200);
 
     }
 

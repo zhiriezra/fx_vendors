@@ -163,7 +163,7 @@ class AuthController extends Controller
             $user->profile_image = env('APP_URL').'/'.$imagePath;
             $user->save();
 
-            return response()->json(['status'=> true, 'message' => 'Profile image uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)] ], 200);
+            return response()->json(['status'=> true, 'message' => 'Profile image uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)]], 200);
         }
 
     }
