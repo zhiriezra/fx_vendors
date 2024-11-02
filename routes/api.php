@@ -41,6 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profile Image and Signature upload
     Route::post('/upload-profile-image', [AuthController::class, 'uploadProfileImage']);
     Route::post('/upload-signature', [AuthController::class, 'uploadSignature']);
+    Route::post('/update-password', [AuthController::class, 'changePassword']);
+
 
     Route::post('/logout', [AuthController::class, 'logout']);
 

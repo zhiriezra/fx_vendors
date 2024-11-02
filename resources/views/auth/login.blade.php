@@ -30,9 +30,16 @@
                     <h4 class="f-w-500 mb-1">Vendor login</h4>
                     <p class="mb-3">Don't have an Account? <a href="{{ route('register')}} " class="link-primary">Register</a></p>
                 </div>
-                
+
 
                 <div class="card-body">
+
+                    @if(session('status'))
+                        <div class="alert alert-success">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
@@ -64,7 +71,7 @@
                                     <h6 class="text-secondary f-w-400 mb-0">Forgot Password?</h6>
                                 </a>
                             @endif
-                            
+
                         </div>
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-primary">Login</button>
