@@ -210,7 +210,7 @@ class AuthController extends Controller
             return response()->json(['status' => true, 'message' => __($status)], 200);
         }
 
-        return response()->json(['status' => false, 'message' => trans($status)], 200);
+        return response()->json(['status' => false, 'message' => trans($status)], 400);
 
     }
 
