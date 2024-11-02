@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Auth;
@@ -27,8 +28,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
         });
@@ -53,8 +54,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
         });
@@ -82,8 +83,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
 
@@ -109,8 +110,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
         });
@@ -138,8 +139,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
 
@@ -164,8 +165,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
         });
@@ -193,8 +194,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
             return response()->json(['status' => true, 'message' => "Order supplied.", 'data' => ['order' => $order]], 200);
@@ -218,8 +219,8 @@ class OrderController extends Controller
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
-                'created_date' => $order->created_at,
-                'updated_date' => $order->updated_at,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
             ];
         });

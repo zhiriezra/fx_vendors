@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductImage;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -25,8 +26,29 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::where('vendor_id', Auth::user()->vendor->id)->get();
-
+        $products = auth()->user()->vendor->products->map(function($product){
+            return [
+                'id' => $product->id,
+                'category_id' => $product->category->id,
+                'category' => $product->category->name,
+                'sub_category_id' => $product->subcategory->id,
+                'sub_category' => $product->subcategory->name,
+                'vendor_id' => $product->vendor_id,
+                'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+                'type' => $product->type,
+                'manufacturer' => $product->manufacturer,
+                'name' => $product->name,
+                'images' => $product->images() ? optional($product->images()->first())->image_path : null,
+                'batch_number' => $product->batch_number,
+                'quantity' => $product->quantity,
+                'unit_price' => $product->unit_price,
+                'agent_price' => $product->agent_price,
+                'description' => $product->description,
+                'stock_date' => $product->stock_date,
+                'created_at' => Carbon::parse($product->created_at)->format('M j, Y, g:ia'),
+                'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
+            ];
+        });
         if($products){
             return response()->json(['status' => true, 'message' => 'Product list', 'data' => ['products' => $products]], 200);
         }else{
@@ -83,7 +105,7 @@ class ProductController extends Controller
         if ($request->file('images')) {
 
             $image = $request->file('images');
-            $imageName = time() . '_' . $image->getClientOriginalName();
+            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
             $imagePath = $image->storeAs('product_images', $imageName, 'public');
 
             // Store image path or URL in the database if needed
@@ -126,7 +148,7 @@ class ProductController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'product_id' => 'required',
-            'images.*' => 'image|max:2048'
+            'images' => 'required|image|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -134,21 +156,34 @@ class ProductController extends Controller
         }
 
         if($request->file('images')) {
-            $manager = new ImageManager(new Driver());
-            $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
-            $img = $manager->read($request->file('images'));
-            $img = $img->resize(370,246);
 
-            $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-            $save_url = 'product_images/'.$name_gen;
+            $image = $request->file('images');
+            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
+            $imagePath = $image->storeAs('product_images', $imageName, 'public');
 
-            // Save image path to the database
-            $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
-        }
-        if($productImage){
-            return response()->json(['status' => true, 'message' => "Image Added Successfully", 'data' => ['image' => $save_url]], 200);
-        }else{
-            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
+            // Store image path or URL in the database if needed
+            $productImage = ProductImage::create([
+                'product_id' => $request->product_id,
+                'image_path' => env('APP_URL').Storage::url($imagePath)
+            ]);
+
+            // $manager = new ImageManager(new Driver());
+            // $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
+            // $img = $manager->read($request->file('images'));
+            // $img = $img->resize(370,246);
+
+            // $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
+            // $save_url = 'product_images/'.$name_gen;
+
+            // // Save image path to the database
+            // $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
+
+            if($productImage){
+                return response()->json(['status' => true, 'message' => "Image Added Successfully", 'data' => ['image' => $productImage->image_path]], 200);
+            }else{
+                return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
+            }
+
         }
 
     }
@@ -182,12 +217,38 @@ class ProductController extends Controller
         $product = Product::with('product_images')->find($id);
 
         if($product){
+            $product = [
+                'id' => $product->id,
+                'category_id' => $product->category->id,
+                'category' => $product->category->name,
+                'sub_category_id' => $product->subcategory->id,
+                'sub_category' => $product->subcategory->name,
+                'vendor_id' => $product->vendor_id,
+                'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+                'type' => $product->type,
+                'manufacturer' => $product->manufacturer,
+                'name' => $product->name,
+                'first_image' => $product->images() ? optional($product->images()->first())->image_path : null,
+                'images' => $product->images()->get()->map(function($image){
+                    return [
+                        'id' => $image->id,
+                        'image_path' => $image->image_path,
+                    ];
+                }),
+                'batch_number' => $product->batch_number,
+                'quantity' => $product->quantity,
+                'unit_price' => $product->unit_price,
+                'agent_price' => $product->agent_price,
+                'description' => $product->description,
+                'stock_date' => $product->stock_date,
+                'created_at' => Carbon::parse($product->created_at)->format('M j, Y, g:ia'),
+                'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
+            ];
 
             return response()->json(['status' => true, 'message' => "Product detail", "data" => ['product' => $product]], 200);
 
         }else{
             return response()->json(['status' => 404, 'message' => "Product Not Found!"], 404);
-
         }
     }
 
@@ -200,7 +261,6 @@ class ProductController extends Controller
      */
     public function update(Request $request)
     {
-
 
         $validator = Validator::make($request->all(), [
             'product_id' => 'required',
