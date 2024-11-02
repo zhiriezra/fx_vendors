@@ -210,9 +210,8 @@ class AuthController extends Controller
             return response()->json(['status' => true, 'message' => __($status)], 200);
         }
 
-        throw ValidationException::withMessages([
-            'email' => [trans($status)]
-        ]);
+        return response()->json(['status' => false, 'message' => trans($status)], 200);
+
     }
 
     public function changePassword(Request $request){
