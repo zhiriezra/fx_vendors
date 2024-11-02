@@ -76,8 +76,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Wallet
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
-    Route::post('/withdrawal-request', [WalletController::class, 'requestWithdrawal']);
+    Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
     Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
+
+    Route::get('/recent-transactions', [WalletController::class, 'transactions']);
 
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
