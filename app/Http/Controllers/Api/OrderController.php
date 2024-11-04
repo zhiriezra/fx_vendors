@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Exports\OrdersExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 use Illuminate\Support\Facades\Auth;
 
@@ -230,6 +232,24 @@ class OrderController extends Controller
         }
 
         return response()->json([ 'status' => false, 'message' => "No supplied orders found!"], 500);
+    }
+
+    //Export user Orders 
+    public function exportOrder()
+    {
+        $fileName = 'orders_' . date('Y-m-d_H-i-s') . '.xlsx';
+        
+        return Excel::download(new OrdersExport, $fileName);
+
+        // $fileName = 'orders_' . date('Y-m-d') . '.xlsx';
+        // Excel::store(new OrdersExport, $fileName, 'public');
+        
+        // return response()->json([
+        //     'success' => true,
+        //     'file' => url('storage/' . $fileName),
+        //     'message' => 'Export generated successfully'
+        // ]);
+        
     }
 
 }
