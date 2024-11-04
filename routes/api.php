@@ -61,6 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/product/{id}/delete', [ProductController::class, 'destroy']);
     // Product end
 
+    //Export Products
+    Route::get('products/export', [ProductController::class, 'export'])
+    ->name('product.export');
+
     // category request
     Route::get('/product-categories', [ProductController::class, 'categories']);
     Route::get('/product-category/{id}', [ProductController::class, 'category']);
@@ -76,6 +80,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
     Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
     Route::get('/orders/{vendor_id}', [OrderController::class, 'index']);
+
+    //Export User Orders
+    Route::get('order/export', [OrderController::class, 'exportOrder'])
+    ->name('order.export');
 
 
 

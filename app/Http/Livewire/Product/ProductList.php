@@ -40,7 +40,9 @@ class ProductList extends Component
 
     public function exportExcel()
     {
-        return Excel::download(new ProductsExport, 'products.xlsx');
+        $date = date('Y-m-d');
+        $fileName = "products_{$date}.xlsx";
+        return Excel::download(new ProductsExport, $fileName);
     }
 
     public function render()
