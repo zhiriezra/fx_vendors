@@ -85,14 +85,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('order/export', [OrderController::class, 'exportOrder'])
     ->name('order.export');
 
-
-
     // Wallet
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
     Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
 
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
+
+    //transactions Export 
+    Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
 
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
