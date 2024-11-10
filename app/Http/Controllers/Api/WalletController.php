@@ -7,6 +7,8 @@ use App\Models\PayoutRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\TransactionsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class WalletController extends Controller
 {
@@ -92,5 +94,13 @@ class WalletController extends Controller
         });
         return response()->json(['status' => true, 'message' => 'My recent transactions', 'data' => ['transactions' => $transactions]], 200);
 
+    }
+
+    public function exportTransactions()
+    {
+        $date = date('Y-m-d');
+        $fileName = "transactions_{$date}.xlsx";
+
+        return Excel::download(new TransactionsExport, $fileName);
     }
 }
