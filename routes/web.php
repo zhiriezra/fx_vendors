@@ -55,10 +55,12 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/orders/pending', [OrderController::class, 'pending'])->name('orders.pending');
         Route::get('/orders/accepted', [OrderController::class, 'accepted'])->name('orders.accepted');
         Route::get('/orders/supplied', [OrderController::class, 'supplied'])->name('orders.supplied');
+        //export orders
+        Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
         
-
         // Wallet routes
         Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+
     });
 
 
