@@ -6,6 +6,8 @@ use Livewire\Component;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\OrdersExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VendorOrders extends Component
 {
@@ -50,6 +52,14 @@ class VendorOrders extends Component
 
         // Refresh orders
         $this->mount();
+    }
+
+    //Export user Orders 
+    public function export()
+    {
+        $fileName = 'orders_' . date('Y-m-d_H-i-s') . '.xlsx';
+        
+        return Excel::download(new OrdersExport, $fileName);
     }
 
     public function render()

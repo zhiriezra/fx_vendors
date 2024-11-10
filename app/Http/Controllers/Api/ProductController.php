@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use PDO;
+use App\Exports\ProductsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -55,6 +57,14 @@ class ProductController extends Controller
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
 
+    }
+
+    //Export user products 
+    public function export()
+    {
+        $fileName = 'products_' . date('Y-m-d_H-i-s') . '.xlsx';
+        
+        return Excel::download(new ProductsExport, $fileName);  
     }
 
     /**
