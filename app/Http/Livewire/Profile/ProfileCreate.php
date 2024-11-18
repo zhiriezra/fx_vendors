@@ -86,7 +86,7 @@ class ProfileCreate extends Component
             'gender' => 'required',
             'marital_status' => 'required',
             'identification_mode' => 'required',
-            'identification_no' => 'required',
+            'identification_no' => 'required|digits:11',
             'state_id' => 'required|exists:states,id',
             'lga_id' => 'required|exists:lgas,id',
             'current_location' => 'required',
@@ -102,8 +102,8 @@ class ProfileCreate extends Component
             'registration_no' => 'required',
             'bank' => 'required',
             'account_name' => 'required',
-            'account_no' => 'required',
-            'tin' => 'required',
+            'account_no' => 'required|numeric|digits:10',
+            'tin' => 'required|digits:11',
             'profile_image' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048'
                
         ]);
