@@ -14,7 +14,7 @@ class VendorsController extends Controller
 
         $validator = Validator::make($request->all(), [
             'identification_mode' => 'required',
-            'identification_no' => 'required|digits:10',
+            'identification_no' => 'required|digits:11',
             'dob' => 'required',
             'gender' => 'required',
             'marital_status' => 'required',
