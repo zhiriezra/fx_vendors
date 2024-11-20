@@ -11,8 +11,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use PDO;
+
+use function PHPSTORM_META\map;
 
 class AuthController extends Controller
 {
@@ -30,8 +33,15 @@ class AuthController extends Controller
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
             'middlename' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:users,email,except,id',
-            'phone' => 'required|digits:11|unique:users,phone,except,id',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($request->id ?? null),
+            ],
+            'phone' => [
+                'required',
+                Rule::unique('users', 'phone')->ignore($request->id ?? null),
+            ],
             'password' => 'required|min:4',
         ]);
 
@@ -39,18 +49,26 @@ class AuthController extends Controller
             return response()->json(['status' => false, 'message' =>  $validator->errors()->first()], 422);
         }
 
-        $user = User::create([
-            'user_type_id' => 2,
-            'firstname' => $request->firstname,
-            'middlename' => $request->middlename,
-            'lastname' => $request->lastname,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
+        $user = User::updateOrCreate(
+            [
+                'id' => $request->id
+            ],
+            [
+                'user_type_id' => 2,
+                'firstname' => $request->firstname,
+                'middlename' => $request->middlename,
+                'lastname' => $request->lastname,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+            ]
 
-        ]);
+        );
 
         if($user){
+            if($request->id){
+                return response()->json(['status' => true, 'message' => 'Successfully updated user!', 'data' => ['user' => $user]], 200);
+            }
             return response()->json(['status' => true, 'message' => 'Successfully created user!', 'data' => ['user' => $user, 'token' => $user->createToken('auth-token')->plainTextToken]], 200);
         }else{
             return response()->json(['status' => false, 'message' => 'Something went wrong, please try again'], 500);
