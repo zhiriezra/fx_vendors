@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaystackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
@@ -44,8 +45,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload-signature', [AuthController::class, 'uploadSignature']);
     Route::post('/update-password', [AuthController::class, 'changePassword']);
     Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
-
-
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
@@ -92,7 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
 
-    //transactions Export 
+    //transactions Export
     Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
 
     // Dashboard stats
@@ -100,3 +99,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 });
+Route::get('/banks', [StatsController::class, 'getBankList']);

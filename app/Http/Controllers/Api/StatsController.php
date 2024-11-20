@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bank;
 use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -88,5 +89,20 @@ class StatsController extends Controller
         return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
     }
 
+    public function getBankList(){
+
+        $banks = Bank::all();
+        $banks = $banks->map(function ($bank){
+            return [
+                'id' => $bank->id,
+                'name' => $bank->name,
+                'code' => $bank->code,
+                'country' => $bank->country,
+            ];
+        });
+
+        return response()->json(['status' => true, 'message' => 'Bank list', 'data' => $banks]);
+
+    }
 
 }
