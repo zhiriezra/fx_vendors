@@ -178,7 +178,7 @@ class AuthController extends Controller
 
             // Store image path or URL in the database if needed
             $user = User::find($request->user()->id);
-            $user->profile_image = env('APP_URL').'/'.$imagePath;
+            $user->profile_image = env('APP_URL').Storage::url($imagePath);
             $user->save();
 
             return response()->json(['status'=> true, 'message' => 'Profile image uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)]], 200);
@@ -204,7 +204,7 @@ class AuthController extends Controller
 
             // Store image path or URL in the database if needed
             $user = User::find($request->user()->id);
-            $user->signature = env('APP_URL').'/'.$imagePath;
+            $user->signature = env('APP_URL').Storage::url($imagePath);
             $user->profile_completed = 1;
             $user->save();
 
