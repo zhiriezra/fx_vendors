@@ -173,7 +173,7 @@ class AuthController extends Controller
         if ($request->file('profile_image')) {
 
             $image = $request->file('profile_image');
-            $imageName = time() . '_' . $image->getClientOriginalName();
+            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
             $imagePath = $image->storeAs('vendor_images', $imageName, 'public');
 
             // Store image path or URL in the database if needed
@@ -199,7 +199,7 @@ class AuthController extends Controller
         if ($request->file('signature')) {
 
             $image = $request->file('signature');
-            $imageName = time() . '_' . $image->getClientOriginalName();
+            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
             $imagePath = $image->storeAs('vendor_signatures', $imageName, 'public');
 
             // Store image path or URL in the database if needed

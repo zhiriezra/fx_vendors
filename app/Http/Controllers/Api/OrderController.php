@@ -22,11 +22,12 @@ class OrderController extends Controller
     public function index($vendor_id)
     {
         $user = auth()->user();
-        $orders = $user->vendor->orders()->with(['product', 'agent.user'])->get()->map(function($order){
+        $orders = $user->vendor->orders()->with(['product.product_images', 'agent.user'])->get()->map(function($order){
             return [
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
                 'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
@@ -53,6 +54,7 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
                 'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
@@ -82,6 +84,7 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
                 'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
@@ -108,6 +111,7 @@ class OrderController extends Controller
             return [
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'product_name' => $order->product->name,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
@@ -138,6 +142,7 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
                 'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
@@ -164,6 +169,7 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
                 'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
@@ -193,6 +199,7 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
                 'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
@@ -218,6 +225,7 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
                 'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
                 'agent_price' => $order->product->agent_price,
@@ -234,22 +242,22 @@ class OrderController extends Controller
         return response()->json([ 'status' => false, 'message' => "No supplied orders found!"], 500);
     }
 
-    //Export user Orders 
+    //Export user Orders
     public function exportOrder()
     {
         $fileName = 'orders_' . date('Y-m-d_H-i-s') . '.xlsx';
-        
+
         return Excel::download(new OrdersExport, $fileName);
 
         // $fileName = 'orders_' . date('Y-m-d') . '.xlsx';
         // Excel::store(new OrdersExport, $fileName, 'public');
-        
+
         // return response()->json([
         //     'success' => true,
         //     'file' => url('storage/' . $fileName),
         //     'message' => 'Export generated successfully'
         // ]);
-        
+
     }
 
 }
