@@ -32,7 +32,7 @@ class VendorsController extends Controller
             'bank' => 'required',
             'account_no' => 'required|numeric|digits:10',
             'account_name' => 'required',
-            'tin' => 'required|digits:11'
+            'tin' => 'digits:11'
 
         ]);
 
