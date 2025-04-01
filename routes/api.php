@@ -37,18 +37,21 @@ Route::get('/lgas', [LocationController::class, 'lgasList']);
 Route::get('/lga/{id}', [LocationController::class, 'lga']);
 
 Route::middleware('auth:sanctum')->group(function () {
-
+    // user routes start
     Route::get('/user', [AuthController::class, 'getUser']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/delete-account', [AuthController::class, 'delete']);
+    Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
+    // user routes end
 
-    // Profile Image and Signature upload
+    // routes to update profiles start
+    Route::post('/update-bio', [AuthController::class, 'updateBio']);
+    Route::post('/update-location', [AuthController::class, 'updateLocation']);
+    Route::post('/update-buisness', [AuthController::class, 'updateBusiness']);
+    Route::post('/update-password', [AuthController::class, 'changePassword']);
     Route::post('/upload-profile-image', [AuthController::class, 'uploadProfileImage']);
     Route::post('/upload-signature', [AuthController::class, 'uploadSignature']);
-    Route::post('/update-password', [AuthController::class, 'changePassword']);
-    Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
-
-    Route::post('/logout', [AuthController::class, 'logout']);
-
-    Route::post('update-business', [VendorsController::class, 'updateBusiness']);
+    // routes to update profiles end
 
     // Product start
     Route::post('/add-product', [ProductController::class, 'store']);
