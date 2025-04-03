@@ -16,7 +16,7 @@ class StatsController extends Controller
         $vendor = auth()->user()->vendor;
 
         if ($vendor) {
-
+            // Fetch products with order counts
             $products = $vendor->products()
                 ->withCount([
                     'orders as confirmed_orders_count' => function ($query) {
@@ -35,13 +35,14 @@ class StatsController extends Controller
                 ])
                 ->get();
 
-
+            // Calculate total order counts
             $totalConfirmedOrders = $products->sum('confirmed_orders_count');
             $totalSuppliedOrders = $products->sum('supplied_orders_count');
             $totalPendingOrders = $products->sum('pending_orders_count');
             $totalAcceptedOrders = $products->sum('accepted_orders_count');
             $totalOrders = $products->sum('orders_count');
-
+            
+            // Calculate total earnings
             $totalEarnings = Order::where('status', 'completed')->whereHas('product', function ($query){
                 $query->where('vendor_id', auth()->user()->vendor->id);
             })
@@ -53,7 +54,7 @@ class StatsController extends Controller
                 $totalEarnings = "0";
             };
 
-
+            // Calculate monthly earnings
             $currentMonth = Carbon::now()->month;
             $currentYear = Carbon::now()->year;
 
@@ -70,6 +71,14 @@ class StatsController extends Controller
                 $monthlyEarnings = "0";
             };
 
+            // Count low stock and out of stock products
+            $lowStockThreshold = 3; 
+            $outOfStockCount = $vendor->products()->where('quantity', 0)->count();
+            $lowStockCount = $vendor->products()->where('quantity', '>', 0)
+                ->where('quantity', '<=', $lowStockThreshold)
+                ->count();
+
+            // Return the response
             return response()->json([
                 'status' => true,
                 'message' => 'Vendor statistics',
@@ -81,28 +90,14 @@ class StatsController extends Controller
                     'total_orders' => $totalOrders,
                     'total_earnings' => $totalEarnings,
                     'monthly_earnings' => $monthlyEarnings,
-                    'total_products' => auth()->user()->vendor->products->count()
+                    'total_products' => auth()->user()->vendor->products->count(),
+                    'out_of_stock_products' => $outOfStockCount,
+                    'low_stock_products' => $lowStockCount,
                     ]
             ], 200);
         }
 
         return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
-    }
-
-    public function getBankList(){
-
-        $banks = Bank::all();
-        $banks = $banks->map(function ($bank){
-            return [
-                'id' => $bank->id,
-                'name' => $bank->name,
-                'code' => $bank->code,
-                'country' => $bank->country,
-            ];
-        });
-
-        return response()->json(['status' => true, 'message' => 'Bank list', 'data' => $banks]);
-
     }
 
 }
