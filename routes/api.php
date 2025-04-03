@@ -30,6 +30,8 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 Route::post('/verify-otp', [AuthController::class, 'verifyOTP']);
 
+// Locations list
+Route::get('/countries', [LocationController::class, 'countriesList']);
 Route::get('/states', [LocationController::class, 'statesList']);
 Route::get('/state/{id}', [LocationController::class, 'state']);
 
