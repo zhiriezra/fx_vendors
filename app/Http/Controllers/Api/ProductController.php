@@ -483,4 +483,32 @@ class ProductController extends Controller
             ]
         ], 200);
     }
+
+    public function inventoryBreakdown()
+    {
+        $vendor = auth()->user()->vendor;
+
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+
+        // Fetch inventory breakdown grouped by category
+        $inventoryBreakdown = $vendor->products()
+            ->selectRaw('
+                categories.name as category_name,
+                SUM(products.quantity) as total_quantity,
+                SUM(products.quantity * products.unit_price) as total_amount
+            ')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->groupBy('categories.name')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Inventory breakdown retrieved successfully',
+            'data' => [
+                'inventory_breakdown' => $inventoryBreakdown
+            ]
+        ], 200);
+    }
 }
