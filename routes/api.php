@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products-low-stock', [ProductController::class, 'lowStockProducts']);
     Route::get('/products-out-of-stock', [ProductController::class, 'outOfStockProducts']);
     Route::post('/product/restock', [ProductController::class, 'restockProduct']);
+    Route::get('/products/inventory-breakdown', [ProductController::class, 'inventoryBreakdown']);
     // Product end
 
     //Export Products
