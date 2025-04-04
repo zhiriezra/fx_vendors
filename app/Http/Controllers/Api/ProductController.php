@@ -37,7 +37,7 @@ class ProductController extends Controller
                 'sub_category' => $product->subcategory->name,
                 'vendor_id' => $product->vendor_id,
                 'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                'type' => $product->type,
+                'unit' => $product->unit,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
                 'images' => $product->images() ? optional($product->images()->first())->image_path : null,
@@ -77,15 +77,15 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'name' => 'required',
             'category_id' => 'required',
             'sub_category_id' => 'required',
-            'type' => 'required',
-            'manufacturer' => 'required',
-            'name' => 'required',
             'quantity' => 'required|integer',
+            'unit' => 'required|string',
             'unit_price' => 'required|numeric',
             'agent_price' => 'required|numeric',
             'description' => 'nullable',
+            'manufacturer' => 'required',
             'stock_date' => 'required|date',
             'images.*' => 'image|max:2048'
         ]);
@@ -99,11 +99,11 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'sub_category_id' => $request->sub_category_id,
             'vendor_id' => auth()->user()->vendor->id,
-            'type' => $request->type,
             'manufacturer' => $request->manufacturer,
             'name' => $request->name,
             'batch_number' => (string) Str::uuid(),
             'quantity' => $request->quantity,
+            'unit' => $request->unit,
             'unit_price' => $request->unit_price,
             'agent_price' => $request->agent_price,
             'description' => $request->description,
@@ -111,42 +111,11 @@ class ProductController extends Controller
             'stock_date' => $request->stock_date,
 
         ]);
-
-        if ($request->file('images')) {
-
-            $image = $request->file('images');
-            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
-            $imagePath = $image->storeAs('product_images', $imageName, 'public');
-
-            // Store image path or URL in the database if needed
-            $image = ProductImage::create([
-                'product_id' => $product->id,
-                'image_path' => env('APP_URL').Storage::url($imagePath)
-            ]);
-
-        }
+        
 
         if($product){
 
-            $data = [
-                'id' => $product->id,
-                'image' => $image->image_path,
-                'category' => $product->category->name,
-                'sub_category' => $product->subcategory->name,
-                'vendor' => $product->vendor->business_name,
-                'type' => $product->type,
-                'manufacturer' => $product->manufacturer,
-                'name' => $product->name,
-                'batch_number' => $product->batch_number,
-                'quantity' => $product->quantity,
-                'agent_price' => $product->agent_price,
-                'description' => $product->description,
-                'stock_date' => $product->stock_date,
-                'created_at' => $product->created_at,
-                'updated_at' => $product->updated_at
-            ];
-
-            return response()->json(['status' => true, 'message' => "Product Created Successfully", "data" => ["product" => $data]], 200);
+            return response()->json(['status' => true, 'message' => "Your product have been successfully uploaded", "data" => ["product" => $product]], 200);
         }else{
 
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
@@ -157,12 +126,19 @@ class ProductController extends Controller
     public function addImage(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required',
+            'product_id' => 'required|exists:products,id',
             'images' => 'required|image|max:2048'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        // Check the number of images already uploaded for the product
+        $ImagesCount = ProductImage::where('product_id', $request->product_id)->count();
+
+        if ($ImagesCount >= 5) {
+            return response()->json(['status' => false, 'message' => "Image must not be more than 5"], 422);
         }
 
         if($request->file('images')) {
@@ -189,7 +165,15 @@ class ProductController extends Controller
             // $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
 
             if($productImage){
-                return response()->json(['status' => true, 'message' => "Image Added Successfully", 'data' => ['image' => $productImage->image_path]], 200);
+                return response()->json([
+                    'status' => true, 
+                    'message' => "Image Added Successfully", 
+                    'data' => [
+                        'image' => $productImage->image_path,
+                        'ImagesCount' => $ImagesCount
+                        ]
+                    ], 
+                    200);
             }else{
                 return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
             }
@@ -235,7 +219,7 @@ class ProductController extends Controller
                 'sub_category' => $product->subcategory->name,
                 'vendor_id' => $product->vendor_id,
                 'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                'type' => $product->type,
+                'unit' => $product->unit,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
                 'first_image' => $product->images() ? optional($product->images()->first())->image_path : null,
@@ -255,7 +239,7 @@ class ProductController extends Controller
                 'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
             ];
 
-            return response()->json(['status' => true, 'message' => "Product detail", "data" => ['product' => $product]], 200);
+            return response()->json(['status' => true, 'message' => "Product details", "data" => ['product' => $product]], 200);
 
         }else{
             return response()->json(['status' => 404, 'message' => "Product Not Found!"], 404);
@@ -276,7 +260,7 @@ class ProductController extends Controller
             'product_id' => 'required',
             'category_id' => 'required',
             'sub_category_id' => 'required',
-            'type' => 'required',
+            'unit' => 'required|string',
             'manufacturer' => 'required',
             'name' => 'required',
             'quantity' => 'required|integer',
@@ -299,7 +283,7 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'sub_category_id' => $request->sub_category_id,
                 'vendor_id' => Auth::user()->vendor->id,
-                'type' => $request->type,
+                'unit' => $request->unit,
                 'manufacturer' => $request->manufacturer,
                 'name' => $request->name,
                 'quantity' => $request->quantity,
@@ -388,5 +372,115 @@ class ProductController extends Controller
         }
 
 
+    }
+
+    public function productStats() 
+    {
+        $vendor = Auth::user()->vendor;
+
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+
+        // product statistics
+        $products = $vendor->products()->selectRaw('
+            COUNT(*) as total_products,
+            SUM(quantity) as available_stocks,
+            SUM(quantity * unit_price) as product_value
+        ')->first();
+
+        // Return the response
+        return response()->json([
+            'status' => true,
+            'message' => 'Product statistics retrieved successfully',
+            'data' => [
+                'total_products' => $products->total_products ?? 0,
+                'available_stocks' => $products->available_stocks ?? 0,
+                'product_value' => $products->product_value ?? 0,
+            ]
+        ], 200);
+
+    }
+
+    public function lowStockProducts()
+    {
+        $vendor = auth()->user()->vendor;
+
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+
+        // Defining low stock threshold
+        $lowStockThreshold = 3;
+
+        // getting products with low stock
+        $lowStockProducts = $vendor->products()
+            ->where('quantity', '>', 0)
+            ->where('quantity', '<=', $lowStockThreshold)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Low stock products',
+            'data' => [
+                'low_stock_products' => $lowStockProducts
+            ]
+        ], 200);
+
+    }
+
+    public function outOfStockProducts()
+    {
+        $vendor = auth()->user()->vendor;
+    
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+    
+        // get products that are out of stock
+        $outOfStockProducts = $vendor->products()
+            ->where('quantity', 0)
+            ->get();
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'Out of stock products',
+            'data' => [
+                'out_of_stock_products' => $outOfStockProducts
+            ]
+        ], 200);
+    }
+
+    public function restockProduct(Request $request)
+    {
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        // Find the product
+        $product = Product::find($request->product_id);
+        
+        if (!$product) {
+            return response()->json(['status' => false, 'message' => 'Product not found'], 404);
+        }
+
+        // Update the product's quantity
+        $newQuantity = $product->quantity + $request->quantity;
+        $product->update(['quantity' => $newQuantity]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Your product has been successfully restocked',
+            'data' => [
+                'product' => $product,
+                'new_quantity' => $newQuantity
+            ]
+        ], 200);
     }
 }
