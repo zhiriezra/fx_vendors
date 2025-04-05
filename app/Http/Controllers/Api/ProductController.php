@@ -40,9 +40,9 @@ class ProductController extends Controller
                 'unit' => $product->unit,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
-                'images' => $product->images() ? optional($product->images()->first())->image_path : null,
                 'batch_number' => $product->batch_number,
                 'quantity' => $product->quantity,
+                'images' => $product->images() ? optional($product->images()->first())->image_path : null,
                 'unit_price' => $product->unit_price,
                 'agent_price' => $product->agent_price,
                 'description' => $product->description,
@@ -87,7 +87,6 @@ class ProductController extends Controller
             'description' => 'nullable',
             'manufacturer' => 'required',
             'stock_date' => 'required|date',
-            'images.*' => 'image|max:2048'
         ]);
 
 
@@ -153,24 +152,15 @@ class ProductController extends Controller
                 'image_path' => env('APP_URL').Storage::url($imagePath)
             ]);
 
-            // $manager = new ImageManager(new Driver());
-            // $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
-            // $img = $manager->read($request->file('images'));
-            // $img = $img->resize(370,246);
-
-            // $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-            // $save_url = 'product_images/'.$name_gen;
-
-            // // Save image path to the database
-            // $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
-
             if($productImage){
+                // Recalculate the image count after adding the new image
+                $updatedImagesCount = ProductImage::where('product_id', $request->product_id)->count();
                 return response()->json([
                     'status' => true, 
                     'message' => "Image Added Successfully", 
                     'data' => [
                         'image' => $productImage->image_path,
-                        'ImagesCount' => $ImagesCount
+                        'ImagesCount' => $updatedImagesCount
                         ]
                     ], 
                     200);
@@ -268,7 +258,6 @@ class ProductController extends Controller
             'agent_price' => 'required|numeric',
             'description' => 'nullable',
             'stock_date' => 'required|date',
-            'images.*' => 'image|max:2048'
         ]);
 
         if ($validator->fails()) {

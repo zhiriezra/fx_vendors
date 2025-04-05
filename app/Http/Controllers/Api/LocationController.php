@@ -61,7 +61,11 @@ class LocationController extends Controller
         $allLgas = Lga::all();
         $lgas = [];
         foreach($allLgas as $lga){
-            $lgas[] = ['id' => $lga->id, 'name' => $lga->name, 'active' => $lga->active];
+            $lgas[] = [
+                'id' => $lga->id, 
+                'name' => $lga->name, 
+                'state_id' => $lga->state_id,
+                'active' => $lga->active];
         };
 
         return response()->json(['status' =>  true, 'message' => 'List of all LGAs', 'data' => ['lgas' => $lgas]], 200);

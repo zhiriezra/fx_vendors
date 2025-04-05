@@ -25,7 +25,6 @@ use App\Http\Controllers\Api\WalletController;
 
 Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/login-email', [AuthController::class, 'loginEmail']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 Route::post('/verify-otp', [AuthController::class, 'verifyOTP']);
