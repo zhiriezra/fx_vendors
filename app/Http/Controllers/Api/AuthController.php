@@ -76,8 +76,8 @@ class AuthController extends Controller
             'marital_status' =>'nullable|string',
             'dob' => 'nullable|string',
             'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15',
-            'nin' => 'nullable|string',
-            'bvn' => 'nullable|string',
+            'nin' => 'nullable|digits:11',
+            'bvn' => 'nullable|digits:11',
         ]);
 
         if ($validator->fails()) {
@@ -212,7 +212,8 @@ class AuthController extends Controller
                 'active' => $user->active,
             ];
 
-            return $this->success(['user' => $responseData], 'Business updated successfully');
+            return $this->success([
+                'user' => $responseData], 'Business updated successfully');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -229,7 +230,7 @@ class AuthController extends Controller
 
         if($validator->fails())
         {
-            return $this->validation($validator->errors(), 'Password is Incorrect', 422);
+            return $this->validation($validator->errors(), 'Invalid Email address or password', 422);
         }
 
         // Look for user
@@ -244,7 +245,7 @@ class AuthController extends Controller
                 return $this->error(null, 'Invalid Email address or Password', 401);
             }
         }else{
-            return $this->error(null, 'Error logging in, user not found or not a Vendor', 404);
+            return $this->error(null, 'Error logging in, user not found', 404);
         }
     }
 
@@ -361,7 +362,7 @@ class AuthController extends Controller
             $user = User::where('email', $request->email)->first();
 
             // Generate OTP
-            $otp = $this->otpService->generateOTP($user->id);
+            $otp = $this->otpService->generateOTP($user);
 
             // Send OTP via email
             // Note: Implement your email sending logic here
@@ -374,7 +375,6 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return $this->error(null, 'Error sending password reset OTP: ' . $e->getMessage(), 500);
         }
-
     }
 
     public function resetPassword(Request $request)
@@ -408,27 +408,5 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return $this->error(null, 'Error resetting password: ' . $e->getMessage(), 500);
         }
-    }
-
-    public function forgotPasswordEmail(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email'
-        ]);
-
-        if($validator->fails()){
-            return $this->error($validator->errors(), 'Validation failed', 422);
-        }
-
-        $user = User::where('email', $request->email)->first();
-
-        if($user){
-            $otp = $this->otpService->generateOTP($user->id);
-
-            // Send OTP via email
-            // Note: Implement your email sending logic here
-        }else{
-            return $this->error(null, 'User not found', 404);
-        }
-    }
+    }    
 }

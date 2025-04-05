@@ -3,17 +3,25 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class OTPService {
 
-    public function generateOTP(User $user){
+    private const OTP_LENGTH = 6;
+    private const OTP_EXPIRY_MINUTES = 10;
 
-        $otp = random_int(100000, 999999);
+
+    public function generateOTP(User $user)
+    {
+
+        $otp = str_pad((string)random_int(0, pow(10, self::OTP_LENGTH) - 1), self::OTP_LENGTH, '0', STR_PAD_LEFT);
 
         $user->otp = $otp;
         $user->otp_expires_at = now()->addMinutes(10);
         $user->save();
 
+        $this->storeOTP($user->id, $otp);
 
         $curl = curl_init();
 
@@ -45,12 +53,33 @@ class OTPService {
 
         if($response['success'] === true){
             return $otp;
+        }else{
+            return $otp;
         };
     }
 
-
     public function verifyOTP(User $user, $otp)
     {
-        return $user->otp == $otp && now()->lessThanOrEqualTo($user->otp_expires_at);
+        $storedOTP = Cache::get($this->getCacheKey($user->id));
+        return $storedOTP && $storedOTP === $otp && now()->lessThanOrEqualTo($user->otp_expires_at);
+    }
+
+    public function invalidateOTP(User $user): void
+    {
+        Cache::forget($this->getCacheKey($user->id));
+    }
+
+    private function storeOTP(int $userId, string $otp): void
+    {
+        Cache::put(
+            $this->getCacheKey($userId),
+            $otp,
+            now()->addMinutes(self::OTP_EXPIRY_MINUTES)
+        );
+    }
+
+    private function getCacheKey(int $userId): string
+    {
+        return "otp_user_{$userId}";
     }
 }
