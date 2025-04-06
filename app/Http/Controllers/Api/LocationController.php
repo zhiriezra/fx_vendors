@@ -73,7 +73,17 @@ class LocationController extends Controller
 
     public function lga($id){
         $lga = Lga::find($id);
-        return response()->json(['status' =>  true, 'message' => 'LGA detail', 'data' => ['id' => $lga->id, 'name' => $lga->name, 'active' => $lga->active]], 200);
+        return response()->json([
+            'status' =>  true, 
+            'message' => 'LGA detail', 
+            'data' => [
+                'id' => $lga->id, 
+                'name' => $lga->name, 
+                'state_id' => $lga->state_id,
+                'state_name' =>$lga->state->name,
+                'active' => $lga->active
+                ]
+            ], 200);
     }
 
     public function getBankList(){
