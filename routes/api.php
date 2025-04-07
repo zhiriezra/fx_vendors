@@ -23,21 +23,22 @@ use App\Http\Controllers\Api\WalletController;
 |
 */
 
-Route::post('/signup', [AuthController::class, 'signup']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::prefix('v1')->group(function() {
+    Route::post('/signup', [AuthController::class, 'signup']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
-Route::post('/verify-otp', [AuthController::class, 'verifyOTP']);
+    // Locations list
+    Route::get('/countries', [LocationController::class, 'countriesList']);
+    Route::get('/states', [LocationController::class, 'statesList']);
+    Route::get('/state/{id}', [LocationController::class, 'state']);
 
-// Locations list
-Route::get('/countries', [LocationController::class, 'countriesList']);
-Route::get('/states', [LocationController::class, 'statesList']);
-Route::get('/state/{id}', [LocationController::class, 'state']);
+    Route::get('/lgas', [LocationController::class, 'lgasList']);
+    Route::get('/lga/{id}', [LocationController::class, 'lga']);
 
-Route::get('/lgas', [LocationController::class, 'lgasList']);
-Route::get('/lga/{id}', [LocationController::class, 'lga']);
+});
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // user routes start
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -97,15 +98,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
     Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
-
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
-
     //transactions Export
     Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
-
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
-
-
 });
-Route::get('/banks', [StatsController::class, 'getBankList']);
