@@ -17,6 +17,8 @@ use Illuminate\Validation\ValidationException;
 use PDO;
 use App\Traits\ApiResponder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
@@ -377,36 +379,171 @@ class AuthController extends Controller
         }
     }
 
-    public function resetPassword(Request $request)
+    public function sendForgotPasswordOTP(Request $request)
     {
+        // Validate the request
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'otp' => 'required|string',
-            'new_password' => 'required|min:8|confirmed'
+            'email' => 'required|email|exists:users,email',
+            'channel' => 'required|in:email,sms'
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(), 'Validation failed', 422);
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         try {
-            // Verify OTP
-            if (!$this->otpService->verifyOTP($request->user_id, $request->otp)) {
-                return $this->error(null, 'Invalid or expired OTP', 422);
+           
+            $user = User::where('email', $request->email)->first();
+
+            $otp = rand(10000, 99999); // Generate a 5-digit OTP
+
+            // Store OTP in the database with expiration time
+            $user->update([
+                'otp' => $otp,
+                'otp_expires_at' => now()->addMinutes(5) // OTP expires after 5 minutes
+            ]);
+
+            // Send OTP based on the channel
+            if ($request->channel === 'email') {
+                // Send OTP via email
+                Mail::raw("Your OTP is: $otp", function ($message) use ($user) {
+                    $message->to($user->email)->subject('Your Password Reset OTP');
+                });
+            } elseif ($request->channel === 'sms') {
+                // Send OTP via SMS
+                $this->sendSms($user->phone, "Your OTP is: $otp");
             }
 
-            // Update password
-            $user = User::find($request->user_id);
-            $user->password = Hash::make($request->new_password);
-            $user->save();
-
-            // Invalidate OTP after successful password reset
-            $this->otpService->invalidateOTP($request->user_id);
-
-            return $this->success(null, 'Password reset successfully');
+            return response()->json([
+                'status' => true,
+                'message' => "OTP has been sent to your {$request->channel}",
+                'data' => null
+            ], 200);
 
         } catch (\Exception $e) {
-            return $this->error(null, 'Error resetting password: ' . $e->getMessage(), 500);
+            return response()->json([
+                'status' => false,
+                'message' => 'Error sending OTP: ' . $e->getMessage(),
+                'errors' => null
+            ], 500);
+        }
+    }
+
+    public function verifyForgotPasswordOTP(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'otp' => 'required|numeric|digits:5'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = User::where('email', $request->email)->first();
+
+            // Check if OTP matches and is not expired
+            if ($user->otp !== $request->otp || $user->otp_expires_at < now()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid or expired OTP',
+                    'errors' => null
+                ], 400);
+            }
+
+            // Clear the OTP
+            $user->update([
+                'otp' => null,
+                'otp_expires_at' => null
+            ]);
+
+            // Generate a unique token
+            $token = bin2hex(random_bytes(32)); // Generate a secure random token
+
+            // Cache the token for 5 minutes
+            Cache::put("password_reset_token:{$user->email}", $token, now()->addMinutes(5));
+
+            return response()->json([
+                'status' => true,
+                'message' => 'OTP verified successfully',
+                'data' => [
+                    'token' => $token 
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error verifying OTP: ' . $e->getMessage(),
+                'errors' => null
+            ], 500);
+        }
+    }
+
+
+    public function resetPassword(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|min:8|confirmed', 
+            'token' => 'required|string', 
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+
+            $user = User::where('email', $request->email)->first();
+
+            // Get the cached token
+            $cachedToken = Cache::get("password_reset_token:{$user->email}");
+
+            // Validate the token
+            if (!$cachedToken || $cachedToken !== $request->token) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid or expired token',
+                    'errors' => null
+                ], 403); 
+            }
+
+            // Update the user's password
+            $user->update([
+                'password' => bcrypt($request->password) 
+            ]);
+
+            // Clear the cached token
+            Cache::forget("password_reset_token:{$user->email}");
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Password reset successfully',
+                'data' => null
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error resetting password: ' . $e->getMessage(),
+                'errors' => null
+            ], 500);
         }
     }    
 }

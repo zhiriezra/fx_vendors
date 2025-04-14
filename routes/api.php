@@ -26,7 +26,12 @@ use App\Http\Controllers\Api\WalletController;
 Route::prefix('v1')->group(function() {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    // Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+
+    // Password reset routes
+    Route::post('/password/reset/send-otp', [AuthController::class, 'sendForgotPasswordOTP']);
+    Route::post('/password/reset/verify-otp', [AuthController::class, 'verifyForgotPasswordOTP']);
+    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 
     // Locations list
     Route::get('/countries', [LocationController::class, 'countriesList']);
