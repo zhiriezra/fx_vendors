@@ -36,6 +36,8 @@ Route::prefix('v1')->group(function() {
     Route::get('/lgas', [LocationController::class, 'lgasList']);
     Route::get('/lga/{id}', [LocationController::class, 'lga']);
 
+    Route::get('/banks', [LocationController::class, 'getBankList']);
+
 });
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
