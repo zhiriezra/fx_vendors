@@ -371,6 +371,15 @@ class AuthController extends Controller
            
             $user = User::where('email', $request->email)->first();
 
+             // Check if the user is an Vendor
+            if ($user->user_type_id !== 2) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You are not Registered as a Vendor',
+                    'errors' => null
+                ], 403); // Forbidden
+            }
+
             $otp = rand(10000, 99999); // Generate a 5-digit OTP
 
             // Store OTP in the database with expiration time
@@ -379,9 +388,9 @@ class AuthController extends Controller
                 'otp_expires_at' => now()->addMinutes(5) // OTP expires after 5 minutes
             ]);
 
-            // Send OTP based on the channel
+            // Email channel
             if ($request->channel === 'email') {
-                // Send OTP via email using Laravel's Mail facade
+    
                 Mail::to($user->email)->send(new ForgotPasswordMail($otp)
                 );
             } elseif ($request->channel === 'sms') {
