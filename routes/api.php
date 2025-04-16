@@ -26,7 +26,6 @@ use App\Http\Controllers\Api\WalletController;
 Route::prefix('v1')->group(function() {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/login', [AuthController::class, 'login']);
-    // Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
     // Password reset routes
     Route::post('/password/reset/send-otp', [AuthController::class, 'sendForgotPasswordOTP']);
