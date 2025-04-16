@@ -18,6 +18,7 @@ use PDO;
 use App\Traits\ApiResponder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\ForgotPasswordMail;
 use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
@@ -350,35 +351,6 @@ class AuthController extends Controller
         return $this->success(null, 'Password updated successfully', 200);
     }
 
-    public function forgotPassword(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->error($validator->errors(), 'Validation failed', 422);
-        }
-
-        try {
-            $user = User::where('email', $request->email)->first();
-
-            // Generate OTP
-            $otp = $this->otpService->generateOTP($user);
-
-            // Send OTP via email
-            // Note: Implement your email sending logic here
-
-            return $this->success([
-                'message' => 'OTP has been sent to your email',
-                'user_id' => $user->id
-            ], 'Password reset OTP sent successfully');
-
-        } catch (\Exception $e) {
-            return $this->error(null, 'Error sending password reset OTP: ' . $e->getMessage(), 500);
-        }
-    }
-
     public function sendForgotPasswordOTP(Request $request)
     {
         // Validate the request
@@ -409,10 +381,9 @@ class AuthController extends Controller
 
             // Send OTP based on the channel
             if ($request->channel === 'email') {
-                // Send OTP via email
-                Mail::raw("Your OTP is: $otp", function ($message) use ($user) {
-                    $message->to($user->email)->subject('Your Password Reset OTP');
-                });
+                // Send OTP via email using Laravel's Mail facade
+                Mail::to($user->email)->send(new ForgotPasswordMail($otp)
+                );
             } elseif ($request->channel === 'sms') {
                 // Send OTP via SMS
                 $this->sendSms($user->phone, "Your OTP is: $otp");
@@ -489,7 +460,6 @@ class AuthController extends Controller
             ], 500);
         }
     }
-
 
     public function resetPassword(Request $request)
     {
