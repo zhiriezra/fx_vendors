@@ -7,6 +7,7 @@ use App\Models\Lga;
 use App\Models\State;
 use App\Models\Bank;
 use App\Models\Country;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 
 class LocationController extends Controller
@@ -100,5 +101,16 @@ class LocationController extends Controller
 
         return response()->json(['status' => true, 'message' => 'Bank list', 'data' => $banks]);
 
+    }
+
+    public function unitList(){
+
+        $allUnits = Unit::all();
+        $units = [];
+        foreach($allUnits as $unit){
+            $units[] = ['id' => $unit->id, 'name' => $unit->name];
+        };
+
+        return response()->json(['status' =>  true, 'message' => 'List of all Units', 'data' => ['units' => $units]], 200);
     }
 }

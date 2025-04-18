@@ -36,11 +36,10 @@ Route::prefix('v1')->group(function() {
     Route::get('/countries', [LocationController::class, 'countriesList']);
     Route::get('/states', [LocationController::class, 'statesList']);
     Route::get('/state/{id}', [LocationController::class, 'state']);
-
     Route::get('/lgas', [LocationController::class, 'lgasList']);
     Route::get('/lga/{id}', [LocationController::class, 'lga']);
-
     Route::get('/banks', [LocationController::class, 'getBankList']);
+    Route::get('/units', [LocationController::class, 'unitList']);
 
 });
 
