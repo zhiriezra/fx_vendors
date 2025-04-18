@@ -124,6 +124,7 @@ class ProductController extends Controller
 
     public function addImage(Request $request)
     {
+        // Validate the request
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
             'images' => 'required|image|max:2048'
@@ -140,36 +141,35 @@ class ProductController extends Controller
             return response()->json(['status' => false, 'message' => "Image must not be more than 5"], 422);
         }
 
-        if($request->file('images')) {
-
+        if ($request->file('images')) {
             $image = $request->file('images');
-            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
+            $imageName = time() . '_' . preg_replace('/\s+/', '_', $image->getClientOriginalName());
             $imagePath = $image->storeAs('product_images', $imageName, 'public');
 
-            // Store image path or URL in the database if needed
+            // Generate the full URL for the image
+            $fullImagePath = Storage::url($imagePath);
+
+            // Store the full image URL in the database
             $productImage = ProductImage::create([
                 'product_id' => $request->product_id,
-                'image_path' => env('APP_URL').Storage::url($imagePath)
+                'image_path' => $fullImagePath
             ]);
 
-            if($productImage){
+            if ($productImage) {
                 // Recalculate the image count after adding the new image
                 $updatedImagesCount = ProductImage::where('product_id', $request->product_id)->count();
                 return response()->json([
-                    'status' => true, 
-                    'message' => "Image Added Successfully", 
+                    'status' => true,
+                    'message' => "Image Added Successfully",
                     'data' => [
-                        'image' => $productImage->image_path,
+                        'image' => url($fullImagePath), // Ensure the full URL is returned
                         'ImagesCount' => $updatedImagesCount
-                        ]
-                    ], 
-                    200);
-            }else{
+                    ]
+                ], 200);
+            } else {
                 return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
             }
-
         }
-
     }
 
     public function deleteImage(Request $request){
