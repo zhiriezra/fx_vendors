@@ -20,6 +20,10 @@ class UnitSeeder extends Seeder
             ['name' => 'Litres'],
             ['name' => 'Kilogram'],
             ['name' => 'Metric Ton'],
+            ['name' => 'Grams'],
+            ['name' => 'Bags'],
+            ['name' => 'Trucks'],
+            ['name' => 'Satchet'],
         ];
 
         foreach ($units as $unit) {
