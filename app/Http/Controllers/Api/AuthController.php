@@ -289,12 +289,20 @@ class AuthController extends Controller
             $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
             $imagePath = $image->storeAs('vendor_images', $imageName, 'public');
 
+            $fullImagePath = Storage::url($imagePath);
+
             // Store image path or URL in the database if needed
             $user = User::find($request->user()->id);
-            $user->profile_image = env('APP_URL').Storage::url($imagePath);
+            $user->profile_image =$fullImagePath;
             $user->save();
 
-            return response()->json(['status'=> true, 'message' => 'Profile image uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)]], 200);
+            return response()->json([
+                'status'=> true, 
+                'message' => 'Profile image uploaded successfully', 
+                'data' => [
+                'profile_image' => url($fullImagePath)
+                ]
+            ], 200);
         }
 
     }
@@ -316,13 +324,21 @@ class AuthController extends Controller
             $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
             $imagePath = $image->storeAs('vendor_signatures', $imageName, 'public');
 
+            $fullImagePath = Storage::url($imagePath);
+
             // Store image path or URL in the database if needed
             $user = User::find($request->user()->id);
-            $user->signature = env('APP_URL').Storage::url($imagePath);
+            $user->signature = $fullImagePath;
             $user->profile_completed = 1;
             $user->save();
 
-            return response()->json(['status'=> true, 'message' => 'Signature uploaded successfully', 'data' => ['profile_image' => env('APP_URL').Storage::url($imagePath)] ], 200);
+            return response()->json([
+                'status'=> true, 
+                'message' => 'Signature uploaded successfully', 
+                'data' => [
+                'profile_image' => url($fullImagePath)
+                ] 
+            ], 200);
         }
 
     }

@@ -108,7 +108,11 @@ class LocationController extends Controller
         $allUnits = Unit::all();
         $units = [];
         foreach($allUnits as $unit){
-            $units[] = ['id' => $unit->id, 'name' => $unit->name];
+            $units[] = [
+                'id' => $unit->id, 
+                'name' => $unit->name,
+                'status' => $unit->status
+            ];
         };
 
         return response()->json(['status' =>  true, 'message' => 'List of all Units', 'data' => ['units' => $units]], 200);
