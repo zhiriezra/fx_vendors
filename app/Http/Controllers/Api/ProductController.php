@@ -149,7 +149,6 @@ class ProductController extends Controller
             // Generate the full URL for the image
             $fullImagePath = Storage::url($imagePath);
 
-            // Store the full image URL in the database
             $productImage = ProductImage::create([
                 'product_id' => $request->product_id,
                 'image_path' => $fullImagePath
@@ -162,7 +161,7 @@ class ProductController extends Controller
                     'status' => true,
                     'message' => "Image Added Successfully",
                     'data' => [
-                        'image' => url($fullImagePath), // Ensure the full URL is returned
+                        'image' => url($fullImagePath), 
                         'ImagesCount' => $updatedImagesCount
                     ]
                 ], 200);
