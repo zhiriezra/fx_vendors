@@ -29,6 +29,13 @@ class ProductController extends Controller
     public function index()
     {
         $products = auth()->user()->vendor->products->map(function($product){
+
+            // Retrieve the first image for the product
+            $firstImage = $product->images()->first();
+
+            // Generate the full URL for the image if it exists
+            $fullImagePath = $firstImage ? url($firstImage->image_path) : null;
+            
             return [
                 'id' => $product->id,
                 'category_id' => $product->category->id,
@@ -42,7 +49,7 @@ class ProductController extends Controller
                 'name' => $product->name,
                 'batch_number' => $product->batch_number,
                 'quantity' => $product->quantity,
-                'images' => $product->images() ? optional($product->images()->first())->image_path : null,
+                'images' => $fullImagePath,
                 'unit_price' => $product->unit_price,
                 'agent_price' => $product->agent_price,
                 'description' => $product->description,
@@ -106,7 +113,6 @@ class ProductController extends Controller
             'unit_price' => $request->unit_price,
             'agent_price' => $request->agent_price,
             'description' => $request->description,
-            'quantity' => $request->quantity,
             'stock_date' => $request->stock_date,
 
         ]);
@@ -147,7 +153,7 @@ class ProductController extends Controller
             $imagePath = $image->storeAs('product_images', $imageName, 'public');
 
             // Generate the full URL for the image
-            $fullImagePath = Storage::url($imagePath);
+            $fullImagePath = url(Storage::url($imagePath));
 
             $productImage = ProductImage::create([
                 'product_id' => $request->product_id,
@@ -198,6 +204,11 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = Product::with('product_images')->find($id);
+        // Retrieve the first image for the product
+        $firstImage = $product->images()->first();
+
+        // Generate the full URL for the image if it exists
+        $fullImagePath = $firstImage ? url($firstImage->image_path) : null;
 
         if($product){
             $product = [
@@ -211,11 +222,11 @@ class ProductController extends Controller
                 'unit_id' => $product->unit_id,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
-                'first_image' => $product->images() ? optional($product->images()->first())->image_path : null,
+                'first_image' => $fullImagePath,
                 'images' => $product->images()->get()->map(function($image){
                     return [
                         'id' => $image->id,
-                        'image_path' => $image->image_path,
+                        'image_path' => url($image->image_path),
                     ];
                 }),
                 'batch_number' => $product->batch_number,
