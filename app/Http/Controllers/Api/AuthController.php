@@ -224,6 +224,60 @@ class AuthController extends Controller
         }
     }
 
+    public function patchBusiness(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'business_email' => 'email',
+            'business_mobile' => 'string',
+            'business_name' => 'string',
+            'business_address' => 'string',
+            'registration_no' => 'string',
+            'tin' => 'string',
+            'business_type' => 'string',
+            'bank' => 'string',
+            'account_no' => 'string',
+            'account_name' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error($validator->errors(), 'Validation failed', 422);
+        }
+
+        if(auth()->user()->user_type_id != 2){
+            return $this->error(null, 'You are not authorized to update this profile', 401);
+        }
+
+        try {
+            DB::beginTransaction();
+
+
+            $user = auth()->user();
+
+            $user->vendor->update([
+                'business_email' => $request->business_email,
+                'business_mobile' => $request->business_mobile,
+                'business_name' => $request->business_name,
+                'business_address' => $request->business_address,
+                'registration_no' => $request->registration_no,
+                'tin' => $request->tin,
+                'business_type' => $request->business_type,
+                'bank' => $request->bank,
+                'account_no' => $request->account_no,
+                'account_name' => $request->account_name,
+            ]);
+
+            $user->save();
+
+            DB::commit();
+
+            return $this->success(['user' => $user], 'Updated successful');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error($e->getMessage(), 'Update failed', 500);
+        }
+    }
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
