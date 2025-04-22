@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Unit;
 use App\Models\ProductImage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -45,6 +46,7 @@ class ProductController extends Controller
                 'vendor_id' => $product->vendor_id,
                 'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
                 'unit_id' => $product->unit_id,
+                'unit' => $product->unit ? $product->unit->name : null,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
                 'batch_number' => $product->batch_number,
@@ -220,6 +222,7 @@ class ProductController extends Controller
                 'vendor_id' => $product->vendor_id,
                 'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
                 'unit_id' => $product->unit_id,
+                'unit' => $product->unit ? $product->unit->name : null,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
                 'first_image' => $fullImagePath,
