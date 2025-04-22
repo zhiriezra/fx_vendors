@@ -55,6 +55,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/update-bio', [AuthController::class, 'updateBio']);
     Route::post('/update-location', [AuthController::class, 'updateLocation']);
     Route::post('/update-business', [AuthController::class, 'updateBusiness']);
+    Route::post('/patch-business', [AuthController::class, 'patchBusiness']);
     Route::post('/update-password', [AuthController::class, 'changePassword']);
     Route::post('/upload-profile-image', [AuthController::class, 'uploadProfileImage']);
     Route::post('/upload-signature', [AuthController::class, 'uploadSignature']);
