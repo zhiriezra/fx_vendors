@@ -21,6 +21,11 @@ class Vendor extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
     public function state()
     {
         return $this->belongsTo(State::class);
@@ -29,7 +34,7 @@ class Vendor extends Model
     public function lga()
     {
         return $this->belongsTo(Lga::class);
-    }
+    }    
 
     public function orders()
     {
