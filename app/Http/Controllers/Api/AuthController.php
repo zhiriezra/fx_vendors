@@ -224,57 +224,60 @@ class AuthController extends Controller
         }
     }
 
-    public function patchBusiness(Request $request)
+    public function updateBusinessPartial(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
-            'business_email' => 'email',
-            'business_mobile' => 'string',
-            'business_name' => 'string',
-            'business_address' => 'string',
-            'registration_no' => 'string',
-            'tin' => 'string',
-            'business_type' => 'string',
-            'bank' => 'string',
-            'account_no' => 'string',
-            'account_name' => 'string',
+            'business_email' => 'nullable|email', 
+            'business_mobile' => 'nullable|string', 
+            'business_name' => 'nullable|string', 
+            'business_address' => 'nullable|string', 
+            'registration_no' => 'nullable|string', 
+            'tin' => 'nullable|string', 
+            'business_type' => 'nullable', 
+            'bank' => 'nullable',
+            'account_no' => 'nullable|string', 
+            'account_name' => 'nullable|string', 
         ]);
 
         if ($validator->fails()) {
             return $this->error($validator->errors(), 'Validation failed', 422);
         }
 
-        if(auth()->user()->user_type_id != 2){
-            return $this->error(null, 'You are not authorized to update this profile', 401);
-        }
-
         try {
             DB::beginTransaction();
 
-
             $user = auth()->user();
+            $vendor = $user->vendor;
 
-            $user->vendor->update([
-                'business_email' => $request->business_email,
-                'business_mobile' => $request->business_mobile,
-                'business_name' => $request->business_name,
-                'business_address' => $request->business_address,
-                'registration_no' => $request->registration_no,
-                'tin' => $request->tin,
-                'business_type' => $request->business_type,
-                'bank' => $request->bank,
-                'account_no' => $request->account_no,
-                'account_name' => $request->account_name,
-            ]);
-
-            $user->save();
+            // Update only the fields provided in the request
+            $vendor->update($request->only([
+                'business_email',
+                'business_mobile',
+                'business_name',
+                'business_address',
+                'registration_no',
+                'tin',
+                'business_type',
+                'bank',
+                'account_no',
+                'account_name',
+            ]));
 
             DB::commit();
 
-            return $this->success(['user' => $user], 'Updated successful');
+            // Fetch the updated vendor details
+            $updatedVendor = $vendor->fresh(); // Refresh the model to get the latest data
+
+            // Return success response with updated user details
+            return $this->success([
+                'vendor' => $updatedVendor,
+                'message' => 'Business details updated successfully'
+            ], 'Success');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error($e->getMessage(), 'Update failed', 500);
+            return $this->error($e->getMessage(), 'Business update failed', 500);
         }
     }
 
@@ -306,11 +309,76 @@ class AuthController extends Controller
         }
     }
 
-
     public function getUser(Request $request)
     {
         $user = User::with('vendor')->where('id', $request->user()->id)->first();
-        return response()->json(['status' => true, 'message' => 'authenticated user', 'data' => ['user' => $user]], 200);
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Transform profile_image and signature to include the full URL
+        $fullProfileImage = $user->profile_image ? url($user->profile_image) : null;
+        $fullSignature = $user->signature ? url($user->signature) : null;
+
+        $responseData = [
+            'id' => $user->id,
+            'user_type_id' => $user->user_type_id,
+            'user_type' => $user->usertype->name,
+            'firstname' => $user->firstname,
+            'middlename' => $user->middlename,
+            'lastname' => $user->lastname,
+            'phone' => $user->phone,
+            'email' => $user->email,
+            'fcm_token' => $user->fcm_token,
+            'company_id' => $user->company_id,
+            'active' => $user->active,
+            'profile_completed' => $user->profile_completed,
+            'profile_image' => $fullProfileImage, // Full URL for profile image
+            'signature' => $fullSignature,       // Full URL for signature
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+            'vendor' => $user->vendor ? [
+                'id' => $user->vendor->id,
+                'dob' => $user->vendor->dob,
+                'gender' => $user->vendor->gender,
+                'marital_status' => $user->vendor->marital_status,
+                'current_location' => $user->vendor->current_location,
+                'permanent_address' => $user->vendor->permanent_address,
+                'country_id' => $user->vendor->country_id,
+                'country' => $user->vendor->country->name,
+                'state_id' => $user->vendor->state_id,
+                'state' => $user->vendor->state->name,
+                'lga_id' => $user->vendor->lga_id,
+                'lga' => $user->vendor->lga->name,
+                'community' => $user->vendor->community,
+                'business_name' => $user->vendor->business_name,
+                'nin' => $user->vendor->nin,
+                'bvn' => $user->vendor->bvn,
+                'tin' => $user->vendor->tin,
+                'business_email' => $user->vendor->business_email,
+                'business_mobile' => $user->vendor->business_mobile,
+                'business_address' => $user->vendor->business_address,
+                'registration_no' => $user->vendor->registration_no,
+                'tin' => $user->vendor->tin,
+                'business_type' => $user->vendor->business_type,
+                'bank' => $user->vendor->bank,
+                'account_no' => $user->vendor->account_no,
+                'account_name' => $user->vendor->account_name,
+                'status' => $user->vendor->status,
+            ] : null,
+        ];
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Authenticated user',
+            'data' => [
+                'user' => $responseData,
+            ],
+        ], 200);
     }
 
     public function logout(Request $request)
