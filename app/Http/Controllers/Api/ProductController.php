@@ -122,12 +122,41 @@ class ProductController extends Controller
 
         if($product){
 
-            return response()->json(['status' => true, 'message' => "Your product have been successfully uploaded", "data" => ["product" => $product]], 200);
-        }else{
+            // Reload product with category and subcategory
+            $productReload = Product::with(['category', 'subCategory', 'unit'])->find($product->id);
 
+            // Format the output
+            $formattedProduct = [
+                'id' => $productReload->id,
+                'caregory_id'=> $productReload->category->id,
+                'category' => $productReload->category->name,
+                'sub_category' => $productReload->subcategory->id,
+                'subcategory' => $productReload->subcategory->name,
+                'vendor' => $productReload->vendor->user->firstname.' '.$productReload->vendor->user->lastname,
+                'manufacturer' => $productReload->manufacturer,
+                'name' => $productReload->name,
+                'batch_number' => $productReload->batch_number,
+                'quantity' => $productReload->quantity,
+                'unit_id' => $productReload->unit_id,
+                'unit' => $productReload->unit->name,
+                'unit_price' => $productReload->unit_price,
+                'agent_price' => $productReload->agent_price,
+                'description' => $productReload->description,
+                'stock_date' => $productReload->stock_date,
+                'created_at' => $productReload->created_at,
+                'updated_at' => $productReload->updated_at,
+            ];
+
+            return response()->json([
+                'status' => true,
+                'message' => "Your product has been successfully uploaded",
+                'data' => [
+                    'product' => $formattedProduct
+                ]
+            ], 200);
+        } else {
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
-
     }
 
     public function addImage(Request $request)
@@ -296,13 +325,39 @@ class ProductController extends Controller
                 'stock_date' => $request->stock_date,
             ]);
 
-            return response()->json(['status' => true,'message' => "Product Updated Successfully", "data" => ['product' => $product]], 200);
+            // Reload the product with relationships
+            $updatedProduct = Product::with(['category', 'subcategory', 'unit'])->find($product->id);
 
-        }else{
+            // Format the response
+            $formattedProduct = [
+                'id' => $updatedProduct->id,
+                'category_id' =>$updatedProduct->category->id,
+                'category' => $updatedProduct->category->name,
+                'sub_category_id' =>$updatedProduct->subcategory->id,
+                'subcategory' => $updatedProduct->subcategory->name,
+                'vendor_id' => $updatedProduct->vendor_id,
+                'vendor' => $updatedProduct->vendor->user->firstname.' '.$updatedProduct->vendor->user->lastname,
+                'manufacturer' => $updatedProduct->manufacturer,
+                'name' => $updatedProduct->name,
+                'batch_number' => $updatedProduct->batch_number,
+                'quantity' => $updatedProduct->quantity,
+                'unit_id' => $updatedProduct->unit_id,
+                'unit' =>$updatedProduct->unit->name,
+                'unit_price' => $updatedProduct->unit_price,
+                'agent_price' => $updatedProduct->agent_price,
+                'description' => $updatedProduct->description,
+                'stock_date' => $updatedProduct->stock_date,
+                'created_at' => $updatedProduct->created_at,
+                'updated_at' => $updatedProduct->updated_at,
+            ];
 
-            return response()->json(['status' => false,'message' => "Product Not Found!"], 404);
+            return response()->json([
+                'status' => true,
+                'message' => "Product Updated Successfully",
+                'data' => ['product' => $formattedProduct]
+            ], 200);
         }
-   }
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -516,7 +571,7 @@ class ProductController extends Controller
         }
 
         // Find the product
-        $product = Product::find($request->product_id);
+        $product = Product::with(['category', 'subCategory', 'unit'])->find($request->product_id);
         
         if (!$product) {
             return response()->json(['status' => false, 'message' => 'Product not found'], 404);
@@ -526,11 +581,33 @@ class ProductController extends Controller
         $newQuantity = $product->quantity + $request->quantity;
         $product->update(['quantity' => $newQuantity]);
 
+        $formattedProduct = [
+            'id' => $product->id,
+            'category_id' => $product->category_id,
+            'category' => $product->category ? $product->category->name : null,
+            'sub_category_id' => $product->subcategory->id,
+            'sub_category' => $product->subcategory ? $product->subcategory->name : null,
+            'vendor_id' => $product->vendor_id,
+            'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+            'manufacturer' => $product->manufacturer,
+            'name' => $product->name,
+            'unit_id' => $product->unit_id,
+            'unit' => $product->unit ? $product->unit->name : null,
+            'batch_number' => $product->batch_number,
+            'quantity' => $newQuantity,
+            'unit_price' => $product->unit_price,
+            'agent_price' => $product->agent_price,
+            'description' => $product->description,
+            'stock_date' => $product->stock_date,
+            'created_at' => $product->created_at,
+            'updated_at' => $product->updated_at,
+        ];
+
         return response()->json([
             'status' => true,
             'message' => 'Your product has been successfully restocked',
             'data' => [
-                'product' => $product,
+                'product' => $formattedProduct,
                 'new_quantity' => $newQuantity
             ]
         ], 200);
