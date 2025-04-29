@@ -419,13 +419,38 @@ class ProductController extends Controller
         $lowStockProducts = $vendor->products()
             ->where('quantity', '>', 0)
             ->where('quantity', '<=', $lowStockThreshold)
+            ->with(['category', 'subcategory', 'unit']) // Eager load relationships
             ->get();
+
+            $Products = $lowStockProducts->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'category' => $product->category ? $product->category->name : null,
+                    'sub_category_id' => $product->subcategory->id,
+                    'sub_category' => $product->subcategory ? $product->subcategory->name : null,
+                    'vendor_id' => $product->vendor_id,
+                    'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+                    'manufacturer' => $product->manufacturer,
+                    'name' => $product->name,
+                    'unit_id' => $product->unit_id,
+                    'unit' => $product->unit ? $product->unit->name : null,
+                    'batch_number' => $product->batch_number,
+                    'quantity' => $product->quantity,
+                    'unit_price' => $product->unit_price,
+                    'agent_price' => $product->agent_price,
+                    'description' => $product->description,
+                    'stock_date' => $product->stock_date,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                ];
+            });
 
         return response()->json([
             'status' => true,
             'message' => 'Low stock products',
             'data' => [
-                'low_stock_products' => $lowStockProducts
+                'low_stock_products' => $Products
             ]
         ], 200);
 
@@ -442,13 +467,38 @@ class ProductController extends Controller
         // get products that are out of stock
         $outOfStockProducts = $vendor->products()
             ->where('quantity', 0)
+            ->with(['category', 'subcategory', 'unit']) // Eager load relationships
             ->get();
+
+            $Products = $outOfStockProducts->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'category' => $product->category ? $product->category->name : null,
+                    'sub_category_id' => $product->subcategory->id,
+                    'sub_category' => $product->subcategory ? $product->subcategory->name : null,
+                    'vendor_id' => $product->vendor_id,
+                    'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+                    'manufacturer' => $product->manufacturer,
+                    'name' => $product->name,
+                    'unit_id' => $product->unit_id,
+                    'unit' => $product->unit ? $product->unit->name : null,
+                    'batch_number' => $product->batch_number,
+                    'quantity' => $product->quantity,
+                    'unit_price' => $product->unit_price,
+                    'agent_price' => $product->agent_price,
+                    'description' => $product->description,
+                    'stock_date' => $product->stock_date,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                ];
+            });
     
         return response()->json([
             'status' => true,
             'message' => 'Out of stock products',
             'data' => [
-                'out_of_stock_products' => $outOfStockProducts
+                'out_of_stock_products' => $Products
             ]
         ], 200);
     }
