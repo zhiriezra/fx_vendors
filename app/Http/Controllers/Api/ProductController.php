@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Unit;
 use App\Models\ProductImage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -29,6 +30,13 @@ class ProductController extends Controller
     public function index()
     {
         $products = auth()->user()->vendor->products->map(function($product){
+
+            // Retrieve the first image for the product
+            $firstImage = $product->images()->first();
+
+            // Generate the full URL for the image if it exists
+            $fullImagePath = $firstImage ? url($firstImage->image_path) : null;
+            
             return [
                 'id' => $product->id,
                 'category_id' => $product->category->id,
@@ -37,12 +45,13 @@ class ProductController extends Controller
                 'sub_category' => $product->subcategory->name,
                 'vendor_id' => $product->vendor_id,
                 'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                'type' => $product->type,
+                'unit_id' => $product->unit_id,
+                'unit' => $product->unit ? $product->unit->name : null,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
-                'images' => $product->images() ? optional($product->images()->first())->image_path : null,
                 'batch_number' => $product->batch_number,
                 'quantity' => $product->quantity,
+                'images' => $fullImagePath,
                 'unit_price' => $product->unit_price,
                 'agent_price' => $product->agent_price,
                 'description' => $product->description,
@@ -77,17 +86,16 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'name' => 'required',
             'category_id' => 'required',
             'sub_category_id' => 'required',
-            'type' => 'required',
-            'manufacturer' => 'required',
-            'name' => 'required',
             'quantity' => 'required|integer',
+            'unit_id' => 'required',
             'unit_price' => 'required|numeric',
             'agent_price' => 'required|numeric',
             'description' => 'nullable',
+            'manufacturer' => 'required',
             'stock_date' => 'required|date',
-            'images.*' => 'image|max:2048'
         ]);
 
 
@@ -99,65 +107,63 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'sub_category_id' => $request->sub_category_id,
             'vendor_id' => auth()->user()->vendor->id,
-            'type' => $request->type,
             'manufacturer' => $request->manufacturer,
             'name' => $request->name,
             'batch_number' => (string) Str::uuid(),
             'quantity' => $request->quantity,
+            'unit_id' => $request->unit_id,
             'unit_price' => $request->unit_price,
             'agent_price' => $request->agent_price,
             'description' => $request->description,
-            'quantity' => $request->quantity,
             'stock_date' => $request->stock_date,
 
         ]);
-
-        if ($request->file('images')) {
-
-            $image = $request->file('images');
-            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
-            $imagePath = $image->storeAs('product_images', $imageName, 'public');
-
-            // Store image path or URL in the database if needed
-            $image = ProductImage::create([
-                'product_id' => $product->id,
-                'image_path' => env('APP_URL').Storage::url($imagePath)
-            ]);
-
-        }
+        
 
         if($product){
 
-            $data = [
-                'id' => $product->id,
-                'image' => $image->image_path,
-                'category' => $product->category->name,
-                'sub_category' => $product->subcategory->name,
-                'vendor' => $product->vendor->business_name,
-                'type' => $product->type,
-                'manufacturer' => $product->manufacturer,
-                'name' => $product->name,
-                'batch_number' => $product->batch_number,
-                'quantity' => $product->quantity,
-                'agent_price' => $product->agent_price,
-                'description' => $product->description,
-                'stock_date' => $product->stock_date,
-                'created_at' => $product->created_at,
-                'updated_at' => $product->updated_at
+            // Reload product with category and subcategory
+            $productReload = Product::with(['category', 'subCategory', 'unit'])->find($product->id);
+
+            // Format the output
+            $formattedProduct = [
+                'id' => $productReload->id,
+                'caregory_id'=> $productReload->category->id,
+                'category' => $productReload->category->name,
+                'sub_category' => $productReload->subcategory->id,
+                'subcategory' => $productReload->subcategory->name,
+                'vendor' => $productReload->vendor->user->firstname.' '.$productReload->vendor->user->lastname,
+                'manufacturer' => $productReload->manufacturer,
+                'name' => $productReload->name,
+                'batch_number' => $productReload->batch_number,
+                'quantity' => $productReload->quantity,
+                'unit_id' => $productReload->unit_id,
+                'unit' => $productReload->unit->name,
+                'unit_price' => $productReload->unit_price,
+                'agent_price' => $productReload->agent_price,
+                'description' => $productReload->description,
+                'stock_date' => $productReload->stock_date,
+                'created_at' => $productReload->created_at,
+                'updated_at' => $productReload->updated_at,
             ];
 
-            return response()->json(['status' => true, 'message' => "Product Created Successfully", "data" => ["product" => $data]], 200);
-        }else{
-
+            return response()->json([
+                'status' => true,
+                'message' => "Your product has been successfully uploaded",
+                'data' => [
+                    'product' => $formattedProduct
+                ]
+            ], 200);
+        } else {
             return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
         }
-
     }
 
     public function addImage(Request $request)
     {
+        // Validate the request
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required',
+            'product_id' => 'required|exists:products,id',
             'images' => 'required|image|max:2048'
         ]);
 
@@ -165,37 +171,41 @@ class ProductController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
         }
 
-        if($request->file('images')) {
+        // Check the number of images already uploaded for the product
+        $ImagesCount = ProductImage::where('product_id', $request->product_id)->count();
 
-            $image = $request->file('images');
-            $imageName = time() . '_' . preg_replace('/\s+/', '_',$image->getClientOriginalName());
-            $imagePath = $image->storeAs('product_images', $imageName, 'public');
-
-            // Store image path or URL in the database if needed
-            $productImage = ProductImage::create([
-                'product_id' => $request->product_id,
-                'image_path' => env('APP_URL').Storage::url($imagePath)
-            ]);
-
-            // $manager = new ImageManager(new Driver());
-            // $name_gen = hexdec(uniqid()).'.'.$request->file('images')->getClientOriginalExtension();
-            // $img = $manager->read($request->file('images'));
-            // $img = $img->resize(370,246);
-
-            // $img->toJpeg(80)->save(base_path('public/storage/product_images/'.$name_gen));
-            // $save_url = 'product_images/'.$name_gen;
-
-            // // Save image path to the database
-            // $productImage = ProductImage::insert(['product_id' => $request->product_id, 'image_path' => $save_url]);
-
-            if($productImage){
-                return response()->json(['status' => true, 'message' => "Image Added Successfully", 'data' => ['image' => $productImage->image_path]], 200);
-            }else{
-                return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
-            }
-
+        if ($ImagesCount >= 5) {
+            return response()->json(['status' => false, 'message' => "Image must not be more than 5"], 422);
         }
 
+        if ($request->file('images')) {
+            $image = $request->file('images');
+            $imageName = time() . '_' . preg_replace('/\s+/', '_', $image->getClientOriginalName());
+            $imagePath = $image->storeAs('product_images', $imageName, 'public');
+
+            // Generate the full URL for the image
+            $fullImagePath = url(Storage::url($imagePath));
+
+            $productImage = ProductImage::create([
+                'product_id' => $request->product_id,
+                'image_path' => $fullImagePath
+            ]);
+
+            if ($productImage) {
+                // Recalculate the image count after adding the new image
+                $updatedImagesCount = ProductImage::where('product_id', $request->product_id)->count();
+                return response()->json([
+                    'status' => true,
+                    'message' => "Image Added Successfully",
+                    'data' => [
+                        'image' => url($fullImagePath), 
+                        'ImagesCount' => $updatedImagesCount
+                    ]
+                ], 200);
+            } else {
+                return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
+            }
+        }
     }
 
     public function deleteImage(Request $request){
@@ -225,6 +235,11 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = Product::with('product_images')->find($id);
+        // Retrieve the first image for the product
+        $firstImage = $product->images()->first();
+
+        // Generate the full URL for the image if it exists
+        $fullImagePath = $firstImage ? url($firstImage->image_path) : null;
 
         if($product){
             $product = [
@@ -235,14 +250,15 @@ class ProductController extends Controller
                 'sub_category' => $product->subcategory->name,
                 'vendor_id' => $product->vendor_id,
                 'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                'type' => $product->type,
+                'unit_id' => $product->unit_id,
+                'unit' => $product->unit ? $product->unit->name : null,
                 'manufacturer' => $product->manufacturer,
                 'name' => $product->name,
-                'first_image' => $product->images() ? optional($product->images()->first())->image_path : null,
+                'first_image' => $fullImagePath,
                 'images' => $product->images()->get()->map(function($image){
                     return [
                         'id' => $image->id,
-                        'image_path' => $image->image_path,
+                        'image_path' => url($image->image_path),
                     ];
                 }),
                 'batch_number' => $product->batch_number,
@@ -255,7 +271,7 @@ class ProductController extends Controller
                 'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
             ];
 
-            return response()->json(['status' => true, 'message' => "Product detail", "data" => ['product' => $product]], 200);
+            return response()->json(['status' => true, 'message' => "Product details", "data" => ['product' => $product]], 200);
 
         }else{
             return response()->json(['status' => 404, 'message' => "Product Not Found!"], 404);
@@ -276,7 +292,7 @@ class ProductController extends Controller
             'product_id' => 'required',
             'category_id' => 'required',
             'sub_category_id' => 'required',
-            'type' => 'required',
+            'unit_id' => 'required',
             'manufacturer' => 'required',
             'name' => 'required',
             'quantity' => 'required|integer',
@@ -284,7 +300,6 @@ class ProductController extends Controller
             'agent_price' => 'required|numeric',
             'description' => 'nullable',
             'stock_date' => 'required|date',
-            'images.*' => 'image|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -299,7 +314,7 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'sub_category_id' => $request->sub_category_id,
                 'vendor_id' => Auth::user()->vendor->id,
-                'type' => $request->type,
+                'unit_id' => $request->unit_id,
                 'manufacturer' => $request->manufacturer,
                 'name' => $request->name,
                 'quantity' => $request->quantity,
@@ -310,13 +325,39 @@ class ProductController extends Controller
                 'stock_date' => $request->stock_date,
             ]);
 
-            return response()->json(['status' => true,'message' => "Product Updated Successfully", "data" => ['product' => $product]], 200);
+            // Reload the product with relationships
+            $updatedProduct = Product::with(['category', 'subcategory', 'unit'])->find($product->id);
 
-        }else{
+            // Format the response
+            $formattedProduct = [
+                'id' => $updatedProduct->id,
+                'category_id' =>$updatedProduct->category->id,
+                'category' => $updatedProduct->category->name,
+                'sub_category_id' =>$updatedProduct->subcategory->id,
+                'subcategory' => $updatedProduct->subcategory->name,
+                'vendor_id' => $updatedProduct->vendor_id,
+                'vendor' => $updatedProduct->vendor->user->firstname.' '.$updatedProduct->vendor->user->lastname,
+                'manufacturer' => $updatedProduct->manufacturer,
+                'name' => $updatedProduct->name,
+                'batch_number' => $updatedProduct->batch_number,
+                'quantity' => $updatedProduct->quantity,
+                'unit_id' => $updatedProduct->unit_id,
+                'unit' =>$updatedProduct->unit->name,
+                'unit_price' => $updatedProduct->unit_price,
+                'agent_price' => $updatedProduct->agent_price,
+                'description' => $updatedProduct->description,
+                'stock_date' => $updatedProduct->stock_date,
+                'created_at' => $updatedProduct->created_at,
+                'updated_at' => $updatedProduct->updated_at,
+            ];
 
-            return response()->json(['status' => false,'message' => "Product Not Found!"], 404);
+            return response()->json([
+                'status' => true,
+                'message' => "Product Updated Successfully",
+                'data' => ['product' => $formattedProduct]
+            ], 200);
         }
-   }
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -388,5 +429,215 @@ class ProductController extends Controller
         }
 
 
+    }
+
+    public function productStats() 
+    {
+        $vendor = Auth::user()->vendor;
+
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+
+        // product statistics
+        $products = $vendor->products()->selectRaw('
+            COUNT(*) as total_products,
+            SUM(quantity) as available_stocks,
+            SUM(quantity * unit_price) as product_value
+        ')->first();
+
+        // Return the response
+        return response()->json([
+            'status' => true,
+            'message' => 'Product statistics retrieved successfully',
+            'data' => [
+                'total_products' => $products->total_products ?? 0,
+                'available_stocks' => $products->available_stocks ?? 0,
+                'product_value' => $products->product_value ?? 0,
+            ]
+        ], 200);
+
+    }
+
+    public function lowStockProducts()
+    {
+        $vendor = auth()->user()->vendor;
+
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+
+        // Defining low stock threshold
+        $lowStockThreshold = 3;
+
+        // getting products with low stock
+        $lowStockProducts = $vendor->products()
+            ->where('quantity', '>', 0)
+            ->where('quantity', '<=', $lowStockThreshold)
+            ->with(['category', 'subcategory', 'unit']) // Eager load relationships
+            ->get();
+
+            $Products = $lowStockProducts->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'category' => $product->category ? $product->category->name : null,
+                    'sub_category_id' => $product->subcategory->id,
+                    'sub_category' => $product->subcategory ? $product->subcategory->name : null,
+                    'vendor_id' => $product->vendor_id,
+                    'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+                    'manufacturer' => $product->manufacturer,
+                    'name' => $product->name,
+                    'unit_id' => $product->unit_id,
+                    'unit' => $product->unit ? $product->unit->name : null,
+                    'batch_number' => $product->batch_number,
+                    'quantity' => $product->quantity,
+                    'unit_price' => $product->unit_price,
+                    'agent_price' => $product->agent_price,
+                    'description' => $product->description,
+                    'stock_date' => $product->stock_date,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                ];
+            });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Low stock products',
+            'data' => [
+                'low_stock_products' => $Products
+            ]
+        ], 200);
+
+    }
+
+    public function outOfStockProducts()
+    {
+        $vendor = auth()->user()->vendor;
+    
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+    
+        // get products that are out of stock
+        $outOfStockProducts = $vendor->products()
+            ->where('quantity', 0)
+            ->with(['category', 'subcategory', 'unit']) // Eager load relationships
+            ->get();
+
+            $Products = $outOfStockProducts->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'category' => $product->category ? $product->category->name : null,
+                    'sub_category_id' => $product->subcategory->id,
+                    'sub_category' => $product->subcategory ? $product->subcategory->name : null,
+                    'vendor_id' => $product->vendor_id,
+                    'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+                    'manufacturer' => $product->manufacturer,
+                    'name' => $product->name,
+                    'unit_id' => $product->unit_id,
+                    'unit' => $product->unit ? $product->unit->name : null,
+                    'batch_number' => $product->batch_number,
+                    'quantity' => $product->quantity,
+                    'unit_price' => $product->unit_price,
+                    'agent_price' => $product->agent_price,
+                    'description' => $product->description,
+                    'stock_date' => $product->stock_date,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                ];
+            });
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'Out of stock products',
+            'data' => [
+                'out_of_stock_products' => $Products
+            ]
+        ], 200);
+    }
+
+    public function restockProduct(Request $request)
+    {
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        // Find the product
+        $product = Product::with(['category', 'subCategory', 'unit'])->find($request->product_id);
+        
+        if (!$product) {
+            return response()->json(['status' => false, 'message' => 'Product not found'], 404);
+        }
+
+        // Update the product's quantity
+        $newQuantity = $product->quantity + $request->quantity;
+        $product->update(['quantity' => $newQuantity]);
+
+        $formattedProduct = [
+            'id' => $product->id,
+            'category_id' => $product->category_id,
+            'category' => $product->category ? $product->category->name : null,
+            'sub_category_id' => $product->subcategory->id,
+            'sub_category' => $product->subcategory ? $product->subcategory->name : null,
+            'vendor_id' => $product->vendor_id,
+            'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
+            'manufacturer' => $product->manufacturer,
+            'name' => $product->name,
+            'unit_id' => $product->unit_id,
+            'unit' => $product->unit ? $product->unit->name : null,
+            'batch_number' => $product->batch_number,
+            'quantity' => $newQuantity,
+            'unit_price' => $product->unit_price,
+            'agent_price' => $product->agent_price,
+            'description' => $product->description,
+            'stock_date' => $product->stock_date,
+            'created_at' => $product->created_at,
+            'updated_at' => $product->updated_at,
+        ];
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Your product has been successfully restocked',
+            'data' => [
+                'product' => $formattedProduct,
+                'new_quantity' => $newQuantity
+            ]
+        ], 200);
+    }
+
+    public function inventoryBreakdown()
+    {
+        $vendor = auth()->user()->vendor;
+
+        if (!$vendor) {
+            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+        }
+
+        // Fetch inventory breakdown grouped by category
+        $inventoryBreakdown = $vendor->products()
+            ->selectRaw('
+                categories.name as category_name,
+                SUM(products.quantity) as total_quantity,
+                SUM(products.quantity * products.unit_price) as total_amount
+            ')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->groupBy('categories.name')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Inventory breakdown retrieved successfully',
+            'data' => [
+                'inventory_breakdown' => $inventoryBreakdown
+            ]
+        ], 200);
     }
 }

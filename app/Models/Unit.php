@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Lga extends Model
+class Unit extends Model
 {
     use HasFactory;
 
-    public function state()
+    protected $guarded = [''];
+
+    public function products()
     {
-        return $this->belongsTo(State::class);
+        return $this->hasMany(Product::class);
     }
 }

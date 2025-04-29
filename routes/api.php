@@ -23,32 +23,43 @@ use App\Http\Controllers\Api\WalletController;
 |
 */
 
-Route::post('/signup', [AuthController::class, 'signup']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/login-email', [AuthController::class, 'loginEmail']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::prefix('v1')->group(function() {
+    Route::post('/signup', [AuthController::class, 'signup']);
+    Route::post('/login', [AuthController::class, 'login']);
 
-Route::post('/verify-otp', [AuthController::class, 'verifyOTP']);
+    // Password reset routes
+    Route::post('/password/reset/send-otp', [AuthController::class, 'sendForgotPasswordOTP']);
+    Route::post('/password/reset/verify-otp', [AuthController::class, 'verifyForgotPasswordOTP']);
+    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 
-Route::get('/states', [LocationController::class, 'statesList']);
-Route::get('/state/{id}', [LocationController::class, 'state']);
+    // Locations list
+    Route::get('/countries', [LocationController::class, 'countriesList']);
+    Route::get('/states', [LocationController::class, 'statesList']);
+    Route::get('/state/{id}', [LocationController::class, 'state']);
+    Route::get('/lgas', [LocationController::class, 'lgasList']);
+    Route::get('/lga/{id}', [LocationController::class, 'lga']);
+    Route::get('/banks', [LocationController::class, 'getBankList']);
+    Route::get('/units', [LocationController::class, 'unitList']);
 
-Route::get('/lgas', [LocationController::class, 'lgasList']);
-Route::get('/lga/{id}', [LocationController::class, 'lga']);
+});
 
-Route::middleware('auth:sanctum')->group(function () {
-
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    // user routes start
     Route::get('/user', [AuthController::class, 'getUser']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/delete-account', [AuthController::class, 'delete']);
+    Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
+    // user routes end
 
-    // Profile Image and Signature upload
+    // routes to update profiles start
+    Route::post('/update-bio', [AuthController::class, 'updateBio']);
+    Route::post('/update-location', [AuthController::class, 'updateLocation']);
+    Route::post('/update-business', [AuthController::class, 'updateBusiness']);
+    Route::post('/patch-business', [AuthController::class, 'updateBusinessPartial']);
+    Route::post('/update-password', [AuthController::class, 'changePassword']);
     Route::post('/upload-profile-image', [AuthController::class, 'uploadProfileImage']);
     Route::post('/upload-signature', [AuthController::class, 'uploadSignature']);
-    Route::post('/update-password', [AuthController::class, 'changePassword']);
-    Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
-
-    Route::post('/logout', [AuthController::class, 'logout']);
-
-    Route::post('update-business', [VendorsController::class, 'updateBusiness']);
+    // routes to update profiles end
 
     // Product start
     Route::post('/add-product', [ProductController::class, 'store']);
@@ -58,6 +69,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/product/{id}', [ProductController::class, 'show']);
     Route::post('/product/update', [ProductController::class, 'update']);
     Route::delete('/product/{id}/delete', [ProductController::class, 'destroy']);
+    Route::get('/products-stats', [ProductController::class, 'productStats']);
+    Route::get('/products-low-stock', [ProductController::class, 'lowStockProducts']);
+    Route::get('/products-out-of-stock', [ProductController::class, 'outOfStockProducts']);
+    Route::post('/product/restock', [ProductController::class, 'restockProduct']);
+    Route::get('/products/inventory-breakdown', [ProductController::class, 'inventoryBreakdown']);
     // Product end
 
     //Export Products
@@ -88,15 +104,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
     Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
-
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
-
     //transactions Export
     Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
-
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
-
-
 });
-Route::get('/banks', [StatsController::class, 'getBankList']);

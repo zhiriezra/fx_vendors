@@ -25,6 +25,10 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+// Route::get('/test-email', function () {
+//     return view('emails.forgot_password_otp', ['otp' => '1234']);
+// });
+
 Auth::routes();
 
 Route::group(['middleware' => 'auth'], function(){
