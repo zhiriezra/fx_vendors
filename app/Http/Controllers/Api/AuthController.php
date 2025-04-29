@@ -45,8 +45,8 @@ class AuthController extends Controller
 
         try {
             $user = User::create([
-                'firstname' => 'temp_name',
-                'lastname' => 'temp_name',
+                'firstname' => 'New',
+                'lastname' => 'User',
                 'phone' => rand(7000000000, 9999999999), // Generate random Nigerian phone number
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
@@ -363,7 +363,6 @@ class AuthController extends Controller
                 'business_mobile' => $user->vendor->business_mobile,
                 'business_address' => $user->vendor->business_address,
                 'registration_no' => $user->vendor->registration_no,
-                'tin' => $user->vendor->tin,
                 'business_type' => $user->vendor->business_type,
                 'bank' => $user->vendor->bank,
                 'account_no' => $user->vendor->account_no,
