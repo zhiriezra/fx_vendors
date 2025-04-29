@@ -23,7 +23,7 @@ class ProductsExport implements FromCollection, WithHeadings
             ->select(
                 'products.name',
                 'products.batch_number',
-                'products.type',
+                'products.unit',
                 'products.manufacturer',
                 'categories.name as category_name', 
                 'sub_categories.name as subcategory_name',
