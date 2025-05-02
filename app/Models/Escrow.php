@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Country extends Model
+class Escrow extends Model
 {
     use HasFactory;
 
-    public function walletTypes()
+    protected $guarded = [''];
+
+    public function product()
     {
-        return $this->belongsToMany(WalletType::class, 'wallet_type_countries');
+        return $this->belongsTo(Product::class, 'product_id');
     }
-
 }
-
