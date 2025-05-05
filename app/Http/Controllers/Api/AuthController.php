@@ -78,7 +78,7 @@ class AuthController extends Controller
             'business_name' => 'nullable|string',
             'marital_status' =>'nullable|string',
             'dob' => 'nullable|string',
-            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15',
+            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone',
             'nin' => 'nullable|digits:11',
             'bvn' => 'nullable|digits:11',
         ]);
@@ -119,7 +119,8 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error($e->getMessage(), 'Bio update failed', 500);
+            $error = app()->isProduction() ? 'Bio update failed' : $e->getMessage();
+            return $this->error($error, 'An unexpected error occurred', 500);
         }
     }
 
