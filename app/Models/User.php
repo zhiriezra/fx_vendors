@@ -59,4 +59,46 @@ class User extends Authenticatable implements Wallet
         return $this->hasOne(Agent::class);
     }
 
+     /*     public function wallets(){
+        return $this->hasOne(ModelsWallet::class);
+    } */
+
+   /*     public function wallets(){
+        return $this->hasOne(ModelsWallet::class);
+    } */
+
+    // If you want to manually define, it should be like this:
+
+    public function wallets()
+    {
+        return $this->morphMany(\Bavix\Wallet\Models\Wallet::class, 'holder');
+    }
+
+    public function getWallet($user_id, $slug)
+    {
+        $user_id = $user_id ?? auth()->id();
+
+        return $this->wallets()->where('holder_id', $user_id)->where('slug', $slug)->firstOrFail();
+
+        /* return ModelsWallet::where('holder_id', $user_id)
+            ->where('holder_type', self::class)
+                ->where('slug', $slug)
+                    ->firstOrFail(); */
+    }
+
+    public function walletDeposit($user_id, $slug, $amount)
+    {
+        return $this->getWallet($user_id, $slug)->depositFloat($amount);
+    }
+
+    public function walletWithdraw($user_id, $slug, $amount)
+    {
+        return $this->getWallet($user_id, $slug)->withdrawFloat($amount);
+    }
+
+    public function walletBalance($user_id, $slug)
+    {
+        return $this->getWallet($user_id, $slug)->balanceFloatNum;
+    }
+
 }

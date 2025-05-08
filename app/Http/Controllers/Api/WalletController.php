@@ -2,21 +2,51 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\PayoutRequest;
 use Carbon\Carbon;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Models\PayoutRequest;
 use App\Exports\TransactionsExport;
+use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\GeneralWalletService;
+use Illuminate\Support\Facades\Validator;
 
 class WalletController extends Controller
 {
-    public function getBalance(Request $request){
-        $balance = $request->user()->balance;
+    protected $GeneralWalletService;
 
-        return response()->json(['status' => true, 'message' => 'User wallet balance', 'data' =>['balance' => $balance]], 200);
+    public function __construct(GeneralWalletService $GeneralWalletService)
+    {
+        $this->GeneralWalletService = $GeneralWalletService;
     }
+
+    /**
+     * Get the user's wallet balance or create a wallet if it doesn't exist.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getBalance(Request $request)
+    {
+        $user = $request->user();
+
+        // Check if the user already has a wallet
+        $wallet = Wallet::where('holder_id', $user->id)->first();
+
+        if ($wallet) {
+            // Return the wallet balance from the database if exist
+            return response()->json([
+                'status'  => true,
+                'message' => 'User wallet balance',
+                'balance' => $wallet->balance,
+            ], 200);
+        }
+
+        //Create a wallet for the user if it doesn't exist
+        return $this->GeneralWalletService->createUserWallet($user);
+    }
+
 
     public function requestWithdrawal(Request $request){
         $validator = Validator::make($request->all(), [

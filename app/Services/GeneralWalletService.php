@@ -14,6 +14,8 @@ class GeneralWalletService
 {
     protected $walletProviderFactory;
 
+    public $userCountry = null;
+
     public function __construct(WalletProviderFactory $walletProviderFactory)
     {
         $this->walletProviderFactory = $walletProviderFactory;
@@ -25,7 +27,7 @@ class GeneralWalletService
      * @param int $userId
      * @return bool
      */
-    public function agentHasWallet(int $userId): bool
+    public function vendorHasWallet(int $userId): bool
     {
         return Wallet::where('holder_id', $userId)->exists();
     }
@@ -40,7 +42,12 @@ class GeneralWalletService
     {
         $countryToProviderMap = config('wallet_providers.country_to_provider_map');
 
-        $userCountry = $user->agent?->state?->country?->name;
+        if($user->user_type_id == 1){
+            $userCountry = $user?->agent?->state?->country?->name;
+        }
+        else{
+            $userCountry = $user?->vendor?->state?->country?->name;
+        }
 
         if (!$userCountry) {
             throw new \Exception("User country information is missing or incomplete.");
@@ -80,7 +87,7 @@ class GeneralWalletService
                     'status'  => false,
                     'message' => 'Transaction Failed',
                     'data'    => $result,
-                ], 200);
+                ], 422);
 
             }
 
@@ -127,7 +134,7 @@ class GeneralWalletService
                     'status'  => false,
                     'message' => 'Transaction Failed',
                     'data'    => $result,
-                ], 200);
+                ], 422);
 
             }
 
@@ -144,7 +151,6 @@ class GeneralWalletService
             ], 500);
         }
     }
-
     public function createUserWallet($user)
     {
         // Determine the default wallet provider for the user's country
@@ -170,7 +176,7 @@ class GeneralWalletService
 
             $this->createAndSaveWallet($user, $defaultProvider, $walletData);
 
-            $wallet_balance = $user->getWallet($defaultProvider)->balance;
+            $wallet_balance = $user->walletBalance($user->id, $defaultProvider);
 
             return response()->json([
                 'status'  => true,
@@ -179,16 +185,25 @@ class GeneralWalletService
             ], 201);
 
         } catch (\Exception $e) {
-            // Log the error
-            $walletService->logError('Failed to create wallet', [
-                'user_id' => $user->id,
-                'error'   => $e->getMessage(),
-            ]);
 
-           return response()->json([
-                'status'  => false,
-                'message' => 'Failed to create wallets: ' . $e->getMessage(),
-            ], 500);
+            $message = $e->getMessage();
+
+            if (preg_match('/(\{.*\})/', $message, $matches)) {
+                $jsonPart = $matches[1];
+
+                $walletData = json_decode($jsonPart, true);
+
+                $this->createAndSaveWallet($user, $defaultProvider, $walletData);
+
+                $wallet_balance = $user->walletBalance($user->id, $defaultProvider);
+
+                return response()->json([
+                    'status'  => true,
+                    'message' => 'User wallet balance',
+                    'balance' => $wallet_balance,
+                ], 201);
+            }
+
         }
     }
 
@@ -202,15 +217,21 @@ class GeneralWalletService
             throw new \Exception("Wallet type not found for provider: $defaultProvider");
         }
 
-        Wallet::create([
-            'holder_id'      => $user->id,
-            'holder_type'    => "App\Models\User",//get_class($user),
-            'wallet_type_id' => $wallet_type->id,
-            'slug'           => $defaultProvider,
-            'uuid'           => Str::uuid(),
-            'balance'        => 0.00,
-            'meta'           => json_encode($walletData['data'] ?? []),
-        ]);
+        $wallet = Wallet::where('holder_id', $user->id)->where('slug', $defaultProvider)->first();
+
+        if($wallet == null){
+            Wallet::create([
+                'holder_id'      => $user->id,
+                'holder_type'    => "App\Models\User",
+                'wallet_type_id' => $wallet_type->id,
+                'name'           => $defaultProvider,
+                'slug'           => $defaultProvider,
+                'uuid'           => Str::uuid(),
+                'balance'        => 0.00,
+                'meta'           => json_encode($walletData['data'] ?? []),
+            ]);
+        }
+
     }
 
 
