@@ -65,6 +65,7 @@ class NpsbWalletApiClient
         return $responseData;
     }
 
+
     /**
      * Call an API to fetch wallet balance.
      *
