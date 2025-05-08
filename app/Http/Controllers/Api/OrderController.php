@@ -2,18 +2,32 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
-use Carbon\Carbon;
+use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use App\Exports\OrdersExport;
-use Maatwebsite\Excel\Facades\Excel;
-
+use App\Services\EscrowService;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\GeneralWalletService;
 
 class OrderController extends Controller
 {
+    use ApiResponder;
+
+    public $total_amount = 0.0;
+
+    protected $GeneralWalletService;
+
+    public function __construct(GeneralWalletService $GeneralWalletService)
+    {
+        $this->GeneralWalletService = $GeneralWalletService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -38,9 +52,10 @@ class OrderController extends Controller
         });
         if($orders){
             return response()->json(['status' => true, 'message' => 'My Orders list', 'data' => ['orders' => $orders, 'total' => $orders->count()]], 200);
-        }else{
-            return response()->json(['status' => false, 'message' => "Can not find any orders!"], 404);
         }
+
+        return response()->json(['status' => false, 'message' => "Can not find any orders!"], 404);
+
     }
 
     public function pendingOrders()
@@ -57,7 +72,7 @@ class OrderController extends Controller
                 'product_image' => optional($order->product->product_images->first())->image_path,
                 'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
                 'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
+                'agent_price' => $order->unit_price,
                 'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
                 'status' => $order->status
@@ -152,6 +167,29 @@ class OrderController extends Controller
             ];
 
             return response()->json(['status' => true, 'message' => "Order declined.", 'data' => ['order' => $order]], 200);
+
+        }
+
+        return response()->json([ 'status' => false, 'message' => "Order not found!"], 400);
+    }
+
+    public function declineNew($order_id, EscrowService $escrowService)
+    {
+        $order = Order::with('product')->find($order_id);
+
+        if($order){
+
+            $user = User::where('id', $order->agent->user_id)->first();
+
+            if($order->status != "pending"){
+                return $this->error(['order' => $order], "You can only decline a pending order.", 422);
+            }
+
+            $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
+
+            $escrow = $escrowService->delineEscrow($order_id, $defaultProvider);
+
+            return $escrow;
 
         }
 
