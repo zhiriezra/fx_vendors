@@ -45,10 +45,12 @@ class NpsbWalletService
     {
         $accountNo = $this->getAccountNo($userId);
 
+        $narration = $this->getNarration($userId, 'debit');
+
         // Construct the payload specific to the 9PSB API
         $payload = [
             'accountNo' => $accountNo,
-            'narration' => "Purchase of products",
+            'narration' => $narration,
             'totalAmount' => $data['amount'],
             'transactionId' => $data['transaction_id'],
             'merchant' => [
@@ -76,7 +78,7 @@ class NpsbWalletService
     {
         $accountNo = $this->getAccountNo($userId);
 
-        $narration = $userId == auth()->id() ? "Cancelled successfully." : "Supply of products";
+        $narration = $this->getNarration($userId, 'credit');
 
         // Construct the payload specific to the 9PSB API
         $payload = [
@@ -118,6 +120,37 @@ class NpsbWalletService
 
         return $accountNumber;
     }
+
+    public function getFullName($user_id){
+
+        $wallet = Wallet::where('holder_id', $user_id)->where('slug', 'npsb')->first();
+
+        $meta = json_decode($wallet->meta, true);
+
+        $fullName = $meta['fullName'] ?? null;
+
+        return $fullName;
+    }
+
+    public function getNarration($user_id, $for)
+    {
+        $walletType = $for == "credit" ? "CREDIT_WALLET" : "DEBIT_WALLET";
+
+        $acc_no = $this->getAccountNo($user_id);
+
+        $fullname = $this->getFullName($user_id);
+
+        $datetime = date('YmdHi');
+
+        $randomDigits = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+
+        $result = $datetime . $randomDigits;
+
+        $narration = $fullname . "/" . $walletType . "/" . $acc_no . "/WAAS" . $result;
+
+        return $narration;
+    }
+
 
     /**
      * Validate mandatory fields for wallet creation.
