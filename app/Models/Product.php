@@ -56,6 +56,10 @@ class Product extends Model
         return $this->belongsTo(Unit::class);
     }
 
+/*     public function escrow(){
+        return $this->hasMany(Escrow::class);
+    } */
+
     protected static function boot()
     {
         parent::boot();
