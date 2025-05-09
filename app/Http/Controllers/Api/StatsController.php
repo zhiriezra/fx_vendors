@@ -41,7 +41,7 @@ class StatsController extends Controller
             $totalPendingOrders = $products->sum('pending_orders_count');
             $totalAcceptedOrders = $products->sum('accepted_orders_count');
             $totalOrders = $products->sum('orders_count');
-            
+
             // Calculate total earnings
             $totalEarnings = Order::where('status', 'completed')->whereHas('product', function ($query){
                 $query->where('vendor_id', auth()->user()->vendor->id);
@@ -72,7 +72,7 @@ class StatsController extends Controller
             };
 
             // Count low stock and out of stock products
-            $lowStockThreshold = 3; 
+            $lowStockThreshold = 3;
             $outOfStockCount = $vendor->products()->where('quantity', 0)->count();
             $lowStockCount = $vendor->products()->where('quantity', '>', 0)
                 ->where('quantity', '<=', $lowStockThreshold)
