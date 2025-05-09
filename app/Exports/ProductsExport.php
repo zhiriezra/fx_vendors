@@ -19,14 +19,15 @@ class ProductsExport implements FromCollection, WithHeadings
 
             return Product::leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->leftJoin('sub_categories', 'products.sub_category_id', '=', 'sub_categories.id')
+            ->leftJoin('units', 'products.unit_id', '=', 'units.id')
             ->where('vendor_id', $userId)
             ->select(
                 'products.name',
                 'products.batch_number',
-                'products.unit',
                 'products.manufacturer',
                 'categories.name as category_name', 
                 'sub_categories.name as subcategory_name',
+                'units.name as unit_name',
                 'products.quantity',
                 'products.unit_price',
                 'products.agent_price',
@@ -41,10 +42,10 @@ class ProductsExport implements FromCollection, WithHeadings
         return [
             'Product Name',
             'Batch Number',
-            'Type',
             'Manufacturer',
             'Category',
             'Sub Category',
+            'Unit',
             'Quantity',
             'Unit Price',
             'Agent Price',
