@@ -174,7 +174,7 @@ class NpsbWalletService
             }
         }
 
-        $agentMandatoryFields = ['gender', 'identification_no', 'dob', 'permanent_address'];
+        $agentMandatoryFields = ['gender', 'bvn', 'dob', 'permanent_address'];
         $missingAgentFields = [];
 
         foreach ($agentMandatoryFields as $field) {
@@ -215,7 +215,7 @@ class NpsbWalletService
             'phoneNo'                => $user->phone,
             'email'                  => $user->email,
             'gender'                 => $genderBool,
-            'bvn'                    => $vendor->identification_no,
+            'bvn'                    => $vendor->bvn,
             'dateOfBirth'            => $dobFormatted,
             'address'                => $vendor->permanent_address,
         ];
