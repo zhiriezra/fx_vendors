@@ -49,7 +49,7 @@ class GeneralWalletService
             $userCountry = $user?->vendor?->state?->country?->name;
         }
 
-        if (!$userCountry) {
+        if ($userCountry == null) {
             throw new \Exception("User country information is missing or incomplete.");
         }
 
@@ -174,6 +174,8 @@ class GeneralWalletService
             // Create the wallet
             $walletData = $walletService->createWallet($user->id);
 
+            //return $walletData;
+
             $this->createAndSaveWallet($user, $defaultProvider, $walletData);
 
             $wallet_balance = $user->walletBalance($user->id, $defaultProvider);
@@ -193,16 +195,25 @@ class GeneralWalletService
 
                 $walletData = json_decode($jsonPart, true);
 
-                $this->createAndSaveWallet($user, $defaultProvider, $walletData);
+                if($walletData['data']['responseCode'] == "42"){
 
-                $wallet_balance = $user->walletBalance($user->id, $defaultProvider);
+                    $this->createAndSaveWallet($user, $defaultProvider, $walletData);
 
-                return response()->json([
-                    'status'  => true,
-                    'message' => 'User wallet balance',
-                    'balance' => $wallet_balance,
-                ], 201);
+                    $wallet_balance = $user->walletBalance($user->id, $defaultProvider);
+
+                    return response()->json([
+                        'status'  => true,
+                        'message' => 'User wallet balance',
+                        'balance' => $wallet_balance,
+                    ], 201);
+                }
+
             }
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Error creating wallet: ' . $e->getMessage(),
+            ], 422);
 
         }
     }
