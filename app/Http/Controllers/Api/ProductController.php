@@ -321,7 +321,6 @@ class ProductController extends Controller
                 'unit_price' => $request->unit_price,
                 'agent_price' => $request->agent_price,
                 'description' => $request->description,
-                'quantity' => $request->quantity,
                 'stock_date' => $request->stock_date,
             ]);
 
