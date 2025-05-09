@@ -88,13 +88,15 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     //Orders
     Route::get('/order/{order_id}/accept', [OrderController::class, 'accept']);
-    Route::get('/order/{order_id}/decline', [OrderController::class, 'decline']);
-    Route::get('/order/{order_id}/supplied', [OrderController::class, 'supplied']);
-    Route::get('/orders/pending', [OrderController::class, 'pendingOrders']);
     Route::get('/orders/accepted', [OrderController::class, 'acceptedOrders']);
+    Route::get('/order/{order_id}/decline', [OrderController::class, 'declineNew']);
+    Route::get('/order/{order_id}/declined', [OrderController::class, 'declined']);
     Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
+    Route::get('/order/{order_id}/supplied', [OrderController::class, 'supplied']);
     Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
-    Route::get('/orders/{vendor_id}', [OrderController::class, 'index']);
+    Route::get('/orders/pending', [OrderController::class, 'pendingOrders']);
+    Route::get('/orders/{order_id}', [OrderController::class, 'singleOrder']);
+    Route::get('/orders', [OrderController::class, 'index']);
 
     //Export User Orders
     Route::get('order/export', [OrderController::class, 'exportOrder'])

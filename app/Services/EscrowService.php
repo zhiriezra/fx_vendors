@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Escrow;
-use App\Models\Wallet;
 use App\Traits\ApiResponder;
 use Illuminate\Support\Facades\DB;
 use App\Services\GeneralWalletService;
@@ -34,19 +33,21 @@ class EscrowService{
 
                 $user = User::where('id', $user_id)->first();
 
-                DB::transaction(function () use ($order, $user, $slug) {
+                return DB::transaction(function () use ($order, $user, $slug) {
 
                     $trans_id = 'EXA0CT' . now()->format('YmdHis') . rand(1000, 9999);
 
                     $amount = $order->unit_price * $order->quantity;
 
+                    $amount = (float) $amount;
+
                     $orderParamTwo = [
                         'transaction_id'=>$trans_id,
                         'amount'=>$amount,
-                        'user_id'=>$user->id, //this is an Agent not the auth user
+                        'user_id'=>$user->id, //this is an Agent not the auth user or Vendor
                     ];
 
-                    $response = $this->GeneralWalletService->creditUserWallet($user, $orderParamTwo);
+                    $response = $this->GeneralWalletService->creditUserWallet($orderParamTwo);
 
                     $virtual_wallet = json_decode($response->getContent(), true);
 
@@ -56,37 +57,50 @@ class EscrowService{
                     ) {
                         if ($virtual_wallet['data']['data']['responseCode'] == "00") {
 
-                            $order->update(['status' => 'declined']);
-
                             $user->walletDeposit($user->id, $slug, $amount);
 
-                            $check_not_completed_order = Escrow::where('transaction_id', $order->transaction_id)
-                                        ->whereIn('status', ['pending', 'accepted', 'supplied', 'completed'])->first();
+                            $order->update(['status' => 'declined']);
 
-                            if($check_not_completed_order == null){
+                            $check_not_completed_order = Order::where('transaction_id', $order->transaction_id)
+                                            ->where('id', '!=', $order->id)
+                                            ->whereIn('status', ['pending', 'accepted', 'supplied'])->first();
 
-                                $escrow = Escrow::where('transaction_id', $order->transaction_id)->first();
+                                if($check_not_completed_order == null){
 
-                                if($escrow  != null){
-                                    $escrow->update(['status' => 'declined']);
+                                    $check_completed_order = Order::where('transaction_id', $order->transaction_id)
+                                            ->where('id', '!=', $order->id)
+                                                ->where('status', 'completed')->first();
+
+                                    $escrow = Escrow::where('transaction_id', $order->transaction_id)->first();
+
+                                    if($check_completed_order != null){
+
+                                        if($escrow  != null){
+                                            $escrow->update(['status' => 'completed']);
+                                        }
+                                    }
+                                    else{
+                                        if($escrow  != null){
+                                            $escrow->update(['status' => 'declined']);
+                                        }
+                                    }
                                 }
-                            }
+
+                            $order = [
+                                'id' => $order->id,
+                                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                                'product_name' => $order->product->name,
+                                'product_image' => optional($order->product->product_images->first())->image_path,
+                                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                                'quantity' => $order->quantity,
+                                'agent_price' => $order->product->agent_price,
+                                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                                'status' => $order->status
+                            ];
+
+                            return $this->success(['order' => $order], 'Order declined successfully');
                         }
-
-                        $order = [
-                            'id' => $order->id,
-                            'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                            'product_name' => $order->product->name,
-                            'product_image' => optional($order->product->product_images->first())->image_path,
-                            'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                            'quantity' => $order->quantity,
-                            'agent_price' => $order->product->agent_price,
-                            'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                            'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                            'status' => $order->status
-                        ];
-
-                        return $this->success(['order' => $order], 'Order declined successfully');
                     }
 
                     $message = $virtual_wallet['message'] ?? 'An unexpected error occurred.';

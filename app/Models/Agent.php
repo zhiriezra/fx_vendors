@@ -31,4 +31,9 @@ class Agent extends Model
         return $this->hasMany(Farmer::class);
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
 }
