@@ -93,6 +93,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
     Route::get('/order/{order_id}/supplied', [OrderController::class, 'confirmSupplied']);
     Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
+    Route::get('/orders/completed', [OrderController::class, 'completedOrders']);
     Route::get('/orders/pending', [OrderController::class, 'pendingOrders']);
     Route::get('/order/{order_id}', [OrderController::class, 'singleOrder']);
     Route::get('/orders', [OrderController::class, 'index']);
