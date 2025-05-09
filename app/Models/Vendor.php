@@ -34,7 +34,7 @@ class Vendor extends Model
     public function lga()
     {
         return $this->belongsTo(Lga::class);
-    }    
+    }
 
     public function orders()
     {

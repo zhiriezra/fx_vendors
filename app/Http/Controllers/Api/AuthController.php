@@ -229,16 +229,16 @@ class AuthController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'business_email' => 'nullable|email', 
-            'business_mobile' => 'nullable|string', 
-            'business_name' => 'nullable|string', 
-            'business_address' => 'nullable|string', 
-            'registration_no' => 'nullable|string', 
-            'tin' => 'nullable|string', 
-            'business_type' => 'nullable', 
+            'business_email' => 'nullable|email',
+            'business_mobile' => 'nullable|string',
+            'business_name' => 'nullable|string',
+            'business_address' => 'nullable|string',
+            'registration_no' => 'nullable|string',
+            'tin' => 'nullable|string',
+            'business_type' => 'nullable',
             'bank' => 'nullable',
-            'account_no' => 'nullable|string', 
-            'account_name' => 'nullable|string', 
+            'account_no' => 'nullable|string',
+            'account_name' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -299,6 +299,7 @@ class AuthController extends Controller
 
         if($user)
         {
+
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
                 $user->tokens()->delete(); // Delete old tokens
                 return $this->success(['token' => $user->createToken('auth-token')->plainTextToken], 'Success', 200);
@@ -419,8 +420,8 @@ class AuthController extends Controller
             $user->save();
 
             return response()->json([
-                'status'=> true, 
-                'message' => 'Profile image uploaded successfully', 
+                'status'=> true,
+                'message' => 'Profile image uploaded successfully',
                 'data' => [
                 'profile_image' => url($fullImagePath)
                 ]
@@ -455,11 +456,11 @@ class AuthController extends Controller
             $user->save();
 
             return response()->json([
-                'status'=> true, 
-                'message' => 'Signature uploaded successfully', 
+                'status'=> true,
+                'message' => 'Signature uploaded successfully',
                 'data' => [
                 'profile_image' => url($fullImagePath)
-                ] 
+                ]
             ], 200);
         }
 
@@ -506,7 +507,7 @@ class AuthController extends Controller
         }
 
         try {
-           
+
             $user = User::where('email', $request->email)->first();
 
              // Check if the user is an Vendor
@@ -528,7 +529,7 @@ class AuthController extends Controller
 
             // Email channel
             if ($request->channel === 'email') {
-    
+
                 Mail::to($user->email)->send(new ForgotPasswordMail($otp)
                 );
             } elseif ($request->channel === 'sms') {
@@ -595,7 +596,7 @@ class AuthController extends Controller
                 'status' => true,
                 'message' => 'OTP verified successfully',
                 'data' => [
-                    'token' => $token 
+                    'token' => $token
                 ]
             ], 200);
 
@@ -613,8 +614,8 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|min:8|confirmed', 
-            'token' => 'required|string', 
+            'password' => 'required|min:8|confirmed',
+            'token' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -638,12 +639,12 @@ class AuthController extends Controller
                     'status' => false,
                     'message' => 'Invalid or expired token',
                     'errors' => null
-                ], 403); 
+                ], 403);
             }
 
             // Update the user's password
             $user->update([
-                'password' => bcrypt($request->password) 
+                'password' => bcrypt($request->password)
             ]);
 
             // Clear the cached token
@@ -662,5 +663,5 @@ class AuthController extends Controller
                 'errors' => null
             ], 500);
         }
-    }    
+    }
 }

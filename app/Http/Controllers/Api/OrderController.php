@@ -33,7 +33,7 @@ class OrderController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($vendor_id)
+    public function index()
     {
         $user = auth()->user();
         $orders = $user->vendor->orders()->with(['product.product_images', 'agent.user'])->get()->map(function($order){
@@ -57,6 +57,7 @@ class OrderController extends Controller
         return response()->json(['status' => false, 'message' => "Can not find any orders!"], 404);
 
     }
+
 
     public function pendingOrders()
     {
@@ -84,6 +85,32 @@ class OrderController extends Controller
         }
 
         return response()->json([ 'status' => false, 'message' => "No pending orders found!"], 500);
+    }
+
+    public function singleOrder($order_id)
+    {
+        $order = Order::with('product')->find($order_id);
+
+        if($order){
+
+            $order = [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
+                'status' => $order->status
+            ];
+
+            return response()->json(['status' => true, 'message' => "Single Order.", 'data' => ['order' => $order]], 200);
+
+        }
+
+        return response()->json([ 'status' => false, 'message' => "order not found"], 404);
     }
 
     public function accept($order_id)
@@ -144,7 +171,7 @@ class OrderController extends Controller
         return response()->json([ 'status' => false, 'message' => "No accepted orders found!"], 500);
     }
 
-    public function decline($order_id)
+    public function declined($order_id)
     {
         $order = Order::with('product')->find($order_id);
 
@@ -182,7 +209,7 @@ class OrderController extends Controller
             $user = User::where('id', $order->agent->user_id)->first();
 
             if($order->status != "pending"){
-                return $this->error(['order' => $order], "You can only decline a pending order.", 422);
+                return $this->error(null, "You can only decline a pending order.", 422);
             }
 
             $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
