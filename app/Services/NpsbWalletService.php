@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Agent;
+use App\Models\Vendor;
 use App\Models\Wallet;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -162,23 +163,23 @@ class NpsbWalletService
     {
 
         $user = User::find($userId);
-        $agent = Agent::where('user_id', $userId)->first();
+        $agent = Vendor::where('user_id', $userId)->first();
 
         $userMandatoryFields = ['firstname', 'lastname', 'phone', 'email'];
         $missingUserFields = [];
 
         foreach ($userMandatoryFields as $field) {
             if (empty($user->$field)) {
-                $missingUserFields[] = "users.$field";
+                $missingUserFields[] = $field;
             }
         }
 
-        $agentMandatoryFields = ['gender', 'bvn', 'nin', 'dob', 'permanent_address'];
+        $agentMandatoryFields = ['gender', 'identification_no', 'dob', 'permanent_address'];
         $missingAgentFields = [];
 
         foreach ($agentMandatoryFields as $field) {
             if (empty($agent->$field)) {
-                $missingAgentFields[] = "agents.$field";
+                $missingAgentFields[] = $field;
             }
         }
 
@@ -196,16 +197,16 @@ class NpsbWalletService
     {
         // Retrieve user and agent records
         $user = User::find($userId);
-        $agent = Agent::where('user_id', $userId)->first();
+        $vendor = Vendor::where('user_id', $userId)->first();
 
         // Validate that user and agent exist
-        if (!$user || !$agent) {
+        if (!$user || !$vendor) {
             throw new \Exception("User or agent record not found for user ID: $userId");
         }
 
-        $genderBool = strtolower($agent->gender) === 'male' ? 0 : 1;
+        $genderBool = strtolower($vendor->gender) === 'male' ? 0 : 1;
 
-        $dobFormatted = \Carbon\Carbon::parse($agent->dob)->format('d/m/Y');
+        $dobFormatted = \Carbon\Carbon::parse($vendor->dob)->format('d/m/Y');
 
         return [
             'transactionTrackingRef' => Str::uuid(), // Unique transaction reference
@@ -214,9 +215,9 @@ class NpsbWalletService
             'phoneNo'                => $user->phone,
             'email'                  => $user->email,
             'gender'                 => $genderBool,
-            'bvn'                    => $agent->bvn,
+            'bvn'                    => $vendor->identification_no,
             'dateOfBirth'            => $dobFormatted,
-            'address'                => $agent->permanent_address,
+            'address'                => $vendor->permanent_address,
         ];
     }
 }
