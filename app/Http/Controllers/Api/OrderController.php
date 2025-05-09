@@ -171,35 +171,6 @@ class OrderController extends Controller
         return response()->json([ 'status' => false, 'message' => "No accepted orders found!"], 500);
     }
 
-    public function declined($order_id)
-    {
-        $order = Order::with('product')->find($order_id);
-
-        if($order){
-
-            $order->status = 'declined';
-            $order->save();
-
-            $order = [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-
-            return response()->json(['status' => true, 'message' => "Order declined.", 'data' => ['order' => $order]], 200);
-
-        }
-
-        return response()->json([ 'status' => false, 'message' => "Order not found!"], 400);
-    }
-
     public function declineNew($order_id, EscrowService $escrowService)
     {
         $order = Order::with('product')->find($order_id);
@@ -251,7 +222,7 @@ class OrderController extends Controller
         return response()->json([ 'status' => false, 'message' => "No declined orders found!"], 500);
     }
 
-    public function supplied($order_id)
+    public function confirmSupplied($order_id)
     {
         $order = Order::with('product')->find($order_id);
 
