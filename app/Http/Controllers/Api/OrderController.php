@@ -278,6 +278,35 @@ class OrderController extends Controller
         return response()->json([ 'status' => false, 'message' => "No supplied orders found!"], 500);
     }
 
+     public function completedOrders()
+    {
+        $vendorId = auth()->user()->vendor->id;
+
+        $orders = Order::where('status', 'completed')->whereHas('product', function($query) use ($vendorId) {
+            $query->where('vendor_id', $vendorId);
+        })->get()->map(function($order){
+            return [
+                'id' => $order->id,
+                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
+                'product_name' => $order->product->name,
+                'product_image' => optional($order->product->product_images->first())->image_path,
+                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
+                'quantity' => $order->quantity,
+                'agent_price' => $order->product->agent_price,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'status' => $order->status
+            ];
+        });
+
+        if($orders){
+            return response()->json(['status' => true, 'message' => "List of completed orders.", 'data' => ['order' => $orders]], 200);
+        }
+
+        return response()->json([ 'status' => false, 'message' => "No completed orders found!"], 500);
+    }
+
+
     //Export user Orders
     public function exportOrder()
     {
