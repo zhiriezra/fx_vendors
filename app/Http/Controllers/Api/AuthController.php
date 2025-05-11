@@ -40,7 +40,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(), 'Validation failed', 422);
+            return $this->error($validator->errors()->first(), 'Validation failed', 422);
         }
 
         try {
