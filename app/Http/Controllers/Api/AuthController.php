@@ -291,7 +291,7 @@ class AuthController extends Controller
 
         if($validator->fails())
         {
-            return $this->validation($validator->errors(), 'Invalid Email address or password', 422);
+            return $this->validation($validator->errors()->first(), 'Invalid Email address or password', 422);
         }
 
         // Look for user
