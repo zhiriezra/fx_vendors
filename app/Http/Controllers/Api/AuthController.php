@@ -78,7 +78,7 @@ class AuthController extends Controller
             'business_name' => 'nullable|string',
             'marital_status' =>'nullable|string',
             'dob' => 'nullable|string',
-            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . auth()->id(),
+            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . $this->user()->id,
             'nin' => 'nullable|digits:11',
             'bvn' => 'nullable|digits:11',
         ]);
