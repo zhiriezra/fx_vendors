@@ -102,7 +102,7 @@ class AuthController extends Controller
                 'phone' => $request->phone,
             ]);
 
-            $vendor = Vendor ::updateOrCreate([
+            $vendor = Vendor::updateOrCreate([
                 'user_id' => $user->id,
             ], [
                 'gender' => $request->gender,
