@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\Agent;
 use App\Models\Vendor;
 use App\Models\Wallet;
 use Illuminate\Support\Str;

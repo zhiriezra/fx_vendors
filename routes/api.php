@@ -102,14 +102,18 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
     // Wallet
-    Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
     Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
+
+    Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
+    Route::get('/wallet-enquiry', [WalletController::class, 'walletEnquiry']);
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
+
     //transactions Export
     Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
+
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
 
-    Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
+
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
 use App\Models\Wallet;
+use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use App\Models\PayoutRequest;
 use App\Exports\TransactionsExport;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Validator;
 
 class WalletController extends Controller
 {
+    use ApiResponder;
+
     protected $GeneralWalletService;
 
     public function __construct(GeneralWalletService $GeneralWalletService)
@@ -31,19 +34,36 @@ class WalletController extends Controller
     {
         $user = $request->user();
 
+        $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
+
         // Check if the user already has a wallet
-        $wallet = Wallet::where('holder_id', $user->id)->first();
+        $wallet = Wallet::where('holder_id', $user->id)->where('slug', $defaultProvider)->first();
 
         if ($wallet) {
-            // Return the wallet balance from the database if exist
-            return response()->json([
-                'status'  => true,
-                'message' => 'User wallet balance',
-                'balance' => $wallet->balance,
-            ], 200);
+            // Return the wallet information
+            return $this->success(['balance' => $wallet->balance], 'User wallet balance.');
         }
 
         //Create a wallet for the user if it doesn't exist
+        return $this->GeneralWalletService->createUserWallet($user);
+    }
+
+
+    public function walletEnquiry(Request $request)
+    {
+        $user = $request->user();
+
+        $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
+
+        // Check if the user already has a wallet
+        $wallet = Wallet::where('holder_id', $user->id)->where('slug', $defaultProvider)->first();
+
+        if ($wallet) {
+            // Return the wallet information
+            return $this->success(['wallet' => $wallet], 'User default wallet.');
+        }
+
+        // Create a wallet for the user if it doesn't exist
         return $this->GeneralWalletService->createUserWallet($user);
     }
 
@@ -91,24 +111,6 @@ class WalletController extends Controller
 
     }
 
-    public function withdrawalRequests(){
-        $payoutRequests = PayoutRequest::where('vendor_id', auth()->user()->vendor->id)->get()->map(function($payout){
-            return [
-                'id' => $payout->id,
-                'vendor_id' => $payout->vendor_id,
-                'amount' => $payout->amount,
-                'transaction_reference' => null,
-                'status' => $payout->status,
-                'created_at' => Carbon::parse($payout->created_at)->format('M j, Y, g:ia'),
-                'updated_at' => Carbon::parse($payout->updated_at)->format('M j, Y, g:ia')
-
-            ];
-        });
-
-        return response()->json(['status' => true, 'message' => 'Withdrawal requests', 'data' => ['requests' => $payoutRequests]], 200);
-
-    }
-
     public function transactions(){
 
         $transactions = auth()->user()->transactions->map(function($transaction){
@@ -117,12 +119,14 @@ class WalletController extends Controller
                 'user_id' => $transaction->payable_id,
                 'type' => $transaction->type,
                 'amount' => $transaction->amount,
+                'meta' => $transaction->meta,
                 'created_at' => Carbon::parse($transaction->created_at)->format('M j, Y, g:ia'),
                 'updated_at' => Carbon::parse($transaction->updated_at)->format('M j, Y, g:ia')
 
             ];
         });
-        return response()->json(['status' => true, 'message' => 'My recent transactions', 'data' => ['transactions' => $transactions]], 200);
+
+        return $this->success(['transactions' => $transactions], 'My recent transactions.');
 
     }
 
