@@ -57,21 +57,28 @@ class EscrowService{
                     ) {
                         if ($virtual_wallet['data']['data']['responseCode'] == "00") {
 
-                            $user->walletDeposit($user->id, $slug, $amount);
+                        $meta = [
+                                'type' => 'transaction',
+                                'transaction_id' => $order->transaction_id,
+                            ];
+
+                            $user->walletDeposit($user->id, $slug, $amount, $meta);
+
+                            $split_tran_id = explode('-', $order->transaction_id);
 
                             $order->update(['status' => 'declined']);
 
-                            $check_not_completed_order = Order::where('transaction_id', $order->transaction_id)
+                            $check_not_completed_order = Order::where('transaction_id', 'LIKE', $split_tran_id[0] . '%')
                                             ->where('id', '!=', $order->id)
                                             ->whereIn('status', ['pending', 'accepted', 'supplied'])->first();
 
                                 if($check_not_completed_order == null){
 
-                                    $check_completed_order = Order::where('transaction_id', $order->transaction_id)
+                                    $check_completed_order = Order::where('transaction_id', 'LIKE', $split_tran_id[0] . '%')
                                             ->where('id', '!=', $order->id)
                                                 ->where('status', 'completed')->first();
 
-                                    $escrow = Escrow::where('transaction_id', $order->transaction_id)->first();
+                                    $escrow = Escrow::where('transaction_id', $split_tran_id[0] . '%')->first();
 
                                     if($check_completed_order != null){
 
