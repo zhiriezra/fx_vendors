@@ -36,25 +36,16 @@ class OrderController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $orders = $user->vendor->orders()->with(['product.product_images', 'agent.user'])->get()->map(function($order){
-            return [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-        });
-        if($orders){
-            return response()->json(['status' => true, 'message' => 'My Orders list', 'data' => ['orders' => $orders, 'total' => $orders->count()]], 200);
+
+        $orders = $user->vendor->orders()->with(['product.product_images', 'agent.user'])
+            ->get()
+            ->map(fn($order) => $this->formatOrder($order));
+
+        if ($orders->isEmpty()) {
+            return $this->error(null, "No orders found!", 404);
         }
 
-        return response()->json(['status' => false, 'message' => "Can not find any orders!"], 404);
+        return $this->success(['orders' => $orders], 'All orders');
 
     }
 
@@ -65,52 +56,25 @@ class OrderController extends Controller
 
         $orders = Order::where('status', 'pending')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get()->map(function($order){
-            return [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->unit_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-        });
+        })->get()->map(fn($order) => $this->formatOrder($order));
 
-        if($orders){
-            return response()->json(['status' => true, 'message' => "List of pending orders.", 'data' => ['order' => $orders]], 200);
+
+        if ($orders->isEmpty()) {
+            return $this->error(null, "No pending orders found!", 404);
         }
 
-        return response()->json([ 'status' => false, 'message' => "No pending orders found!"], 500);
+        return $this->success(['orders' => $orders], 'All pending orders');
     }
 
     public function singleOrder($order_id)
     {
-        $order = Order::with('product')->find($order_id);
+        $order = Order::with(['product.product_images', 'agent.user', 'farmer'])->find($order_id);
 
-        if($order){
-
-            $order = [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-
-            return response()->json(['status' => true, 'message' => "Single Order.", 'data' => ['order' => $order]], 200);
-
+        if ($order) {
+           return $this->success(['order' => $this->formatOrder($order)], 'Single Order');
         }
 
-        return response()->json([ 'status' => false, 'message' => "order not found"], 404);
+        return $this->error(null, 'No order found.', 404);
     }
 
     public function accept($order_id)
@@ -122,24 +86,11 @@ class OrderController extends Controller
             $order->status = 'accepted';
             $order->save();
 
-            $order = [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-
-            return response()->json(['status' => true, 'message' => "Order accepted.", 'data' => ['order' => $order]], 200);
+            return $this->success(['order' => $this->formatOrder($order)], 'Single Order');
 
         }
 
-        return response()->json([ 'status' => false, 'message' => "order not found"], 404);
+        return $this->error(null, 'Order not  found.', 404);
     }
 
     public function acceptedOrders()
@@ -148,27 +99,13 @@ class OrderController extends Controller
 
         $orders = Order::where('status', 'accepted')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get()
-        ->map(function($order){
-            return [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'product_name' => $order->product->name,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-        });
+        })->get()->map(fn($order) => $this->formatOrder($order));
 
-        if($orders){
-            return response()->json(['status' => true, 'message' => "List of accepted orders.", 'data' => ['order' => $orders]], 200);
+        if ($orders->isEmpty()) {
+            return $this->error(null, "No accepted orders found!", 404);
         }
 
-        return response()->json([ 'status' => false, 'message' => "No accepted orders found!"], 500);
+        return $this->success(['orders' => $orders], 'All active accepted orders');
     }
 
     public function declineNew($order_id, EscrowService $escrowService)
@@ -191,7 +128,7 @@ class OrderController extends Controller
 
         }
 
-        return response()->json([ 'status' => false, 'message' => "Order not found!"], 400);
+        return response()->json([ 'status' => false, 'message' => "Order not found!"], 404);
     }
 
     public function declinedOrders()
@@ -200,26 +137,13 @@ class OrderController extends Controller
 
         $orders = Order::where('status', 'declined')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get()->map(function($order){
-            return [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-        });
+        })->get()->map(fn($order) => $this->formatOrder($order));
 
-        if($orders){
-            return response()->json(['status' => true, 'message' => "List of declined orders.", 'data' => ['order' => $orders]], 200);
+        if ($orders->isEmpty()) {
+            return $this->error(null, "No declined orders found!", 404);
         }
 
-        return response()->json([ 'status' => false, 'message' => "No declined orders found!"], 500);
+        return $this->success(['orders' => $orders], 'All declined orders');
     }
 
     public function confirmSupplied($order_id)
@@ -228,26 +152,19 @@ class OrderController extends Controller
 
         if($order){
 
+            if($order->status != "accepted"){
+                return $this->error(null, "You can only confirm an accepted order.", 422);
+            }
+
             $order->status = 'supplied';
             $order->save();
 
-            $order = [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-            return response()->json(['status' => true, 'message' => "Order supplied.", 'data' => ['order' => $order]], 200);
+            return $this->success(['order' => $this->formatOrder($order)], 'Order supplied.');
 
         }
 
-        return response()->json([ 'status' => false, 'message' => "Order not found!"], 400);
+        return $this->error(null, 'Order not  found.', 404);
+
     }
 
     public function suppliedOrders()
@@ -256,54 +173,29 @@ class OrderController extends Controller
 
         $orders = Order::where('status', 'supplied')->whereHas('product', function($query) use ($vendorId) {
             $query->where('vendor_id', $vendorId);
-        })->get()->map(function($order){
-            return [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-        });
+        })->get()->map(fn($order) => $this->formatOrder($order));
 
-        if($orders){
-            return response()->json(['status' => true, 'message' => "List of supplied orders.", 'data' => ['order' => $orders]], 200);
+        if($orders->isEmpty()) {
+            return $this->error(null, "No active supplied orders found!", 404);
         }
 
-        return response()->json([ 'status' => false, 'message' => "No supplied orders found!"], 500);
+        return $this->success(['orders' => $orders], 'List of active supplied orders');
     }
 
      public function completedOrders()
     {
         $vendorId = auth()->user()->vendor->id;
 
-        $orders = Order::where('status', 'completed')->whereHas('product', function($query) use ($vendorId) {
-            $query->where('vendor_id', $vendorId);
-        })->get()->map(function($order){
-            return [
-                'id' => $order->id,
-                'agent' => $order->agent->user->firstname.' '.$order->agent->user->lastname,
-                'product_name' => $order->product->name,
-                'product_image' => optional($order->product->product_images->first())->image_path,
-                'farmer' => $order->farmer->fname.' '.$order->farmer->lname,
-                'quantity' => $order->quantity,
-                'agent_price' => $order->product->agent_price,
-                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'updated_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
-                'status' => $order->status
-            ];
-        });
+        $orders = Order::where('status', 'completed')
+            ->whereHas('product', function($query) use ($vendorId) {
+                $query->where('vendor_id', $vendorId);
+            })->get()->map(fn($order) => $this->formatOrder($order));
 
-        if($orders){
-            return response()->json(['status' => true, 'message' => "List of completed orders.", 'data' => ['order' => $orders]], 200);
+        if ($orders->isEmpty()) {
+            return $this->error(null, "No completed orders found!", 404);
         }
 
-        return response()->json([ 'status' => false, 'message' => "No completed orders found!"], 500);
+        return $this->success(['orders' => $orders], 'List of completed orders');
     }
 
 
@@ -323,6 +215,22 @@ class OrderController extends Controller
         //     'message' => 'Export generated successfully'
         // ]);
 
+    }
+
+    private function formatOrder($order)
+    {
+        return [
+            'id' => $order->id,
+            'agent' => optional($order->agent->user)->firstname . ' ' . optional($order->agent->user)->lastname,
+            'product_name' => optional($order->product)->name,
+            'product_image' => optional($order?->product?->product_images?->first())->image_path,
+            'farmer' => optional($order->farmer)->fname . ' ' . optional($order->farmer)->lname,
+            'quantity' => $order->quantity,
+            'agent_price' => $order->unit_price ?? optional($order->product)->agent_price,
+            'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+            'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
+            'status' => $order->status
+        ];
     }
 
 }
