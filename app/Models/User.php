@@ -86,14 +86,14 @@ class User extends Authenticatable implements Wallet
                     ->firstOrFail(); */
     }
 
-    public function walletDeposit($user_id, $slug, $amount)
+    public function walletDeposit($user_id, $slug, $amount, $meta)
     {
-        return $this->getWallet($user_id, $slug)->depositFloat($amount);
+        return $this->getWallet($user_id, $slug)->depositFloat($amount, $meta);
     }
 
-    public function walletWithdraw($user_id, $slug, $amount)
+    public function walletWithdraw($user_id, $slug, $amount, $meta)
     {
-        return $this->getWallet($user_id, $slug)->withdrawFloat($amount);
+        return $this->getWallet($user_id, $slug)->withdrawFloat($amount, $meta);
     }
 
     public function walletBalance($user_id, $slug)
