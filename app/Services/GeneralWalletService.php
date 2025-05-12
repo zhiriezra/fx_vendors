@@ -29,7 +29,11 @@ class GeneralWalletService
      */
     public function vendorHasWallet(int $userId): bool
     {
-        return Wallet::where('holder_id', $userId)->exists();
+        $user = User::where('id', $userId)->first();
+
+        $defaultProvider = $this->getDefaultWalletProviderForUser($user);
+
+        return Wallet::where('holder_id', $userId)->where('slug', $defaultProvider)->exists();
     }
 
     /**
