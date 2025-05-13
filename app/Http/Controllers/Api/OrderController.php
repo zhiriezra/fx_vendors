@@ -212,21 +212,24 @@ class OrderController extends Controller
 
 
     //Export user Orders
-    public function exportOrder()
+    public function exportOrders()
     {
+        // Check if the vendor has any orders
+        $hasOrders = Order::join('products', 'orders.product_id', '=', 'products.id')
+            ->join('vendors', 'products.vendor_id', '=', 'vendors.id')
+            ->where('vendors.user_id', auth()->id())
+            ->exists();
+
+        if (!$hasOrders) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No orders found for export.'
+            ], 404); 
+        }
+
+        // Proceed with export if orders exist
         $fileName = 'orders_' . date('Y-m-d_H-i-s') . '.xlsx';
-
         return Excel::download(new OrdersExport, $fileName);
-
-        // $fileName = 'orders_' . date('Y-m-d') . '.xlsx';
-        // Excel::store(new OrdersExport, $fileName, 'public');
-
-        // return response()->json([
-        //     'success' => true,
-        //     'file' => url('storage/' . $fileName),
-        //     'message' => 'Export generated successfully'
-        // ]);
-
     }
 
     private function formatOrder($order)

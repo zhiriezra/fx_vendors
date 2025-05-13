@@ -40,7 +40,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(), 'Validation failed', 422);
+            return $this->error($validator->errors()->first(), 'Validation failed', 422);
         }
 
         try {
@@ -78,7 +78,7 @@ class AuthController extends Controller
             'business_name' => 'nullable|string',
             'marital_status' =>'nullable|string',
             'dob' => 'nullable|string',
-            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone',
+            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . $this->user()->id,
             'nin' => 'nullable|digits:11',
             'bvn' => 'nullable|digits:11',
         ]);
@@ -102,7 +102,7 @@ class AuthController extends Controller
                 'phone' => $request->phone,
             ]);
 
-            $vendor = Vendor ::updateOrCreate([
+            $vendor = Vendor::updateOrCreate([
                 'user_id' => $user->id,
             ], [
                 'gender' => $request->gender,
@@ -291,7 +291,7 @@ class AuthController extends Controller
 
         if($validator->fails())
         {
-            return $this->validation($validator->errors(), 'Invalid Email address or password', 422);
+            return $this->validation($validator->errors()->first(), 'Invalid Email address or password', 422);
         }
 
         // Look for user
