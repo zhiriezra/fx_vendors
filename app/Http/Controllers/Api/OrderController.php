@@ -74,7 +74,7 @@ class OrderController extends Controller
            return $this->success(['order' => $this->formatOrder($order)], 'Single Order');
         }
 
-        return $this->error(null, 'No order found.', 404);
+        return $this->error(['order' => $this->formatOrder($order)], 'No order found.', 404);
     }
 
     public function accept($order_id)
@@ -86,7 +86,7 @@ class OrderController extends Controller
             $order->status = 'accepted';
             $order->save();
 
-            return $this->success(['order' => $this->formatOrder($order)], 'Single Order');
+            return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
 
         }
 
@@ -120,11 +120,23 @@ class OrderController extends Controller
                 return $this->error(null, "You can only decline a pending order.", 422);
             }
 
-            $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
+            if($order->payment_type == "wallet"){
 
-            $escrow = $escrowService->delineEscrow($order_id, $defaultProvider);
+                $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
 
-            return $escrow;
+                $escrow = $escrowService->delineEscrow($order_id, $defaultProvider);
+
+                return $escrow;
+
+            }
+            else{
+
+                $order->status = "declined";
+                $order->save();
+
+                return $this->success(['order' => $this->formatOrder($order)], 'Order declined successfully.');
+
+            }
 
         }
 
