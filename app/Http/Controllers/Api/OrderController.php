@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
+use App\Services\PushNotificationService;
 
 class OrderController extends Controller
 {
@@ -86,6 +87,16 @@ class OrderController extends Controller
             $order->status = 'accepted';
             $order->save();
 
+            $title = 'Order Accepted';
+            $body = 'Your order has been accepted by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+            $data = [
+                'type' => 'single',
+                'user_id' => $order->agent->user_id,
+                'transaction_id' => $order->transaction_id
+            ];
+
+            $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+
             return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
 
         }
@@ -134,6 +145,16 @@ class OrderController extends Controller
                 $order->status = "declined";
                 $order->save();
 
+                $title = 'Order Declined';
+                $body = 'Your order has been declined by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+                $data = [
+                    'type' => 'single',
+                    'user_id' => $order->agent->user_id,
+                    'transaction_id' => $order->transaction_id
+                ];
+
+                $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+
                 return $this->success(['order' => $this->formatOrder($order)], 'Order declined successfully.');
 
             }
@@ -170,6 +191,16 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
+
+            $title = 'Order Supplied';
+            $body = 'Your order has been supplied by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+            $data = [
+                'type' => 'single',
+                'user_id' => $order->agent->user_id,
+                'transaction_id' => $order->transaction_id
+            ];
+
+            $this->pushNotificationService->sendToUser($user, $title, $body, $data);
 
             return $this->success(['order' => $this->formatOrder($order)], 'Order supplied.');
 
