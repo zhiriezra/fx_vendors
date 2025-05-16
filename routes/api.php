@@ -99,8 +99,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
 
     //Export User Orders
-    Route::get('order/export', [OrderController::class, 'exportOrder'])
-    ->name('order.export');
+    Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
     // Wallet
     Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
