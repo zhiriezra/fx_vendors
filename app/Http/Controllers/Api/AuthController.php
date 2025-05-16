@@ -126,6 +126,7 @@ class AuthController extends Controller
             ]);
 
             DB::commit();
+            
 
             return $this->success(['user' => $user, 'vendor' => $vendor], 'Bio updated successfully');
 
