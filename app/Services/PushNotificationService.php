@@ -18,19 +18,40 @@ class PushNotificationService
     public function __construct()
     {
         try {
-            $credentials = config('firebase.projects.app.credentials.file');
+            $projectId = env('FIREBASE_PROJECT_ID');
+            if (empty($projectId)) {
+                throw new \Exception('FIREBASE_PROJECT_ID is not set in environment variables');
+            }
+
+            $credentials = [
+                'type' => 'service_account',
+                'project_id' => $projectId,
+                'private_key_id' => env('FIREBASE_PRIVATE_KEY_ID'),
+                'private_key' => str_replace('\n', "\n", env('FIREBASE_PRIVATE_KEY')),
+                'client_email' => env('FIREBASE_CLIENT_EMAIL'),
+                'client_id' => env('FIREBASE_CLIENT_ID'),
+                'auth_uri' => env('FIREBASE_AUTH_URI', 'https://accounts.google.com/o/oauth2/auth'),
+                'token_uri' => env('FIREBASE_TOKEN_URI', 'https://oauth2.googleapis.com/token'),
+                'auth_provider_x509_cert_url' => env('FIREBASE_AUTH_PROVIDER_CERT_URL', 'https://www.googleapis.com/oauth2/v1/certs'),
+                'client_x509_cert_url' => env('FIREBASE_CLIENT_CERT_URL'),
+                'universe_domain' => env('FIREBASE_UNIVERSE_DOMAIN', 'googleapis.com')
+            ];
+
+            // Validate required credentials
+            $requiredFields = ['private_key_id', 'private_key', 'client_email', 'client_id'];
+            foreach ($requiredFields as $field) {
+                if (empty($credentials[$field])) {
+                    throw new \Exception("FIREBASE_{$field} is not set in environment variables");
+                }
+            }
+
+            Log::info('Initializing Firebase with project ID: ' . $projectId);
             
-            if (empty($credentials)) {
-                throw new \Exception('Firebase credentials file path is not configured');
-            }
-
-            if (!file_exists($credentials)) {
-                throw new \Exception('Firebase credentials file not found at: ' . $credentials);
-            }
-
             $this->messaging = (new Factory)
                 ->withServiceAccount($credentials)
                 ->createMessaging();
+                
+            Log::info('Firebase initialized successfully');
         } catch (\Exception $e) {
             Log::error('Failed to initialize Firebase: ' . $e->getMessage());
             throw $e;
