@@ -234,17 +234,26 @@ class OrderController extends Controller
 
     private function formatOrder($order)
     {
+        $total = number_format($order->quantity * $order->unit_price, 2, '.', ',');
         return [
             'id' => $order->id,
-            'agent' => optional($order->agent->user)->firstname . ' ' . optional($order->agent->user)->lastname,
+            'transaction_id' => $order->transaction_id,
             'product_name' => optional($order->product)->name,
             'product_image' => optional($order?->product?->product_images?->first())->image_path,
             'farmer' => optional($order->farmer)->fname . ' ' . optional($order->farmer)->lname,
             'quantity' => $order->quantity,
-            'agent_price' => $order->unit_price ?? optional($order->product)->agent_price,
+            'agent_price' => $order->unit_price,
+            'total' => $total,
             'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
             'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
-            'status' => $order->status
+            'status' => $order->status,
+            'agent' => [
+                'name' => optional($order->agent->user)->firstname . ' ' .
+                        optional($order->agent->user)->lastname . ' ' .
+                        optional($order->agent->user)->middlename,
+                'phone_no' => optional($order->agent->user)->phone,
+                'address' => optional($order->agent)->address,
+            ]
         ];
     }
 
