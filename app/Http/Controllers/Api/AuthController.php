@@ -20,16 +20,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ForgotPasswordMail;
 use Illuminate\Support\Facades\Cache;
+use App\Services\PushNotificationService;
 
 class AuthController extends Controller
 {
 
     use ApiResponder;
     protected $otpService;
+    protected $pushNotificationService;
 
-    public function __construct(OTPService $otpService)
+    public function __construct(OTPService $otpService, PushNotificationService $pushNotificationService)
     {
         $this->otpService = $otpService;
+        $this->pushNotificationService = $pushNotificationService;
     }
 
     public function signup(Request $request)
@@ -57,6 +60,15 @@ class AuthController extends Controller
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
+            $title = 'Welcome to FarmEx';
+            $body = 'Complete your profile and start supporting your farmers!';
+            $data = [
+                'type' => 'single',
+                'user_id' => $user->id
+            ];
+
+            $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+
             return $this->success([
                 'user' => $user,
                 'token' => $token
@@ -78,7 +90,7 @@ class AuthController extends Controller
             'business_name' => 'nullable|string',
             'marital_status' =>'nullable|string',
             'dob' => 'nullable|string',
-            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . $this->user()->id,
+            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . request()->user()->id,
             'nin' => 'nullable|digits:11',
             'bvn' => 'nullable|digits:11',
         ]);

@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LocationController;
-use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaystackController;
 use Illuminate\Http\Request;
@@ -114,6 +114,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
+
+    // Notification routes
+    Route::post('/notifications/token', [NotificationController::class, 'storeToken']);
+    Route::post('/notifications/send', [NotificationController::class, 'sendNotification']);
+    Route::post('/notifications/test', [NotificationController::class, 'testNotification']);
 
 
 });

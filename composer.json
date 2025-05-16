@@ -9,6 +9,7 @@
         "bavix/laravel-wallet": "^9.6",
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image-laravel": "^1.3",
+        "kreait/laravel-firebase": "^5.10",
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
