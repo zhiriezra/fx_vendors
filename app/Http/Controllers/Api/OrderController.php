@@ -224,7 +224,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'No orders found for export.'
-            ], 404); 
+            ], 404);
         }
 
         // Proceed with export if orders exist
@@ -244,6 +244,7 @@ class OrderController extends Controller
             'quantity' => $order->quantity,
             'agent_price' => $order->unit_price,
             'total' => $total,
+            'payment_type' => $order->payment_type,
             'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
             'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
             'status' => $order->status,
