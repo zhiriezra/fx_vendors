@@ -50,6 +50,7 @@ class EscrowService{
 
                     $response = $this->GeneralWalletService->creditUserWallet($orderParamTwo);
 
+
                     //$virtual_wallet = json_decode($response->getContent(), true);
 
                     if (
@@ -114,6 +115,7 @@ class EscrowService{
 
                             return $this->success(['order' => $order], 'Order declined successfully');
                         }
+
 
                         $message = $response['message'] ?? 'An unexpected error occurred.';
 

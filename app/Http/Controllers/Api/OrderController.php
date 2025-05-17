@@ -15,10 +15,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
+use App\Services\PushNotificationService;
 
 class OrderController extends Controller
 {
     use ApiResponder;
+    use PushNotificationService;
 
     public $total_amount = 0.0;
 
@@ -26,6 +28,7 @@ class OrderController extends Controller
 
     public function __construct(GeneralWalletService $GeneralWalletService)
     {
+        $this->pushNotificationService = new PushNotificationService();
         $this->GeneralWalletService = $GeneralWalletService;
     }
 
@@ -93,12 +96,23 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'stage' => "accepted",
                 ]);
+              
+              $title = 'Order Accepted';
+              $body = 'Your order has been accepted by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+              $data = [
+                  'type' => 'single',
+                  'user_id' => $order->agent->user_id,
+                  'transaction_id' => $order->transaction_id
+              ];
+
+              $this->pushNotificationService->sendToUser($user, $title, $body, $data);
 
                 return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
 
             }
 
             return $this->error(null, 'Can only accept a pending order.', 404);
+
         }
 
         return $this->error(null, 'Order not  found.', 404);
@@ -149,6 +163,16 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'stage' => "declined",
                 ]);
+              
+                $title = 'Order Declined';
+                $body = 'Your order has been declined by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+                $data = [
+                    'type' => 'single',
+                    'user_id' => $order->agent->user_id,
+                    'transaction_id' => $order->transaction_id
+                ];
+
+                $this->pushNotificationService->sendToUser($user, $title, $body, $data);
 
                 return $this->success(['order' => $this->formatOrder($order)], 'Order declined successfully.');
 
@@ -186,11 +210,21 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
-
+          
             OrderProcessing::create([
                 'order_id' => $order->id,
                 'stage' => "supplied",
             ]);
+
+            $title = 'Order Supplied';
+            $body = 'Your order has been supplied by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+            $data = [
+                'type' => 'single',
+                'user_id' => $order->agent->user_id,
+                'transaction_id' => $order->transaction_id
+            ];
+
+            $this->pushNotificationService->sendToUser($user, $title, $body, $data);
 
             return $this->success(['order' => $this->formatOrder($order)], 'Order supplied.');
 

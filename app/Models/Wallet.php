@@ -12,7 +12,7 @@ class Wallet extends Model
     protected $casts = [
         'meta' => 'array',
     ];
-
+  
     protected $guarded = [''];
 
     public function user()
