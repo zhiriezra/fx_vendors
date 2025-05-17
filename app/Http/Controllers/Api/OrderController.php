@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use App\Exports\OrdersExport;
+use App\Models\OrderProcessing;
 use App\Services\EscrowService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -86,20 +87,31 @@ class OrderController extends Controller
 
         if($order){
 
-            $order->status = 'accepted';
-            $order->save();
+            if($order->status == 'pending'){
 
-            $title = 'Order Accepted';
-            $body = 'Your order has been accepted by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
-            $data = [
-                'type' => 'single',
-                'user_id' => $order->agent->user_id,
-                'transaction_id' => $order->transaction_id
-            ];
+                $order->status = 'accepted';
+                $order->save();
 
-            $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+                OrderProcessing::create([
+                    'order_id' => $order->id,
+                    'stage' => "accepted",
+                ]);
+              
+              $title = 'Order Accepted';
+              $body = 'Your order has been accepted by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+              $data = [
+                  'type' => 'single',
+                  'user_id' => $order->agent->user_id,
+                  'transaction_id' => $order->transaction_id
+              ];
 
-            return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
+              $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+
+                return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
+
+            }
+
+            return $this->error(null, 'Can only accept a pending order.', 404);
 
         }
 
@@ -147,6 +159,11 @@ class OrderController extends Controller
                 $order->status = "declined";
                 $order->save();
 
+                OrderProcessing::create([
+                    'order_id' => $order->id,
+                    'stage' => "declined",
+                ]);
+              
                 $title = 'Order Declined';
                 $body = 'Your order has been declined by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
                 $data = [
@@ -193,6 +210,11 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
+          
+            OrderProcessing::create([
+                'order_id' => $order->id,
+                'stage' => "supplied",
+            ]);
 
             $title = 'Order Supplied';
             $body = 'Your order has been supplied by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
@@ -278,6 +300,7 @@ class OrderController extends Controller
             'agent_price' => $order->unit_price,
             'total' => $total,
             'payment_type' => $order->payment_type,
+            'delivery_type' => $order->delivery_type,
             'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
             'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
             'status' => $order->status,

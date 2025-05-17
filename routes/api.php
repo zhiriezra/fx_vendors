@@ -102,12 +102,16 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
     // Wallet
-    Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
-    Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
+
+    //Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
+    //Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
+
 
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::get('/wallet-enquiry', [WalletController::class, 'walletEnquiry']);
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
+    Route::post('/withdrawal-requests', [WalletController::class, 'fundWithdraw']);
+
 
     //transactions Export
     Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
@@ -115,10 +119,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
 
+
     // Notification routes
     Route::post('/notifications/token', [NotificationController::class, 'storeToken']);
     Route::post('/notifications/send', [NotificationController::class, 'sendNotification']);
     Route::post('/notifications/test', [NotificationController::class, 'testNotification']);
+
 
 
 });
