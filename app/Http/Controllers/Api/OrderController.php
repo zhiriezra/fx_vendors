@@ -19,6 +19,7 @@ use App\Services\PushNotificationService;
 class OrderController extends Controller
 {
     use ApiResponder;
+    use PushNotificationService;
 
     public $total_amount = 0.0;
 
@@ -26,6 +27,7 @@ class OrderController extends Controller
 
     public function __construct(GeneralWalletService $GeneralWalletService)
     {
+        $this->pushNotificationService = new PushNotificationService();
         $this->GeneralWalletService = $GeneralWalletService;
     }
 
