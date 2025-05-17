@@ -9,6 +9,10 @@ class Wallet extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'meta' => 'array',
+    ];
+
     protected $guarded = [''];
 
     public function user()

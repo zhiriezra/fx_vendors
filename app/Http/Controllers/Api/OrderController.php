@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use App\Exports\OrdersExport;
+use App\Models\OrderProcessing;
 use App\Services\EscrowService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -83,11 +84,21 @@ class OrderController extends Controller
 
         if($order){
 
-            $order->status = 'accepted';
-            $order->save();
+            if($order->status == 'pending'){
 
-            return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
+                $order->status = 'accepted';
+                $order->save();
 
+                OrderProcessing::create([
+                    'order_id' => $order->id,
+                    'stage' => "accepted",
+                ]);
+
+                return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
+
+            }
+
+            return $this->error(null, 'Can only accept a pending order.', 404);
         }
 
         return $this->error(null, 'Order not  found.', 404);
@@ -134,6 +145,11 @@ class OrderController extends Controller
                 $order->status = "declined";
                 $order->save();
 
+                OrderProcessing::create([
+                    'order_id' => $order->id,
+                    'stage' => "declined",
+                ]);
+
                 return $this->success(['order' => $this->formatOrder($order)], 'Order declined successfully.');
 
             }
@@ -170,6 +186,11 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
+
+            OrderProcessing::create([
+                'order_id' => $order->id,
+                'stage' => "supplied",
+            ]);
 
             return $this->success(['order' => $this->formatOrder($order)], 'Order supplied.');
 
@@ -245,6 +266,7 @@ class OrderController extends Controller
             'agent_price' => $order->unit_price,
             'total' => $total,
             'payment_type' => $order->payment_type,
+            'delivery_type' => $order->delivery_type,
             'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
             'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
             'status' => $order->status,

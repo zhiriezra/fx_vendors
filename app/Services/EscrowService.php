@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\Escrow;
 use App\Traits\ApiResponder;
+use App\Models\OrderProcessing;
 use Illuminate\Support\Facades\DB;
 use App\Services\GeneralWalletService;
 
@@ -49,15 +50,15 @@ class EscrowService{
 
                     $response = $this->GeneralWalletService->creditUserWallet($orderParamTwo);
 
-                    $virtual_wallet = json_decode($response->getContent(), true);
+                    //$virtual_wallet = json_decode($response->getContent(), true);
 
                     if (
-                        isset($virtual_wallet['data']) &&
-                        isset($virtual_wallet['data']['data']['responseCode'])
+                        isset($response['data']) &&
+                        isset($response['data']['responseCode'])
                     ) {
-                        if ($virtual_wallet['data']['data']['responseCode'] == "00") {
+                        if ($response['data']['responseCode'] == "00") {
 
-                        $meta = [
+                            $meta = [
                                 'type' => 'transaction',
                                 'transaction_id' => $order->transaction_id,
                             ];
@@ -67,6 +68,11 @@ class EscrowService{
                             $split_tran_id = explode('-', $order->transaction_id);
 
                             $order->update(['status' => 'declined']);
+
+                            OrderProcessing::create([
+                                'order_id' => $order->id,
+                                'stage' => "declined",
+                            ]);
 
                             $check_not_completed_order = Order::where('transaction_id', 'LIKE', $split_tran_id[0] . '%')
                                             ->where('id', '!=', $order->id)
@@ -108,9 +114,14 @@ class EscrowService{
 
                             return $this->success(['order' => $order], 'Order declined successfully');
                         }
+
+                        $message = $response['message'] ?? 'An unexpected error occurred.';
+
+                        return $this->error(null, $message, 401);
+
                     }
 
-                    $message = $virtual_wallet['message'] ?? 'An unexpected error occurred.';
+                    $message = $response['message'] ?? 'An unexpected error occurred.';
 
                     return $this->error(null, $message, 401);
 
