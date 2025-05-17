@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Bank;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Wallet;
+use App\Models\Country;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
@@ -67,6 +69,72 @@ class NpsbWalletService
     }
 
     /**
+     * Wallet Fund Transfet to Bank.
+     *
+     * @param array $data
+     * @return array
+     * @throws \Exception
+     */
+    public function walletWithdrawal(array $data)
+    {
+        $user = auth()->user();
+
+        $vendor = auth()->user()->vendor;
+
+        $narration = $this->getNarration($user->id, 'debit');
+
+        $bank_id = auth()->user()->vendor->bank;
+
+        $wallet = Wallet::where('holder_id', $user->id)->where('slug', 'Npsb')->first();
+
+        $bank = Bank::where('id', $bank_id)->first();
+
+        if($wallet != null){
+
+            if($bank != null){
+
+                // Construct the payload specific to the 9PSB API
+                $payload = [
+                    'customer' => [
+                        'account' =>[
+                            'bank' => $bank->code,
+                            'name' => auth()->user()->vendor->account_name,
+                            'number' => auth()->user()->vendor->account_no,
+                            'senderaccountnumber' => $wallet['meta']['accountNumber'],
+                            'sendername' => $wallet['meta']['fullName'],
+                        ]
+                    ],
+                    'narration' => $narration,
+                    'order' => [
+                            'amount' => $data['amount'],
+                            'country' => $vendor->state->country->code,
+                            'currency' => $vendor->state->country->currency,
+                            'description' => $wallet['meta']['fullName'],
+                    ],
+                    'transaction' => [
+                        'reference' => $data['transaction_id'],
+                    ],
+                    'merchant' => [
+                        'isFee'              => false,
+                        'merchantFeeAccount' => '',
+                        'merchantFeeAmount'  => '',
+                    ],
+                ];
+
+                // Use the NpsbWalletApiClient to make the API call
+                $response = $this->walletApiClient->post('/wallet_other_banks', $payload);
+
+                return $response;
+
+            }
+
+        }
+        else{
+            throw new \Exception("User do not have a wallet");
+        }
+    }
+
+    /**
      * Debit a user's wallet.
      *
      * @param int $userId
@@ -114,9 +182,7 @@ class NpsbWalletService
 
         $wallet = Wallet::where('holder_id', $user_id)->where('slug', 'npsb')->first();
 
-        $meta = json_decode($wallet->meta, true);
-
-        $accountNumber = $meta['accountNumber'] ?? null;
+        $accountNumber = $wallet['meta']['accountNumber'] ?? null;
 
         return $accountNumber;
     }
@@ -125,9 +191,7 @@ class NpsbWalletService
 
         $wallet = Wallet::where('holder_id', $user_id)->where('slug', 'npsb')->first();
 
-        $meta = json_decode($wallet->meta, true);
-
-        $fullName = $meta['fullName'] ?? null;
+        $fullName = $wallet['meta']['fullName'] ?? null;
 
         return $fullName;
     }

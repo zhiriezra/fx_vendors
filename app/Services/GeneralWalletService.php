@@ -123,24 +123,7 @@ class GeneralWalletService
             // Call the wallet service to debit the wallet from the API call
             $result = $walletService->creditWallet($user->id, $data);
 
-            if($result['data']['responseCode'] == "00"){
-
-                return response()->json([
-                    'status'  => true,
-                    'message' => 'Transaction process successfully',
-                    'data'    => $result,
-                ], 200);
-
-            }
-            else{
-
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Transaction Failed',
-                    'data'    => $result,
-                ], 422);
-
-            }
+            return $result;
 
         } catch (\Exception $e) {
             // Log the error
@@ -249,6 +232,36 @@ class GeneralWalletService
 
     }
 
+    public function walletFundWithdrawal(array $param){
+
+        $user = auth()->user();
+
+         try {
+            // Determine the default wallet provider for the user's country
+            $defaultProvider = $this->getDefaultWalletProviderForUser($user);
+
+            // Resolve the wallet service for the default provider
+            $walletService = $this->walletProviderFactory->make($defaultProvider);
+
+            // Call the wallet service to debit the wallet from the API call
+            $result = $walletService->walletWithdrawal($param);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Failed to debit wallet', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to debit wallet: ' . $e->getMessage(),
+            ], 500);
+        }
+
+    }
 
 
 }
