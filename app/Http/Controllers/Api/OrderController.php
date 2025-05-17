@@ -25,6 +25,7 @@ class OrderController extends Controller
     public $total_amount = 0.0;
 
     protected $GeneralWalletService;
+    protected $pushNotificationService;
 
     public function __construct(GeneralWalletService $GeneralWalletService)
     {
@@ -83,7 +84,10 @@ class OrderController extends Controller
 
     public function accept($order_id)
     {
+
         $order = Order::with('product')->find($order_id);
+
+        $user = $order->agent->user;
 
         if($order){
 
@@ -96,7 +100,7 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'stage' => "accepted",
                 ]);
-              
+
               $title = 'Order Accepted';
               $body = 'Your order has been accepted by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
               $data = [
@@ -163,7 +167,7 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'stage' => "declined",
                 ]);
-              
+
                 $title = 'Order Declined';
                 $body = 'Your order has been declined by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
                 $data = [
@@ -202,6 +206,8 @@ class OrderController extends Controller
     {
         $order = Order::with('product')->find($order_id);
 
+        $user = $order->product->vendor->user;
+
         if($order){
 
             if($order->status != "accepted"){
@@ -210,7 +216,7 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
-          
+
             OrderProcessing::create([
                 'order_id' => $order->id,
                 'stage' => "supplied",
