@@ -105,6 +105,7 @@ class WalletController extends Controller
     }
 
 /*     public function requestWithdrawal(Request $request){
+
         $validator = Validator::make($request->all(), [
             'amount' => 'required'
         ]);
@@ -145,7 +146,9 @@ class WalletController extends Controller
 
         return response()->json(['status' => false, 'message' => 'You do not have enough funds in your wallet'], 400);
 
+
     } */
+  
 
     public function fundWithdraw(Request $request)
     {

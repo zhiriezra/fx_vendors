@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+
 use App\Models\Bank;
 use App\Models\User;
 use App\Models\Vendor;
@@ -69,6 +70,7 @@ class NpsbWalletService
     }
 
     /**
+
      * Wallet Fund Transfet to Bank.
      *
      * @param array $data
@@ -134,8 +136,7 @@ class NpsbWalletService
         }
     }
 
-    /**
-     * Debit a user's wallet.
+     /** Debit a user's wallet.
      *
      * @param int $userId
      * @param array $data

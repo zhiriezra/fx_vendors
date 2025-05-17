@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LocationController;
-use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaystackController;
 use Illuminate\Http\Request;
@@ -102,19 +102,29 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
     // Wallet
+
     //Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
     //Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
+
 
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::get('/wallet-enquiry', [WalletController::class, 'walletEnquiry']);
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
     Route::post('/withdrawal-requests', [WalletController::class, 'fundWithdraw']);
 
+
     //transactions Export
     Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
 
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
+
+
+    // Notification routes
+    Route::post('/notifications/token', [NotificationController::class, 'storeToken']);
+    Route::post('/notifications/send', [NotificationController::class, 'sendNotification']);
+    Route::post('/notifications/test', [NotificationController::class, 'testNotification']);
+
 
 
 });
