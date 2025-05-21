@@ -484,7 +484,7 @@ class AuthController extends Controller
             'current_password' => 'required',
             'new_password' => 'required|min:8|confirmed',
         ]);
-
+        
         if ($validator->fails()) {
             return $this->error($validator->errors(), 'Validation failed', 422);
         }
