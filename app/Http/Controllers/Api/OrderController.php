@@ -53,7 +53,6 @@ class OrderController extends Controller
 
     }
 
-
     public function pendingOrders()
     {
         $vendorId = auth()->user()->vendor->id;
@@ -103,8 +102,9 @@ class OrderController extends Controller
               $title = 'Order Accepted';
               $body = 'Your order has been accepted by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
               $data = [
-                  'type' => 'single',
-                  'user_id' => $order->agent->user_id,
+                  'type' => 'order',
+                  'order_id' => $order->id,
+                  'target_user_id' => $order->agent->user_id,
                   'transaction_id' => $order->transaction_id
               ];
 
@@ -142,7 +142,7 @@ class OrderController extends Controller
 
         if($order){
 
-            $user = User::where('id', $order->agent->user_id)->first();
+            $user = $order->agent->user;
 
             if($order->status != "pending"){
                 return $this->error(null, "You can only decline a pending order.", 422);
@@ -159,6 +159,8 @@ class OrderController extends Controller
             }
             else{
 
+                $user = $order->agent->user;
+
                 $order->status = "declined";
                 $order->save();
 
@@ -170,8 +172,9 @@ class OrderController extends Controller
                 $title = 'Order Declined';
                 $body = 'Your order has been declined by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
                 $data = [
-                    'type' => 'single',
-                    'user_id' => $order->agent->user_id,
+                    'type' => 'order',
+                    'order_id' => $order->id,
+                    'target_user_id' => $order->agent->user_id,
                     'transaction_id' => $order->transaction_id
                 ];
 
@@ -205,7 +208,7 @@ class OrderController extends Controller
     {
         $order = Order::with('product')->find($order_id);
 
-        $user = $order->product->vendor->user;
+        $user = $order->agent->user;
 
         if($order){
 
@@ -224,8 +227,9 @@ class OrderController extends Controller
             $title = 'Order Supplied';
             $body = 'Your order has been supplied by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
             $data = [
-                'type' => 'single',
-                'user_id' => $order->agent->user_id,
+                'type' => 'order',
+                'order_id' => $order->id,
+                'target_user_id' => $order->agent->user_id,
                 'transaction_id' => $order->transaction_id
             ];
 
