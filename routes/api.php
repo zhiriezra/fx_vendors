@@ -125,6 +125,18 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/send', [NotificationController::class, 'sendNotification']);
     Route::post('/notifications/test', [NotificationController::class, 'testNotification']);
 
+    // Push Notification Routes
+    Route::prefix('notifications')->group(function () {
+        Route::post('/send', [NotificationController::class, 'sendNotification']);
+        Route::post('/test', [NotificationController::class, 'testNotification']);
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/{id}', [NotificationController::class, 'show']);
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+        Route::get('/statistics', [NotificationController::class, 'statistics']);
+    });
+
 
 
 });
