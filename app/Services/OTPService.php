@@ -35,7 +35,7 @@ class OTPService {
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => array(
-            'token' => 'uzAkF1lx0SjXC6FsdWmCWRN4g7dJTdLwxHD1u7WiZUzWtk2HQd',
+            'token' => env('SMART_SMS_TOKEN'),
             'sender' => 'Muva App',
             'app_name_code' => 5396066507,
             'phone' => $user->phone,

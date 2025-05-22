@@ -30,4 +30,9 @@ class Order extends Model
     {
         return $this->belongsTo(Farmer::class);
     }
+
+    public function order_processings()
+    {
+        return $this->hasMany(OrderProcessing::class);
+    }
 }
