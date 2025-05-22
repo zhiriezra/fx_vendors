@@ -85,8 +85,6 @@ class OrderController extends Controller
 
         $order = Order::with('product')->find($order_id);
 
-        $user = $order->agent->user;
-
         if($order){
 
             if($order->status == 'pending'){
@@ -104,11 +102,10 @@ class OrderController extends Controller
               $data = [
                   'type' => 'order',
                   'order_id' => $order->id,
-                  'target_user_id' => $order->agent->user_id,
                   'transaction_id' => $order->transaction_id
               ];
 
-              $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+              $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
 
                 return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
 
@@ -159,8 +156,6 @@ class OrderController extends Controller
             }
             else{
 
-                $user = $order->agent->user;
-
                 $order->status = "declined";
                 $order->save();
 
@@ -174,11 +169,10 @@ class OrderController extends Controller
                 $data = [
                     'type' => 'order',
                     'order_id' => $order->id,
-                    'target_user_id' => $order->agent->user_id,
                     'transaction_id' => $order->transaction_id
                 ];
 
-                $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+                $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
 
                 return $this->success(['order' => $this->formatOrder($order)], 'Order declined successfully.');
 
@@ -208,8 +202,6 @@ class OrderController extends Controller
     {
         $order = Order::with('product')->find($order_id);
 
-        $user = $order->agent->user;
-
         if($order){
 
             if($order->status != "accepted"){
@@ -229,11 +221,10 @@ class OrderController extends Controller
             $data = [
                 'type' => 'order',
                 'order_id' => $order->id,
-                'target_user_id' => $order->agent->user_id,
                 'transaction_id' => $order->transaction_id
             ];
 
-            $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+            $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
 
             return $this->success(['order' => $this->formatOrder($order)], 'Order supplied.');
 
