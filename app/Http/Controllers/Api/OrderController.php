@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
 use App\Services\PushNotificationService;
+use App\Models\Escrow;
 
 class OrderController extends Controller
 {
@@ -290,6 +291,8 @@ class OrderController extends Controller
     private function formatOrder($order)
     {
         $total = number_format($order->quantity * $order->unit_price, 2, '.', ',');
+        $escrow = Escrow::where('transaction_id', $order->transaction_id)->first();
+
         return [
             'id' => $order->id,
             'transaction_id' => $order->transaction_id,
@@ -299,8 +302,8 @@ class OrderController extends Controller
             'quantity' => $order->quantity,
             'agent_price' => $order->unit_price,
             'total' => $total,
-            'payment_type' => $order->payment_type,
-            'delivery_type' => $order->delivery_type,
+            'payment_type' => $escrow->payment_type,
+            'delivery_type' => $escrow->delivery_type,
             'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
             'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
             'status' => $order->status,
