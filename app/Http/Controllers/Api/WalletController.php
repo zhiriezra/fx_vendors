@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Wallet;
 use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
@@ -17,58 +18,94 @@ class WalletController extends Controller
 {
     use ApiResponder;
 
-    protected $GeneralWalletService;
+    protected GeneralWalletService $walletService;
+    protected $user;
+    protected $defaultProvider;
 
-    public function __construct(GeneralWalletService $GeneralWalletService)
+    public function __construct(GeneralWalletService $walletService)
     {
-        $this->GeneralWalletService = $GeneralWalletService;
+        $this->middleware(function ($request, $next) use ($walletService) {
+
+            $this->user = User::where('id', auth()->user()->id)->first();
+
+            $this->walletService = $walletService;
+
+            $this->defaultProvider = $walletService->getDefaultWalletProviderForUser($this->user);
+
+            return $next($request);
+        });
     }
 
     /**
-     * Get the user's wallet balance or create a wallet if it doesn't exist.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Retrieve the user's wallet balance or create a wallet if none exists.
      */
     public function getBalance(Request $request)
     {
-        $user = $request->user();
 
-        $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
-
-        // Check if the user already has a wallet
-        $wallet = Wallet::where('holder_id', $user->id)->where('slug', $defaultProvider)->first();
+        $wallet = Wallet::where('holder_id', $this->user->id)
+            ->where('slug', $this->defaultProvider)
+            ->first();
 
         if ($wallet) {
-            // Return the wallet information
-            return $this->success(['balance' => $wallet->balance], 'User wallet balance.');
+
+            $balance = $this->user->walletBalance($this->user->id, $this->defaultProvider);
+
+            return $this->success(['balance' => $balance], 'User wallet balance.');
         }
 
-        //Create a wallet for the user if it doesn't exist
-        return $this->GeneralWalletService->createUserWallet($user);
+        return $this->walletService->createUserWallet($this->user);
     }
 
-
+    /**
+     * Retrieve wallet information or create a new one if not found.
+     */
     public function walletEnquiry(Request $request)
     {
-        $user = $request->user();
 
-        $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
+        $wallet = Wallet::where('holder_id', $this->user->id)
+            ->where('slug', $this->defaultProvider)
+            ->first();
 
-        // Check if the user already has a wallet
-        $wallet = Wallet::where('holder_id', $user->id)->where('slug', $defaultProvider)->first();
-
-        if ($wallet) {
-            // Return the wallet information
-            return $this->success(['wallet' => $wallet], 'User default wallet.');
+        if (!$wallet) {
+            return $this->walletService->createUserWallet($this->user);
         }
 
-        // Create a wallet for the user if it doesn't exist
-        return $this->GeneralWalletService->createUserWallet($user);
+        $formattedWallet = [
+            'id'          => $wallet->id,
+            'name'        => $wallet->name,
+            'slug'        => $wallet->slug,
+            'meta'        => $wallet->meta,
+            'balance'     => $this->user->walletBalance($this->user->id, $this->defaultProvider),
+            'created_at'  => Carbon::parse($wallet->created_at)->format('M j, Y, g:ia'),
+            'updated_at'  => Carbon::parse($wallet->updated_at)->format('M j, Y, g:ia'),
+        ];
+
+        return $this->success(['wallet' => $formattedWallet], 'User default wallet.');
+
     }
 
+    /**
+     * Return the authenticated user's wallet transactions.
+     */
+    public function transactions()
+    {
+        $transactions = $this->user->transactions->map(function ($transaction) {
+            return [
+                'wallet_id'   => $transaction->wallet_id,
+                'user_id'     => $transaction->payable_id,
+                'type'        => $transaction->type,
+                'amount'      => $transaction->amount,
+                'meta'        => $transaction->meta,
+                'created_at'  => Carbon::parse($transaction->created_at)->format('M j, Y, g:ia'),
+                'updated_at'  => Carbon::parse($transaction->updated_at)->format('M j, Y, g:ia'),
+            ];
+        });
 
-    public function requestWithdrawal(Request $request){
+        return $this->success(['transactions' => $transactions], 'My recent transactions.');
+    }
+
+/*     public function requestWithdrawal(Request $request){
+
         $validator = Validator::make($request->all(), [
             'amount' => 'required'
         ]);
@@ -109,24 +146,54 @@ class WalletController extends Controller
 
         return response()->json(['status' => false, 'message' => 'You do not have enough funds in your wallet'], 400);
 
-    }
 
-    public function transactions(){
+    } */
+  
 
-        $transactions = auth()->user()->transactions->map(function($transaction){
-            return [
-                'wallet_id' => $transaction->wallet_id,
-                'user_id' => $transaction->payable_id,
-                'type' => $transaction->type,
-                'amount' => $transaction->amount,
-                'meta' => $transaction->meta,
-                'created_at' => Carbon::parse($transaction->created_at)->format('M j, Y, g:ia'),
-                'updated_at' => Carbon::parse($transaction->updated_at)->format('M j, Y, g:ia')
+    public function fundWithdraw(Request $request)
+    {
 
-            ];
-        });
+        $rules = [
+            'amount' => 'required|numeric',
+        ];
 
-        return $this->success(['transactions' => $transactions], 'My recent transactions.');
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return $this->error($validator->errors(), 'Validation failed', 422);
+        }
+
+        $trans_id = 'EXA0WD' . now()->format('YmdHis') . rand(1000, 9999);
+
+        $param = [
+                    'amount'=> $request->amount,
+                    'transaction_id' => $trans_id
+                ];
+
+        $response = $this->walletService->walletFundWithdrawal($param);
+
+        return $response;
+
+        if (
+                isset($response['data']) &&
+                isset($response['data']['responseCode'])
+            ) {
+                if($response['data']['responseCode'] == "00"){
+                    return $this->success(null, 'Fund Transfer Successful.');
+                }
+                else{
+
+                        $message = $response['message'] ?? 'Transaction Failed.';
+
+                        return $this->error(null, $message, 422);
+
+                }
+            }
+            else{
+                    $message = $response['message'] ?? 'Transaction Failed..';
+
+                    return $this->error(null, $message, 422);
+            }
 
     }
 

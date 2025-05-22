@@ -9,11 +9,14 @@ use App\Models\Product;
 use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use App\Exports\OrdersExport;
+use App\Models\OrderProcessing;
 use App\Services\EscrowService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
+use App\Services\PushNotificationService;
+use App\Models\Escrow;
 
 class OrderController extends Controller
 {
@@ -22,10 +25,12 @@ class OrderController extends Controller
     public $total_amount = 0.0;
 
     protected $GeneralWalletService;
+    protected $pushNotificationService;
 
-    public function __construct(GeneralWalletService $GeneralWalletService)
+    public function __construct(GeneralWalletService $GeneralWalletService, PushNotificationService $pushNotificationService)
     {
         $this->GeneralWalletService = $GeneralWalletService;
+        $this->pushNotificationService = $pushNotificationService;
     }
 
     /**
@@ -48,7 +53,6 @@ class OrderController extends Controller
         return $this->success(['orders' => $orders], 'All orders');
 
     }
-
 
     public function pendingOrders()
     {
@@ -79,14 +83,36 @@ class OrderController extends Controller
 
     public function accept($order_id)
     {
+
         $order = Order::with('product')->find($order_id);
 
         if($order){
 
-            $order->status = 'accepted';
-            $order->save();
+            if($order->status == 'pending'){
 
-            return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
+                $order->status = 'accepted';
+                $order->save();
+
+                OrderProcessing::create([
+                    'order_id' => $order->id,
+                    'stage' => "accepted",
+                ]);
+
+              $title = 'Order Accepted';
+              $body = 'Your order has been accepted by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+              $data = [
+                  'type' => 'order',
+                  'order_id' => $order->id,
+                  'transaction_id' => $order->transaction_id
+              ];
+
+              $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
+
+                return $this->success(['order' => $this->formatOrder($order)], 'Order accepted successfully');
+
+            }
+
+            return $this->error(null, 'Can only accept a pending order.', 404);
 
         }
 
@@ -114,7 +140,7 @@ class OrderController extends Controller
 
         if($order){
 
-            $user = User::where('id', $order->agent->user_id)->first();
+            $user = $order->agent->user;
 
             if($order->status != "pending"){
                 return $this->error(null, "You can only decline a pending order.", 422);
@@ -133,6 +159,21 @@ class OrderController extends Controller
 
                 $order->status = "declined";
                 $order->save();
+
+                OrderProcessing::create([
+                    'order_id' => $order->id,
+                    'stage' => "declined",
+                ]);
+
+                $title = 'Order Declined';
+                $body = 'Your order has been declined by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+                $data = [
+                    'type' => 'order',
+                    'order_id' => $order->id,
+                    'transaction_id' => $order->transaction_id
+                ];
+
+                $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
 
                 return $this->success(['order' => $this->formatOrder($order)], 'Order declined successfully.');
 
@@ -170,6 +211,21 @@ class OrderController extends Controller
 
             $order->status = 'supplied';
             $order->save();
+
+            OrderProcessing::create([
+                'order_id' => $order->id,
+                'stage' => "supplied",
+            ]);
+
+            $title = 'Order Supplied';
+            $body = 'Your order has been supplied by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
+            $data = [
+                'type' => 'order',
+                'order_id' => $order->id,
+                'transaction_id' => $order->transaction_id
+            ];
+
+            $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
 
             return $this->success(['order' => $this->formatOrder($order)], 'Order supplied.');
 
@@ -224,7 +280,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'No orders found for export.'
-            ], 404); 
+            ], 404);
         }
 
         // Proceed with export if orders exist
@@ -235,6 +291,8 @@ class OrderController extends Controller
     private function formatOrder($order)
     {
         $total = number_format($order->quantity * $order->unit_price, 2, '.', ',');
+        $escrow = Escrow::where('transaction_id', $order->transaction_id)->first();
+
         return [
             'id' => $order->id,
             'transaction_id' => $order->transaction_id,
@@ -244,6 +302,8 @@ class OrderController extends Controller
             'quantity' => $order->quantity,
             'agent_price' => $order->unit_price,
             'total' => $total,
+            'payment_type' => $escrow->payment_type,
+            'delivery_type' => $escrow->delivery_type,
             'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
             'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
             'status' => $order->status,
