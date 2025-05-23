@@ -82,9 +82,8 @@ class User extends Authenticatable
 
     }
 
-    public function walletBalance($user_id, $slug)
-    {
-        return $this->getWallet($user_id, $slug)->balanceFloatNum;
+    public function walletBalance($user_id, $slug){
+        return Wallet::where('user_id', $user_id)->where('slug', $slug)->first()->balance;
     }
 
     public function walletDeposit($user_id, $slug, $amount, $meta): void
