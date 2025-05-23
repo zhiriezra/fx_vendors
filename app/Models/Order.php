@@ -31,8 +31,8 @@ class Order extends Model
         return $this->belongsTo(Farmer::class);
     }
 
-    public function order_processings()
+    public function escrow()
     {
-        return $this->hasMany(OrderProcessing::class);
+        return $this->belongsTo(Escrow::class);
     }
 }

@@ -45,4 +45,10 @@ class Vendor extends Model
     {
         return $this->hasMany(PayoutRequest::class);
     }
+
+    public function escrow(){
+        return $this->hasMany(Escrow::class);
+    }
 }
+
+

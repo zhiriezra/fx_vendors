@@ -10,12 +10,12 @@ class OrderProcessing extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_id',
+        'escrow_id',
         'stage'
     ];
 
-    public function order()
+    public function escrow()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Escrow::class);
     }
 }
