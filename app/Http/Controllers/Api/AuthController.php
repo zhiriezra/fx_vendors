@@ -362,8 +362,8 @@ class AuthController extends Controller
                 'marital_status' => $user->vendor->marital_status,
                 'current_location' => $user->vendor->current_location,
                 'permanent_address' => $user->vendor->permanent_address,
-                'country_id' => $user->vendor->country_id,
-                'country' => $user->vendor->country->name,
+                'country_id' => $user->vendor->state->country_id,
+                'country' => $user->vendor->state->country->name,
                 'state_id' => $user->vendor->state_id,
                 'state' => $user->vendor->state->name,
                 'lga_id' => $user->vendor->lga_id,
@@ -484,7 +484,7 @@ class AuthController extends Controller
             'current_password' => 'required',
             'new_password' => 'required|min:8|confirmed',
         ]);
-
+        
         if ($validator->fails()) {
             return $this->error($validator->errors(), 'Validation failed', 422);
         }
