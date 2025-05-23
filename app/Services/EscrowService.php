@@ -21,7 +21,7 @@ class EscrowService{
     {
         $this->GeneralWalletService = $GeneralWalletService;
     }
-
+/*
     public function delineEscrow($order_id, $slug){
 
         $order = Order::find($order_id);
@@ -136,7 +136,7 @@ class EscrowService{
         }
 
         return $this->error(null, 'Can not find this order', 401);
-    }
+    } */
 
 
 }

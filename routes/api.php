@@ -1,16 +1,19 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\LocationController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\PaystackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\StatsController;
-use App\Http\Controllers\Api\VendorsController;
 use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\VendorsController;
+use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\OrderAcceptController;
+use App\Http\Controllers\Api\PaystackController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Api\OrderDeclineController;
+use App\Http\Controllers\Api\OrderSupplyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -87,11 +90,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/category/request', [ProductController::class, 'CatRequest'])->name('CatRequest');
 
     //Orders
-    Route::get('/order/{order_id}/accept', [OrderController::class, 'accept']);
+    Route::get('/order/{order_id}/accept', [OrderAcceptController::class, 'orderAccept']);
+    Route::get('/order/{order_id}/supplied', [OrderSupplyController::class, 'orderSupply']);
+    Route::get('/order/{order_id}/decline', [OrderDeclineController::class, 'orderDecline']);
     Route::get('/orders/accepted', [OrderController::class, 'acceptedOrders']);
-    Route::get('/order/{order_id}/decline', [OrderController::class, 'declineNew']);
     Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
-    Route::get('/order/{order_id}/supplied', [OrderController::class, 'confirmSupplied']);
     Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
     Route::get('/orders/completed', [OrderController::class, 'completedOrders']);
     Route::get('/orders/pending', [OrderController::class, 'pendingOrders']);
