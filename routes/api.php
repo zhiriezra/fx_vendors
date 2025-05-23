@@ -91,16 +91,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/category/request', [ProductController::class, 'CatRequest'])->name('CatRequest');
 
     //Orders
-    Route::get('/order/{order_id}/accept', [OrderAcceptController::class, 'orderAccept']);
-    Route::get('/order/{order_id}/supplied', [OrderSupplyController::class, 'orderSupply']);
-    Route::get('/order/{order_id}/decline', [OrderDeclineController::class, 'orderDecline']);
-    Route::get('/orders/accepted', [OrderController::class, 'acceptedOrders']);
-    Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
-    Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
-    Route::get('/orders/completed', [OrderController::class, 'completedOrders']);
-    Route::get('/orders/pending', [OrderController::class, 'pendingOrders']);
     Route::get('/order/{order_id}', [OrderController::class, 'singleOrder']);
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::post('/order/{id}/update-status', [OrderController::class, 'updateOrderStatus']);
+
 
     //Export User Orders
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
