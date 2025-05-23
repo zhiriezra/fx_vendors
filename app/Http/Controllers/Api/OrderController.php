@@ -11,6 +11,7 @@ use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 
+
 class OrderController extends Controller
 {
     use ApiResponder;
@@ -36,7 +37,6 @@ class OrderController extends Controller
 
     }
 
-
     public function singleOrder($escrow_id)
     {
         $vendorId = auth()->user()->vendor->id;
@@ -57,10 +57,8 @@ class OrderController extends Controller
     {
         $vendorId = auth()->user()->vendor->id;
 
-
         $escrows = Escrow::where('status', 'pending')
             ->with(['orders.product.vendor.user', 'orders.agent.user', 'vendor.user'])->get();
-
 
         $filteredEscrows = $escrows->filter(fn(Escrow $e) => $this->hasOrderForVendor($e, $vendorId));
 
@@ -75,62 +73,6 @@ class OrderController extends Controller
     {
         $vendorId = auth()->user()->vendor->id;
 
-        $orders = Order::where('status', 'accepted')->whereHas('product', function($query) use ($vendorId) {
-            $query->where('vendor_id', $vendorId);
-        })->get()->map(fn($order) => $this->formatOrder($order));
-
-        if ($orders->isEmpty()) {
-            return $this->error(null, "No accepted orders found!", 404);
-        }
-
-        return $this->success(['orders' => $orders], 'All active accepted orders');
-    }
-
-    public function declineNew($order_id, EscrowService $escrowService)
-    {
-        $order = Order::with('product')->find($order_id);
-
-        if($order){
-
-            $user = $order->agent->user;
-
-            if($order->status != "pending"){
-                return $this->error(null, "You can only decline a pending order.", 422);
-            }
-
-            if($order->payment_type == "wallet"){
-
-                $defaultProvider = $this->GeneralWalletService->getDefaultWalletProviderForUser($user);
-
-                $escrow = $escrowService->delineEscrow($order_id, $defaultProvider);
-
-                return $escrow;
-
-            }
-            else{
-
-                $order->status = "declined";
-                $order->save();
-
-                OrderProcessing::create([
-                    'order_id' => $order->id,
-                    'stage' => "declined",
-                ]);
-
-                $title = 'Order Declined';
-                $body = 'Your order has been declined by the vendor' . $order->product->vendor->user->firstname . ' ' . $order->product->vendor->user->lastname;
-                $data = [
-                    'type' => 'order',
-                    'order_id' => $order->id,
-                    'transaction_id' => $order->transaction_id
-                ];
-
-                $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
-
-                return $this->success(['order' => $this->formatOrder($order)], 'Order declined successfully.');
-
-            }
-          
         $escrows = Escrow::where('status', 'accepted')
             ->with(['orders.product.vendor.user', 'orders.agent.user', 'vendor.user'])->get();
 
@@ -146,7 +88,7 @@ class OrderController extends Controller
     public function declinedOrders()
     {
         $vendorId = auth()->user()->vendor->id;
-      
+
         $escrows = Escrow::where('status', 'declined')
             ->with(['orders.product.vendor.user', 'orders.agent.user', 'vendor.user'])->get();
 
