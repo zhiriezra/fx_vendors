@@ -139,4 +139,57 @@ class NotificationController extends Controller
             ], 'Error sending test notification', 500);
         }
     }
+
+    public function index(Request $request)
+    {
+        // Since we're not storing notifications in the database,
+        // we'll return a message indicating that notifications are push-only
+        return $this->success([
+            'message' => 'Notifications are push-only and not stored in the database',
+            'documentation' => [
+                'store_token' => 'POST /notifications/token - Store FCM token',
+                'send_notification' => 'POST /notifications/send - Send a notification',
+                'test_notification' => 'POST /notifications/test - Test notification functionality'
+            ]
+        ], 'Notification system information');
+    }
+
+    public function show($id)
+    {
+        return $this->error(null, 'Notifications are push-only and not stored in the database', 404);
+    }
+
+    public function markAsRead($id)
+    {
+        return $this->error(null, 'Notifications are push-only and not stored in the database', 404);
+    }
+
+    public function markAllAsRead()
+    {
+        return $this->error(null, 'Notifications are push-only and not stored in the database', 404);
+    }
+
+    public function destroy($id)
+    {
+        return $this->error(null, 'Notifications are push-only and not stored in the database', 404);
+    }
+
+    public function statistics()
+    {
+        // Since we're not storing notifications in the database,
+        // we'll return basic statistics about push notification capabilities
+        $stats = [
+            'system_type' => 'Push-only notifications',
+            'service' => 'Firebase Cloud Messaging (FCM)',
+            'capabilities' => [
+                'single_user_notifications' => true,
+                'multiple_user_notifications' => true,
+                'topic_notifications' => true,
+                'data_payload' => true,
+                'notification_payload' => true
+            ]
+        ];
+
+        return $this->success($stats, 'Notification system statistics');
+    }
 }

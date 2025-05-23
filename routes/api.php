@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\StatsController;
+use App\Http\Controllers\Api\VendorsController;
+use App\Http\Controllers\Api\TransactionsController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\VendorsController;
@@ -117,7 +119,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
 
     //transactions Export
-    Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
+    Route::get('/transactions/export', [TransactionsController::class, 'exportTransactions'])
+    ->name('transactions.export');
 
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
@@ -127,6 +130,18 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/token', [NotificationController::class, 'storeToken']);
     Route::post('/notifications/send', [NotificationController::class, 'sendNotification']);
     Route::post('/notifications/test', [NotificationController::class, 'testNotification']);
+
+    // Push Notification Routes
+    Route::prefix('notifications')->group(function () {
+        Route::post('/send', [NotificationController::class, 'sendNotification']);
+        Route::post('/test', [NotificationController::class, 'testNotification']);
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/{id}', [NotificationController::class, 'show']);
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+        Route::get('/statistics', [NotificationController::class, 'statistics']);
+    });
 
 
 
