@@ -34,7 +34,7 @@ class Vendor extends Model
     public function lga()
     {
         return $this->belongsTo(Lga::class);
-    }    
+    }
 
     public function orders()
     {
@@ -45,4 +45,10 @@ class Vendor extends Model
     {
         return $this->hasMany(PayoutRequest::class);
     }
+
+    public function escrow(){
+        return $this->hasMany(Escrow::class);
+    }
 }
+
+
