@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\VendorsController;
+use App\Http\Controllers\Api\TransactionsController;
 use App\Http\Controllers\Api\WalletController;
 
 /*
@@ -114,7 +115,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
 
     //transactions Export
-    Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
+    Route::get('/transactions/export', [TransactionsController::class, 'exportTransactions'])
+    ->name('transactions.export');
 
     // Dashboard stats
     Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
