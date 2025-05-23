@@ -25,7 +25,6 @@ class OTPService {
 
         $curl = curl_init();
 
-        
         curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://app.smartsmssolutions.com/io/api/client/v1/smsotp/send/',
         CURLOPT_RETURNTRANSFER => true,
