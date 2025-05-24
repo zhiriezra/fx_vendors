@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
 use App\Models\Order;
+use App\Models\Escrow;
 use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use App\Exports\OrdersExport;
-use App\Http\Controllers\Controller;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
 use App\Services\PushNotificationService;
 
@@ -115,7 +116,7 @@ class OrderController extends Controller
                         'order_id' => $order->id,
                         'transaction_id' => $order->transaction_id
                     ];
-                    
+
                     $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
                 }
             }
@@ -124,7 +125,7 @@ class OrderController extends Controller
             if ($newStatus === 'declined') {
                 // Restore product quantities
 
-                
+
                 foreach ($order->orderItems as $orderItem) {
                     $product = $orderItem->product;
                     $product->quantity += $orderItem->quantity;
@@ -173,7 +174,7 @@ class OrderController extends Controller
                         'order_id' => $order->id,
                         'transaction_id' => $order->transaction_id
                     ];
-                    
+
                     $this->pushNotificationService->sendToUser($order->agent->user, $title, $body, $data);
                 }
             }
@@ -191,7 +192,7 @@ class OrderController extends Controller
             return $this->error(null, "Failed to update order status: " . $e->getMessage(), 500);
         }
     }
-    
+
 
     //Export user Orders
     public function exportOrders()
@@ -224,6 +225,90 @@ class OrderController extends Controller
         });
     }
 
+
+    public function salesRecord()
+    {
+        // Fetch completed orders for the current vendor
+        $salesRecords = Order::where('vendor_id', auth()->user()->vendor->id)
+            ->where('status', 'completed')
+            ->get();
+
+        if ($salesRecords->isEmpty()) {
+            return $this->error(null, 'No completed sales found.', 404);
+        }
+
+        // Calculate totals
+        $walletTotal = $salesRecords->where("payment_type", "wallet")->sum('total_amount');
+        $cashTotal = $salesRecords->where("payment_type", "cash")->sum('total_amount');
+
+        // Format order records
+        $formattedSales = $salesRecords->map(function ($record) {
+            return [
+                'id' => $record->id,
+                'transaction_id' => $record->transaction_id,
+                'amount' => (float) $record->total_amount,
+                'payment_type' => $record->payment_type,
+                'created_at_' => $record->created_at->diffForHumans()
+            ];
+        });
+
+        return $this->success([
+            'wallet_total' => (float) $walletTotal,
+            'cash_total' => (float) $cashTotal,
+            'grand_total' => (float) ($walletTotal + $cashTotal),
+            'orders' => $formattedSales
+        ], 'Sales records retrieved successfully.');
+    }
+
+
+    public function salesDetail($order_id)
+    {
+        // Fetch the order with related items and agent
+        $order = Order::with(['orderItems.product.product_images', 'agent.user'])
+            ->where('id', $order_id)
+            ->where('status', 'completed')
+            ->first();
+
+        if (!$order) {
+            return $this->error(null, 'Sales record not found.', 404);
+        }
+
+        // Ensure current vendor owns this order
+        if ($order->vendor_id !== auth()->user()->vendor->id) {
+            return $this->error(null, 'You are not authorized to view this sales detail.', 403);
+        }
+
+        // Format each product from orderItems
+        $products = $order->orderItems->map(function ($item) {
+            $product = $item->product;
+            return [
+                'product_name' => optional($product)->name,
+                'product_image' => optional(optional($product)->product_images->first())->image_path
+                    ?? env('APP_URL') . '/default.png',
+                'quantity' => $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+                'total_price' => (float) $item->quantity * $item->unit_price,
+            ];
+        });
+
+        // Format main order data
+        $formattedOrder = [
+            'id' => $order->id,
+            'transaction_id' => $order->transaction_id,
+            'transaction_total' => (float) $order->total_amount,
+            'payment_type' => $order->payment_type,
+            'created_at_human' => $order->created_at->diffForHumans(),
+            'agent' => $order->agent->user->firstname . ' ' . $order->agent->user->lastname,
+            'agent_phone' => $order->agent->user->phone,
+            'products' => $products,
+        ];
+
+        return $this->success([
+            'order' => $formattedOrder
+        ], 'Sales detail retrieved successfully.');
+    }
+
+
     /**
      * Formats a single escrow for API response.
      */
@@ -252,7 +337,7 @@ class OrderController extends Controller
                     'product_image' => optional($order->product)->product_images ? optional($order->product->product_images->first())->image_path : env('APP_URL') . '/default.png',
                     'quantity' => $order->quantity,
                     'unit_price' => (float) $order->unit_price,
-                    'agent_price' => (float) $order->agent_price,   
+                    'agent_price' => (float) $order->agent_price,
                     'commission' => (float) $order->commission,
                     'total' => (float) $total,
                 ];
