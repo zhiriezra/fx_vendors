@@ -77,7 +77,7 @@ class OrderController extends Controller
                 $query->where('vendor_id', $vendorId);
             })
             ->with(['orderItems.product', 'agent.user'])
-            ->first();  
+            ->first();
 
         if (!$order) {
             return $this->error(null, "No order found.", 404);
@@ -327,6 +327,7 @@ class OrderController extends Controller
             'products' => $products,
         ];
 
+        //return
         return $this->success([
             'order' => $formattedOrder
         ], 'Sales detail retrieved successfully.');
