@@ -111,6 +111,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::get('/wallet-enquiry', [WalletController::class, 'walletEnquiry']);
     Route::get('/recent-transactions', [WalletController::class, 'transactions']);
+    Route::get('/wallet-transactions', [WalletController::class, 'walletTransactions']);
+    Route::get('/wallet-transaction/{transaction_id}', [WalletController::class, 'walletTransaction']);
     Route::post('/withdrawal-requests', [WalletController::class, 'fundWithdraw']);
 
 
