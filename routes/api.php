@@ -95,6 +95,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/order/{id}/update-status', [OrderController::class, 'updateOrderStatus']);
 
+    Route::get('/sales-record', [OrderController::class, 'salesRecord']);
+    Route::get('/sales-detail/{id}', [OrderController::class, 'salesDetail']);
+
 
     //Export User Orders
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
