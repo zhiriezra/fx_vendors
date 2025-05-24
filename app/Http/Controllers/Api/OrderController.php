@@ -260,7 +260,6 @@ class OrderController extends Controller
         ], 'Sales records retrieved successfully.');
     }
 
-
     public function salesDetail($order_id)
     {
         // Fetch the order with related items and agent
