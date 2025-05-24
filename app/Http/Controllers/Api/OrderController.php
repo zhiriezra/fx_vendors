@@ -287,6 +287,7 @@ class OrderController extends Controller
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'total_price' => (float) $item->quantity * $item->unit_price,
+                'commission' => (float) $item->commission,
             ];
         });
 
@@ -295,6 +296,8 @@ class OrderController extends Controller
             'id' => $order->id,
             'transaction_id' => $order->transaction_id,
             'transaction_total' => (float) $order->total_amount,
+            'commission' => (float) $order->commission,
+            'service_charge' => (float) $order->service_charge,
             'payment_type' => $order->payment_type,
             'created_at_human' => $order->created_at->diffForHumans(),
             'agent' => $order->agent->user->firstname . ' ' . $order->agent->user->lastname,
