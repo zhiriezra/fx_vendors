@@ -181,7 +181,7 @@ class GeneralWalletService
                 $jsonPart = $matches[1];
 
                 $walletData = json_decode($jsonPart, true);
-
+                return response()->json($walletData);
                 if($walletData['data']['responseCode'] == "42"){
 
                     $this->createAndSaveWallet($user, $defaultProvider, $walletData);
