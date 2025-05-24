@@ -42,23 +42,48 @@ class OrderController extends Controller
             return $this->error(null, "No orders found!", 404);
         }
 
-        return $this->success(['orders' => $orders->map(fn($e) => $this->formatOrder($e))], 'All orders');
+        $formattedOrders = $orders->map(function ($order) {
+            $order->products_count = $order->orderItems->count();
+            $order->product_quantity = $order->orderItems->sum('quantity');
+            return $order;
+        });
+        $formattedOrders = $formattedOrders->map(function ($order) {
+            return [
+                'id' => $order->id,
+                'transaction_id' => $order->transaction_id,
+                'total_amount' => (float) $order->total_amount,
+                'payment_type' => $order->payment_type,
+                'delivery_type' => $order->delivery_type,
+                'commission' => (float) $order->commission,
+                'agent' => $order->agent->user->firstname . ' ' . $order->agent->user->lastname,
+                'agent_phone' => $order->agent->user->phone,
+                'delivery_address' => $order->agent->current_location,
+                'item_count' => $order->products_count,
+                'product_count' => $order->product_quantity,
+                'created_date' => Carbon::parse($order->created_at)->format('M j, Y, g:ia'),
+                'updated_date' => Carbon::parse($order->updated_at)->format('M j, Y, g:ia'),
+                'status' => $order->status
+            ];
+        });
+        return $this->success(['orders' => $formattedOrders], 'All orders');
 
     }
 
-    public function singleOrder($escrow_id)
+    public function singleOrder($order_id)
     {
         $vendorId = auth()->user()->vendor->id;
+        $order = Order::where('id', $order_id)
+            ->whereHas('orderItems.product', function ($query) use ($vendorId) {
+                $query->where('vendor_id', $vendorId);
+            })
+            ->with(['orderItems.product', 'agent.user'])
+            ->first();  
 
-        $escrow = Escrow::where('id', $escrow_id)
-            ->with(['orders.product.vendor.user', 'orders.agent.user', 'vendor.user'])
-            ->first();
-
-        if (!$escrow || !$this->hasOrderForVendor($escrow, $vendorId)) {
+        if (!$order) {
             return $this->error(null, "No order found.", 404);
         }
 
-        return $this->success(['order' => $this->formatEscrow($escrow)], 'Single Order');
+        return $this->success(['order' => $this->formatOrder($order)], 'Single Order');
     }
 
     public function updateOrderStatus(Request $request, $id)
@@ -333,7 +358,7 @@ class OrderController extends Controller
                 return [
                     'id' => $order->product->id,
                     'product_name' => optional($order->product)->name,
-                    'product_image' => optional($order->product)->product_images ? optional($order->product->product_images->first())->image_path : env('APP_URL') . '/default.png',
+                    'product_image' => optional($order->product)->product_images && $order->product->product_images->first() ? $order->product->product_images->first()->image_path : env('APP_URL') . '/default.png',
                     'quantity' => $order->quantity,
                     'unit_price' => (float) $order->unit_price,
                     'agent_price' => (float) $order->agent_price,
