@@ -13,7 +13,6 @@ use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
 use Illuminate\Support\Facades\Validator;
-use App\Models\WalletTransaction;
 
 class WalletController extends Controller
 {
@@ -88,19 +87,21 @@ class WalletController extends Controller
     /**
      * Return the authenticated user's wallet transactions.
      */
-    public function walletTransactions()
+    public function transactions()
     {
-        $wallet = Wallet::where('user_id', $this->user->id)->where('slug', $this->defaultProvider)->first();
-        $transactions = WalletTransaction::where('wallet_id', $wallet->id)->get();
-        
-        return $this->success(['transactions' => $transactions], 'Wallet transactions.');
-    }
+        $transactions = $this->user->transactions->map(function ($transaction) {
+            return [
+                'wallet_id'   => $transaction->wallet_id,
+                'user_id'     => $transaction->payable_id,
+                'type'        => $transaction->type,
+                'amount'      => $transaction->amount,
+                'meta'        => $transaction->meta,
+                'created_at'  => Carbon::parse($transaction->created_at)->format('M j, Y, g:ia'),
+                'updated_at'  => Carbon::parse($transaction->updated_at)->format('M j, Y, g:ia'),
+            ];
+        });
 
-    public function walletTransaction($transaction_id)
-    {
-        $transaction = WalletTransaction::where('transaction_id', $transaction_id)->first();
-
-        return $this->success(['transaction' => $transaction], 'Wallet transaction.');
+        return $this->success(['transactions' => $transactions], 'My recent transactions.');
     }
 
 /*     public function requestWithdrawal(Request $request){

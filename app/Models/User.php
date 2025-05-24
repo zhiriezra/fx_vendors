@@ -65,7 +65,9 @@ class User extends Authenticatable
     public function agent()
     {
         return $this->hasOne(Agent::class);
-    }  
+    }
+
+     
 
     public function wallet()
     {
@@ -107,4 +109,5 @@ class User extends Authenticatable
         $this->pushNotificationService->sendToUser($this, $title, $body, $data);
 
     }
+
 }
