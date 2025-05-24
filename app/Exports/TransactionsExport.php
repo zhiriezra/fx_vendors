@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Carbon\Carbon;
 
-class TransactionsExport implements FromQuery, WithHeadings, WithMapping
+class TransactionsExport implements WithHeadings, WithMapping
 {
     protected $transactions;
 
@@ -23,7 +23,7 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping
     {
         return $this->transactions;
     }
-    
+
     public function map($transaction): array
     {
         return [

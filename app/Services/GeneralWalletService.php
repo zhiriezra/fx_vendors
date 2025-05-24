@@ -33,7 +33,7 @@ class GeneralWalletService
 
         $defaultProvider = $this->getDefaultWalletProviderForUser($user);
 
-        return Wallet::where('holder_id', $userId)->where('slug', $defaultProvider)->exists();
+        return Wallet::where('user_id', $userId)->where('slug', $defaultProvider)->exists();
     }
 
     /**
@@ -215,16 +215,13 @@ class GeneralWalletService
             throw new \Exception("Wallet type not found for provider: $defaultProvider");
         }
 
-        $wallet = Wallet::where('holder_id', $user->id)->where('slug', $defaultProvider)->first();
+        $wallet = Wallet::where('user_id', $user->id)->where('slug', $defaultProvider)->first();
 
         if($wallet == null){
             Wallet::create([
-                'holder_id'      => $user->id,
-                'holder_type'    => "App\Models\User",
-                'wallet_type_id' => $wallet_type->id,
+                'user_id'        => $user->id,
                 'name'           => $defaultProvider,
                 'slug'           => $defaultProvider,
-                'uuid'           => Str::uuid(),
                 'balance'        => 0.00,
                 'meta'           => json_encode($walletData['data'] ?? []),
             ]);
