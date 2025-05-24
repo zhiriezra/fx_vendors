@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
 use Illuminate\Support\Facades\Validator;
+use App\Models\WalletTransaction;
 
 class WalletController extends Controller
 {
@@ -42,7 +43,7 @@ class WalletController extends Controller
     public function getBalance(Request $request)
     {
 
-        $wallet = Wallet::where('holder_id', $this->user->id)
+        $wallet = Wallet::where('user_id', $this->user->id)
             ->where('slug', $this->defaultProvider)
             ->first();
 
@@ -62,7 +63,7 @@ class WalletController extends Controller
     public function walletEnquiry(Request $request)
     {
 
-        $wallet = Wallet::where('holder_id', $this->user->id)
+        $wallet = Wallet::where('user_id', $this->user->id)
             ->where('slug', $this->defaultProvider)
             ->first();
 
@@ -87,116 +88,21 @@ class WalletController extends Controller
     /**
      * Return the authenticated user's wallet transactions.
      */
-    public function transactions()
+    public function walletTransactions()
     {
-        $transactions = $this->user->transactions->map(function ($transaction) {
-            return [
-                'wallet_id'   => $transaction->wallet_id,
-                'user_id'     => $transaction->payable_id,
-                'type'        => $transaction->type,
-                'amount'      => $transaction->amount,
-                'meta'        => $transaction->meta,
-                'created_at'  => Carbon::parse($transaction->created_at)->format('M j, Y, g:ia'),
-                'updated_at'  => Carbon::parse($transaction->updated_at)->format('M j, Y, g:ia'),
-            ];
-        });
-
-        return $this->success(['transactions' => $transactions], 'My recent transactions.');
+        $wallet = Wallet::where('user_id', $this->user->id)->where('slug', $this->defaultProvider)->first();
+        $transactions = WalletTransaction::where('wallet_id', $wallet->id)->get();
+        
+        return $this->success(['transactions' => $transactions], 'Wallet transactions.');
     }
 
-/*     public function requestWithdrawal(Request $request){
-
-        $validator = Validator::make($request->all(), [
-            'amount' => 'required'
-        ]);
-
-        $walletBalance = $request->user()->balance;
-        $amount = floatval($request->amount);
-
-        if($validator->fails()){
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
-        }
-
-        $todayWithdrawal = PayoutRequest::where(['vendor_id' => auth()->user()->vendor->id, 'status' => 'pending'])->whereDate('created_at', Carbon::today())->exists();
-
-        if($todayWithdrawal) {
-            return response()->json(['status' => false, 'message' => 'You have a pending withdrawal request today.'], 400);
-        }
-
-        if($amount <= $walletBalance ){
-            $payoutRequest = PayoutRequest::create([
-                'vendor_id' => auth()->user()->vendor->id,
-                'amount' => $request->amount,
-            ]);
-            $data = [
-                'id' => $payoutRequest->id,
-                'vendor_id' => $payoutRequest->vendor_id,
-                'amount' => $payoutRequest->amount,
-                'created_at' => Carbon::parse($payoutRequest->created_at)->format('M j, Y, g:ia'),
-                'updated_at' => Carbon::parse($payoutRequest->updated_at)->format('M j, Y, g:ia')
-            ];
-
-            if($payoutRequest){
-                return response()->json(['status' => true, 'message' => 'Withdrawal request successful, funds will be disbursed within 24 hours', 'data' => ['withdrawal_request' => $data]], 200);
-            }
-
-            return response()->json(['status' => false, 'message' => 'There was an error processing your withdrawal, please try again'], 400);
-
-        }
-
-        return response()->json(['status' => false, 'message' => 'You do not have enough funds in your wallet'], 400);
-
-
-    } */
-
-
-    public function fundWithdraw(Request $request)
+    public function walletTransaction($transaction_id)
     {
+        $transaction = WalletTransaction::where('transaction_id', $transaction_id)->first();
 
-        $rules = [
-            'amount' => 'required|numeric',
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return $this->error($validator->errors(), 'Validation failed', 422);
-        }
-
-        $trans_id = 'EXA0WD' . now()->format('YmdHis') . rand(1000, 9999);
-
-        $param = [
-                    'amount'=> $request->amount,
-                    'transaction_id' => $trans_id
-                ];
-
-        $response = $this->walletService->walletFundWithdrawal($param);
-
-        return $response;
-
-        if (
-                isset($response['data']) &&
-                isset($response['data']['responseCode'])
-            ) {
-                if($response['data']['responseCode'] == "00"){
-                    return $this->success(null, 'Fund Transfer Successful.');
-                }
-                else{
-
-                        $message = $response['message'] ?? 'Transaction Failed.';
-
-                        return $this->error(null, $message, 422);
-
-                }
-            }
-            else{
-                    $message = $response['message'] ?? 'Transaction Failed..';
-
-                    return $this->error(null, $message, 422);
-            }
-
+        return $this->success(['transaction' => $transaction], 'Wallet transaction.');
     }
-
+    
     public function exportTransactions()
     {
         $date = date('Y-m-d');
