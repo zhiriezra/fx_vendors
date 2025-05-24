@@ -68,7 +68,7 @@ class WalletController extends Controller
             ->first();
 
         if (!$wallet) {
-            return $this->walletService->createUserWallet($this->user);
+            return $this->walletService->createUserWalletV1($this->user);
         }
 
         $formattedWallet = [

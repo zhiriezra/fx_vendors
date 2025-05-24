@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Factories\WalletProviderFactory;
 use App\Models\User;
+use App\Traits\ApiResponder;
 
 class GeneralWalletService
 {
+    use ApiResponder;
+
     protected $walletProviderFactory;
 
     public $userCountry = null;
@@ -161,8 +164,6 @@ class GeneralWalletService
             // Create the wallet
             $walletData = $walletService->createWallet($user->id);
 
-            //return $walletData;
-
             $this->createAndSaveWallet($user, $defaultProvider, $walletData);
 
             $wallet_balance = $user->walletBalance($user->id, $defaultProvider);
@@ -202,6 +203,137 @@ class GeneralWalletService
                 'message' => 'Error creating wallet: ' . $e->getMessage(),
             ], 422);
 
+        }
+    }
+
+    /**
+     * Create a new wallet for a user with improved error handling and logging
+     *
+     * @param \App\Models\User $user
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createUserWalletV1(User $user): \Illuminate\Http\JsonResponse
+    {
+        try {
+            Log::info('Starting wallet creation process', ['user_id' => $user->id]);
+
+            // Determine the default wallet provider for the user's country
+            $defaultProvider = $this->getDefaultWalletProviderForUser($user);
+            Log::info('Default provider determined', ['provider' => $defaultProvider, 'user_id' => $user->id]);
+
+            // Resolve the wallet service for the default provider
+            $walletService = $this->walletProviderFactory->make($defaultProvider);
+
+            // Validate mandatory fields
+            $missingFields = $walletService->validateMandatoryFields($user->id);
+            if (!empty($missingFields)) {
+                Log::warning('Missing mandatory fields for wallet creation', [
+                    'user_id' => $user->id,
+                    'missing_fields' => $missingFields
+                ]);
+
+                return $this->error(
+                    'Unable to create user wallet. Please update your profile. Missing fields: ' . implode(', ', $missingFields),
+                    'VALIDATION_ERROR',
+                    400
+                );
+            }
+
+            try {
+                // Create the wallet
+                $walletData = $walletService->createWallet($user->id);
+            } catch (\Exception $e) {
+                // Check if the error is about existing wallet (response code 42)
+                if (strpos($e->getMessage(), '"responseCode":"42"') !== false) {
+                    Log::info('Wallet already exists in provider system', [
+                        'user_id' => $user->id,
+                        'provider' => $defaultProvider
+                    ]);
+
+                    // Extract wallet data from error message
+                    preg_match('/"data":({.*?})/', $e->getMessage(), $matches);
+                    if (isset($matches[1])) {
+                        $walletData = ['data' => json_decode($matches[1], true)];
+                    } else {
+                        throw $e; // Re-throw if we can't extract wallet data
+                    }
+                } else {
+                    throw $e; // Re-throw if it's a different error
+                }
+            }
+
+            // Check if wallet exists in database
+            $existingWallet = Wallet::where('user_id', $user->id)
+                                  ->where('slug', $defaultProvider)
+                                  ->first();
+
+            if (!$existingWallet) {
+                // Save wallet to database if it doesn't exist
+                $this->createAndSaveWallet($user, $defaultProvider, $walletData);
+                Log::info('Wallet saved to database', [
+                    'user_id' => $user->id,
+                    'provider' => $defaultProvider
+                ]);
+            } else {
+                Log::info('Wallet already exists in database', [
+                    'user_id' => $user->id,
+                    'provider' => $defaultProvider
+                ]);
+            }
+
+            // Get wallet balance
+            $walletBalance = $user->walletBalance($user->id, $defaultProvider);
+            Log::info('Wallet balance retrieved', [
+                'user_id' => $user->id,
+                'balance' => $walletBalance
+            ]);
+
+            $responseData = [
+                'balance' => $walletBalance,
+                'provider' => $defaultProvider,
+                'wallet_data' => $walletData,
+                'is_new_wallet' => !$existingWallet
+            ];
+
+            return $this->success(
+                'Wallet created successfully',
+                $responseData,
+                201
+            );
+
+        } catch (\InvalidArgumentException $e) {
+            Log::error('Invalid argument exception in wallet creation', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return $this->error(
+                $e->getMessage(),
+                'INVALID_ARGUMENT',
+                422
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Unexpected error in wallet creation', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Check if the error message contains a JSON response
+            if (preg_match('/{"status":"(.*?)","message":"(.*?)"}/', $e->getMessage(), $matches)) {
+                return $this->error(
+                    $matches[2],
+                    $matches[1],
+                    422
+                );
+            }
+
+            return $this->error(
+                'An unexpected error occurred while creating your wallet. Please try again later.',
+                'INTERNAL_ERROR',
+                500
+            );
         }
     }
 

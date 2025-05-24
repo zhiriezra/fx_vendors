@@ -13,6 +13,24 @@ use Illuminate\Support\Facades\Log;
 
 class NpsbWalletService
 {
+    // NPSB Response Codes
+    const RESPONSE_SUCCESS = '00';
+    const RESPONSE_WALLET_EXISTS = '42';
+    const RESPONSE_INVALID_ACCOUNT = '01';
+    const RESPONSE_INSUFFICIENT_FUNDS = '51';
+    const RESPONSE_INVALID_AMOUNT = '13';
+    const RESPONSE_SYSTEM_ERROR = '99';
+
+    // NPSB Error Messages
+    const ERROR_MESSAGES = [
+        self::RESPONSE_SUCCESS => 'Transaction successful',
+        self::RESPONSE_WALLET_EXISTS => 'A Wallet Already Exists For This User',
+        self::RESPONSE_INVALID_ACCOUNT => 'Invalid account number',
+        self::RESPONSE_INSUFFICIENT_FUNDS => 'Insufficient funds',
+        self::RESPONSE_INVALID_AMOUNT => 'Invalid amount',
+        self::RESPONSE_SYSTEM_ERROR => 'System error occurred'
+    ];
+
     protected NpsbWalletApiClient $walletApiClient;
 
     public function __construct(NpsbWalletApiClient $walletApiClient)
@@ -29,11 +47,43 @@ class NpsbWalletService
      */
     public function createWallet(int $userId): array
     {
-        // Generate the payload using a private method
-        $payload = $this->generateWalletPayload($userId);
+        try {
+            // Generate the payload using a private method
+            $payload = $this->generateWalletPayload($userId);
 
-        // Call the /open_wallet API
-         return $this->walletApiClient->post('/open_wallet', $payload);
+            // Call the /open_wallet API
+            $response = $this->walletApiClient->post('/open_wallet', $payload);
+
+            // Check for specific NPSB response codes
+            if (isset($response['data']['responseCode'])) {
+                $responseCode = $response['data']['responseCode'];
+                
+                if ($responseCode === self::RESPONSE_WALLET_EXISTS) {
+                    // Extract wallet data from existing wallet response
+                    return [
+                        'status' => false,
+                        'message' => self::ERROR_MESSAGES[self::RESPONSE_WALLET_EXISTS],
+                        'data' => $response['data']
+                    ];
+                }
+
+                if ($responseCode !== self::RESPONSE_SUCCESS) {
+                    throw new \Exception(
+                        self::ERROR_MESSAGES[$responseCode] ?? 'Unknown error occurred',
+                        $responseCode
+                    );
+                }
+            }
+
+            return $response;
+        } catch (\Exception $e) {
+            $this->logError('Failed to create wallet', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -46,31 +96,54 @@ class NpsbWalletService
      */
     public function debitWallet(int $userId, array $data): array
     {
-        $accountNo = $this->getAccountNo($userId);
+        try {
+            $accountNo = $this->getAccountNo($userId);
+            if (!$accountNo) {
+                throw new \Exception('Wallet account not found', self::RESPONSE_INVALID_ACCOUNT);
+            }
 
-        $narration = $this->getNarration($userId, 'debit');
+            $narration = $this->getNarration($userId, 'debit');
 
-        // Construct the payload specific to the 9PSB API
-        $payload = [
-            'accountNo' => $accountNo,
-            'narration' => $narration,
-            'totalAmount' => $data['amount'],
-            'transactionId' => $data['transaction_id'],
-            'merchant' => [
-                'isFee'              => false,
-                'merchantFeeAccount' => '',
-                'merchantFeeAmount'  => '',
-            ],
-        ];
+            // Construct the payload specific to the 9PSB API
+            $payload = [
+                'accountNo' => $accountNo,
+                'narration' => $narration,
+                'totalAmount' => $data['amount'],
+                'transactionId' => $data['transaction_id'],
+                'merchant' => [
+                    'isFee'              => false,
+                    'merchantFeeAccount' => '',
+                    'merchantFeeAmount'  => '',
+                ],
+            ];
 
-        // Use the NpsbWalletApiClient to make the API call
-        $response = $this->walletApiClient->post('/debit/transfer', $payload);
+            // Use the NpsbWalletApiClient to make the API call
+            $response = $this->walletApiClient->post('/debit/transfer', $payload);
 
-        return $response;
+            // Check for specific NPSB response codes
+            if (isset($response['data']['responseCode'])) {
+                $responseCode = $response['data']['responseCode'];
+                
+                if ($responseCode !== self::RESPONSE_SUCCESS) {
+                    throw new \Exception(
+                        self::ERROR_MESSAGES[$responseCode] ?? 'Unknown error occurred',
+                        $responseCode
+                    );
+                }
+            }
+
+            return $response;
+        } catch (\Exception $e) {
+            $this->logError('Failed to debit wallet', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            throw $e;
+        }
     }
 
     /**
-
      * Wallet Fund Transfet to Bank.
      *
      * @param array $data
@@ -145,27 +218,51 @@ class NpsbWalletService
      */
     public function creditWallet(int $userId, array $data): array
     {
-        $accountNo = $this->getAccountNo($userId);
+        try {
+            $accountNo = $this->getAccountNo($userId);
+            if (!$accountNo) {
+                throw new \Exception('Wallet account not found', self::RESPONSE_INVALID_ACCOUNT);
+            }
 
-        $narration = $this->getNarration($userId, 'credit');
+            $narration = $this->getNarration($userId, 'credit');
 
-        // Construct the payload specific to the 9PSB API
-        $payload = [
-            'accountNo' => $accountNo,
-            'narration' => $narration,
-            'totalAmount' => $data['amount'],
-            'transactionId' => $data['transaction_id'],
-            'merchant' => [
-                'isFee'              => false,
-                'merchantFeeAccount' => '',
-                'merchantFeeAmount'  => '',
-            ],
-        ];
+            // Construct the payload specific to the 9PSB API
+            $payload = [
+                'accountNo' => $accountNo,
+                'narration' => $narration,
+                'totalAmount' => $data['amount'],
+                'transactionId' => $data['transaction_id'],
+                'merchant' => [
+                    'isFee'              => false,
+                    'merchantFeeAccount' => '',
+                    'merchantFeeAmount'  => '',
+                ],
+            ];
 
-        // Use the NpsbWalletApiClient to make the API call
-        $response = $this->walletApiClient->post('/credit/transfer', $payload);
+            // Use the NpsbWalletApiClient to make the API call
+            $response = $this->walletApiClient->post('/credit/transfer', $payload);
 
-        return $response;
+            // Check for specific NPSB response codes
+            if (isset($response['data']['responseCode'])) {
+                $responseCode = $response['data']['responseCode'];
+                
+                if ($responseCode !== self::RESPONSE_SUCCESS) {
+                    throw new \Exception(
+                        self::ERROR_MESSAGES[$responseCode] ?? 'Unknown error occurred',
+                        $responseCode
+                    );
+                }
+            }
+
+            return $response;
+        } catch (\Exception $e) {
+            $this->logError('Failed to credit wallet', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            throw $e;
+        }
     }
 
     /**
