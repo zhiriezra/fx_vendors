@@ -4,16 +4,24 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use Bavix\Wallet\Interfaces\Wallet;
-use Bavix\Wallet\Traits\HasWallet;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Services\PushNotificationService;
+use App\Models\WalletTransaction;
 
-class User extends Authenticatable implements Wallet
+class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasWallet;
+    use HasApiTokens, HasFactory, Notifiable;
+
+    protected $pushNotificationService;
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->pushNotificationService = app(PushNotificationService::class);
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -59,46 +67,47 @@ class User extends Authenticatable implements Wallet
         return $this->hasOne(Agent::class);
     }
 
-     /*     public function wallets(){
-        return $this->hasOne(ModelsWallet::class);
-    } */
+     
 
-   /*     public function wallets(){
-        return $this->hasOne(ModelsWallet::class);
-    } */
-
-    // If you want to manually define, it should be like this:
-
-    public function wallets()
+    public function wallet()
     {
-        return $this->morphMany(\Bavix\Wallet\Models\Wallet::class, 'holder');
+        return $this->hasOne(Wallet::class);
     }
 
     public function getWallet($user_id, $slug)
     {
         $user_id = $user_id ?? auth()->id();
 
-        return $this->wallets()->where('holder_id', $user_id)->where('slug', $slug)->firstOrFail();
+        return $this->wallet()->where('user_id', $user_id)->where('slug', $slug)->firstOrFail();
 
-        /* return ModelsWallet::where('holder_id', $user_id)
-            ->where('holder_type', self::class)
-                ->where('slug', $slug)
-                    ->firstOrFail(); */
     }
 
-    public function walletDeposit($user_id, $slug, $amount, $meta)
-    {
-        return $this->getWallet($user_id, $slug)->depositFloat($amount, $meta);
+    public function walletBalance($user_id, $slug){
+        return Wallet::where('user_id', $user_id)->where('slug', $slug)->first()->balance;
     }
 
-    public function walletWithdraw($user_id, $slug, $amount, $meta)
+    public function walletDeposit($user_id, $slug, $amount, $meta): void
     {
-        return $this->getWallet($user_id, $slug)->withdrawFloat($amount, $meta);
-    }
+        $wallet = Wallet::where('user_id', $user_id)->where('slug', $slug)->first();
+        $wallet->balance = $amount + $wallet->balance;
+        $wallet->save();
 
-    public function walletBalance($user_id, $slug)
-    {
-        return $this->getWallet($user_id, $slug)->balanceFloatNum;
+        $transaction = WalletTransaction::create([
+            'wallet_id' => $wallet->id,
+            'amount' => $amount,
+            'type' => 'deposit',
+            'reference' => $meta['type'] === 'refund' ? $meta['transaction_id'] : $meta['reference'],
+        ]);
+
+        $title = 'Wallet Deposit';
+        $body = 'Your wallet has been credited with ' . $amount . ' ' . $slug;
+        $data = [
+            'type' => 'payment',
+            'description' => $meta['description'],
+        ];
+
+        $this->pushNotificationService->sendToUser($this, $title, $body, $data);
+
     }
 
 }

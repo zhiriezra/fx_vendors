@@ -9,7 +9,7 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $guarded = [''];
+    protected $guarded = [];
 
     public function product()
     {
@@ -33,6 +33,11 @@ class Order extends Model
 
     public function escrow()
     {
-        return $this->belongsTo(Escrow::class);
+        return $this->hasOne(Escrow::class);
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }
