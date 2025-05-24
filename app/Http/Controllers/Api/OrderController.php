@@ -182,7 +182,7 @@ class OrderController extends Controller
 
 
             DB::commit();
-            return $this->success(['order' => $this->formatOrder($order)], 'Order status updated successfully');
+            return $this->success(['order' => $this->formatOrder($order)], "Order has been {$newStatus} successfully");
 
         } catch (\Exception $e) {
             DB::rollBack();
