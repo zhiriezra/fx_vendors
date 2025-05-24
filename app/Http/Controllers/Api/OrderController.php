@@ -260,7 +260,6 @@ class OrderController extends Controller
         ], 'Sales records retrieved successfully.');
     }
 
-
     public function salesDetail($order_id)
     {
         // Fetch the order with related items and agent
@@ -303,6 +302,7 @@ class OrderController extends Controller
             'products' => $products,
         ];
 
+        //return
         return $this->success([
             'order' => $formattedOrder
         ], 'Sales detail retrieved successfully.');
