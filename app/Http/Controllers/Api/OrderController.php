@@ -46,19 +46,20 @@ class OrderController extends Controller
 
     }
 
-    public function singleOrder($escrow_id)
+    public function singleOrder($order_id)
     {
         $vendorId = auth()->user()->vendor->id;
 
-        $escrow = Escrow::where('id', $escrow_id)
-            ->with(['orders.product.vendor.user', 'orders.agent.user', 'vendor.user'])
+        $order = Order::where('id', $order_id)
+            ->where('vendor_id', $vendorId)
+            ->with(['product.vendor.user', 'agent.user', 'vendor.user'])
             ->first();
 
-        if (!$escrow || !$this->hasOrderForVendor($escrow, $vendorId)) {
+        if (!$order) {
             return $this->error(null, "No order found.", 404);
         }
 
-        return $this->success(['order' => $this->formatEscrow($escrow)], 'Single Order');
+        return $this->success(['order' => $this->formatOrder($order)], 'Single Order');
     }
 
     public function updateOrderStatus(Request $request, $id)
@@ -337,7 +338,7 @@ class OrderController extends Controller
                 return [
                     'id' => $order->product->id,
                     'product_name' => optional($order->product)->name,
-                    'product_image' => optional($order->product)->product_images ? optional($order->product->product_images->first())->image_path : env('APP_URL') . '/default.png',
+                    'product_image' => optional($order->product)->product_images && optional($order->product->product_images->first())->image_path ? optional($order->product->product_images->first())->image_path : env('APP_URL') . '/default.png',
                     'quantity' => $order->quantity,
                     'unit_price' => (float) $order->unit_price,
                     'agent_price' => (float) $order->agent_price,
