@@ -7,8 +7,10 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Carbon\Carbon;
 
-class ProductsExport implements FromCollection, WithHeadings
+class ProductsExport implements FromCollection, WithHeadings, WithMapping
 {
     /**
     * @return \Illuminate\Support\Collection
@@ -35,6 +37,23 @@ class ProductsExport implements FromCollection, WithHeadings
                 'products.stock_date'
             )
             ->get();
+    }
+
+    public function map($product): array
+    {
+        return [
+            $product->name,
+            $product->batch_number,
+            $product->manufacturer,
+            $product->category_name,
+            $product->subcategory_name,
+            $product->unit_name,
+            $product->quantity === null ? 0 : $product->quantity,
+            number_format($product->unit_price, 2),
+            number_format($product->agent_price, 2),
+            $product->description,
+            Carbon::parse($product->stock_date)->format('d/m/Y'),
+        ];
     }
 
     public function headings(): array
