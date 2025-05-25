@@ -98,7 +98,7 @@ class ProductController extends Controller
         ]);
         
         if($product){
-            return $this->success('Product created successfully', 200);
+            return $this->success(null, 'Product created successfully', 200);
         }else{
             return $this->error('Something went wrong!', 500);
         }
@@ -168,7 +168,7 @@ class ProductController extends Controller
                 'stock_date' => $request->stock_date,
             ]);
 
-            return $this->success('Product updated successfully', 200);
+            return $this->success(null, 'Product updated successfully', 200);
         }else{
             return $this->error('Product not found', 404);
         }
@@ -180,7 +180,7 @@ class ProductController extends Controller
 
         if($product){
             $product->delete();
-            return $this->success('Product removed successfully', 200);
+            return $this->success(null, 'Product removed successfully', 200);
         }else{
             return $this->error('Product not found', 404);
         }
@@ -233,16 +233,7 @@ class ProductController extends Controller
                     'total_value' => $categoryProducts->sum(function($product) {
                         return $product->quantity * $product->unit_price;
                     }),
-                    // 'products' => $categoryProducts->map(function($product) {
-                    //     return [
-                    //         'id' => $product->id,
-                    //         'name' => $product->manufacturer_product->name,
-                    //         'subcategory' => $product->manufacturer_product->sub_category->name,
-                    //         'quantity' => $product->quantity,
-                    //         'unit_price' => $product->unit_price,
-                    //         'total_value' => $product->quantity * $product->unit_price
-                    //     ];
-                    // })
+                
                 ];
             })
             ->values();
@@ -294,7 +285,7 @@ class ProductController extends Controller
             ->with(['manufacturer_product.manufacturer', 'manufacturer_product.sub_category.category']) // Eager load relationships
             ->get();
 
-            $Products = $lowStockProducts->map(function ($product) {
+            $products = $lowStockProducts->map(function ($product) {
                 return [
                     'id' => $product->id,
                     'manufacturer' => $product->manufacturer_product->manufacturer->name,
@@ -315,7 +306,7 @@ class ProductController extends Controller
                 ];
             });
 
-        return $this->success(['low_stock_products' => $Products], 'Low stock products', 200);
+        return $this->success(['low_stock_products' => $products], 'Low stock products', 200);
 
     }
 
@@ -333,7 +324,7 @@ class ProductController extends Controller
             ->with(['manufacturer_product.manufacturer', 'manufacturer_product.sub_category.category']) // Eager load relationships
             ->get();
 
-            $Products = $outOfStockProducts->map(function ($product) {
+            $products = $outOfStockProducts->map(function ($product) {
                 return [
                     'id' => $product->id,
                     'manufacturer' => $product->manufacturer_product->manufacturer->name,
@@ -354,7 +345,7 @@ class ProductController extends Controller
                 ];
             });
     
-        return $this->success(['out_of_stock_products' => $Products], 'Out of stock products', 200);
+        return $this->success(['out_of_stock_products' => $products], 'Out of stock products', 200);
     }
 
     public function restockProduct(Request $request)
