@@ -6,64 +6,54 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Unit;
-use App\Models\ProductImage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-// Image Intervention
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 use PDO;
 use App\Exports\ProductsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\ApiResponder;
+use App\Models\Manufacturer;
+use App\Models\StockTracker;
+
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    use ApiResponder;
+    
     public function index()
     {
-        $products = auth()->user()->vendor->products->map(function($product){
+        $vendor = auth()->user()->vendor;
 
-            // Retrieve the first image for the product
-            $firstImage = $product->images()->first();
+        if(!$vendor){
+            return $this->error('Vendor not found', 404);
+        }
 
-            // Generate the full URL for the image if it exists
-            $fullImagePath = $firstImage ? url($firstImage->image_path) : null;
-            
+        $products = $vendor->products->map(function($product){
+
             return [
                 'id' => $product->id,
-                'category_id' => $product->category->id,
-                'category' => $product->category->name,
-                'sub_category_id' => $product->subcategory->id,
-                'sub_category' => $product->subcategory->name,
-                'vendor_id' => $product->vendor_id,
-                'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                'unit_id' => $product->unit_id,
-                'unit' => $product->unit ? $product->unit->name : null,
-                'manufacturer' => $product->manufacturer,
-                'name' => $product->name,
-                'batch_number' => $product->batch_number,
+                'manufacturer' => $product->manufacturer_product->manufacturer->name,
+                'category' => $product->manufacturer_product->sub_category->category->name,
+                'subcategory' => $product->manufacturer_product->sub_category->name,
+                'image' => $product->manufacturer_product->image,   
+                'name' => $product->manufacturer_product->name,
+                'unit' => $product->unit->name,
                 'quantity' => $product->quantity,
-                'images' => $fullImagePath,
                 'unit_price' => $product->unit_price,
                 'agent_price' => $product->agent_price,
-                'description' => $product->description,
-                'stock_date' => $product->stock_date,
+                'low_stock' => $product->low_stock(),
                 'created_at' => Carbon::parse($product->created_at)->format('M j, Y, g:ia'),
                 'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
             ];
         });
+
         if($products){
-            return response()->json(['status' => true, 'message' => 'Product list', 'data' => ['products' => $products]], 200);
+            return $this->success('Product list', ['products' => $products], 200);
         }else{
-            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
+            return $this->error('Something went wrong!', 500);
         }
 
     }
@@ -76,359 +66,124 @@ class ProductController extends Controller
         return Excel::download(new ProductsExport, $fileName);  
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'category_id' => 'required',
-            'sub_category_id' => 'required',
+            'manufacturer_product_id' => 'required',
             'quantity' => 'required|integer',
             'unit_id' => 'required',
             'unit_price' => 'required|numeric',
-            'agent_price' => 'required|numeric',
-            'description' => 'nullable',
-            'manufacturer' => 'required',
+            'agent_price' => 'required|numeric|lt:unit_price',
             'stock_date' => 'required|date',
         ]);
 
+        
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+            return $this->error($validator->errors()->first(), 422);
         }
 
         $product = Product::create([
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
+            'category_id' => 1, //not in use
+            'sub_category_id' => 1, //not in use
             'vendor_id' => auth()->user()->vendor->id,
-            'manufacturer' => $request->manufacturer,
-            'name' => $request->name,
+            'manufacturer_product_id' => $request->manufacturer_product_id,
             'batch_number' => (string) Str::uuid(),
             'quantity' => $request->quantity,
             'unit_id' => $request->unit_id,
             'unit_price' => $request->unit_price,
             'agent_price' => $request->agent_price,
-            'description' => $request->description,
             'stock_date' => $request->stock_date,
 
         ]);
         
-
         if($product){
-
-            // Reload product with category and subcategory
-            $productReload = Product::with(['category', 'subCategory', 'unit'])->find($product->id);
-
-            // Format the output
-            $formattedProduct = [
-                'id' => $productReload->id,
-                'caregory_id'=> $productReload->category->id,
-                'category' => $productReload->category->name,
-                'sub_category' => $productReload->subcategory->id,
-                'subcategory' => $productReload->subcategory->name,
-                'vendor' => $productReload->vendor->user->firstname.' '.$productReload->vendor->user->lastname,
-                'manufacturer' => $productReload->manufacturer,
-                'name' => $productReload->name,
-                'batch_number' => $productReload->batch_number,
-                'quantity' => $productReload->quantity,
-                'unit_id' => $productReload->unit_id,
-                'unit' => $productReload->unit->name,
-                'unit_price' => $productReload->unit_price,
-                'agent_price' => $productReload->agent_price,
-                'description' => $productReload->description,
-                'stock_date' => $productReload->stock_date,
-                'created_at' => $productReload->created_at,
-                'updated_at' => $productReload->updated_at,
-            ];
-
-            return response()->json([
-                'status' => true,
-                'message' => "Your product has been successfully uploaded",
-                'data' => [
-                    'product' => $formattedProduct
-                ]
-            ], 200);
-        } else {
-            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
-        }
-    }
-
-    public function addImage(Request $request)
-    {
-        // Validate the request
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
-            'images' => 'required|image|max:2048'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
-        }
-
-        // Check the number of images already uploaded for the product
-        $ImagesCount = ProductImage::where('product_id', $request->product_id)->count();
-
-        if ($ImagesCount >= 5) {
-            return response()->json(['status' => false, 'message' => "Image must not be more than 5"], 422);
-        }
-
-        if ($request->file('images')) {
-            $image = $request->file('images');
-            $imageName = time() . '_' . preg_replace('/\s+/', '_', $image->getClientOriginalName());
-            $imagePath = $image->storeAs('product_images', $imageName, 'public');
-
-            // Generate the full URL for the image
-            $fullImagePath = url(Storage::url($imagePath));
-
-            $productImage = ProductImage::create([
-                'product_id' => $request->product_id,
-                'image_path' => $fullImagePath
-            ]);
-
-            if ($productImage) {
-                // Recalculate the image count after adding the new image
-                $updatedImagesCount = ProductImage::where('product_id', $request->product_id)->count();
-                return response()->json([
-                    'status' => true,
-                    'message' => "Image Added Successfully",
-                    'data' => [
-                        'image' => url($fullImagePath), 
-                        'ImagesCount' => $updatedImagesCount
-                    ]
-                ], 200);
-            } else {
-                return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
-            }
-        }
-    }
-
-    public function deleteImage(Request $request){
-        $validator = Validator::make($request->all(), [
-            'image_id' => 'required|exists:product_images,id'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
-        }
-
-        $image = ProductImage::find($request->image_id);
-
-        if($image){
-            $image->delete();
-            return response()->json(['status' => true, 'message' => 'Deleted successfully'], 204);
+            return $this->success('Product created successfully', 200);
         }else{
-            return response()->json(['status' => false, 'message' => 'Image not found'], 404);
+            return $this->error('Something went wrong!', 500);
         }
+
     }
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
-     */
+
     public function show($id)
     {
-        $product = Product::with('product_images')->find($id);
-        // Retrieve the first image for the product
-        $firstImage = $product->images()->first();
-
-        // Generate the full URL for the image if it exists
-        $fullImagePath = $firstImage ? url($firstImage->image_path) : null;
-
-        if($product){
-            $product = [
-                'id' => $product->id,
-                'category_id' => $product->category->id,
-                'category' => $product->category->name,
-                'sub_category_id' => $product->subcategory->id,
-                'sub_category' => $product->subcategory->name,
-                'vendor_id' => $product->vendor_id,
-                'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                'unit_id' => $product->unit_id,
-                'unit' => $product->unit ? $product->unit->name : null,
-                'manufacturer' => $product->manufacturer,
-                'name' => $product->name,
-                'first_image' => $fullImagePath,
-                'images' => $product->images()->get()->map(function($image){
-                    return [
-                        'id' => $image->id,
-                        'image_path' => url($image->image_path),
-                    ];
-                }),
-                'batch_number' => $product->batch_number,
-                'quantity' => $product->quantity,
-                'unit_price' => $product->unit_price,
-                'agent_price' => $product->agent_price,
-                'description' => $product->description,
-                'stock_date' => $product->stock_date,
-                'created_at' => Carbon::parse($product->created_at)->format('M j, Y, g:ia'),
-                'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
-            ];
-
-            return response()->json(['status' => true, 'message' => "Product details", "data" => ['product' => $product]], 200);
-
-        }else{
-            return response()->json(['status' => 404, 'message' => "Product Not Found!"], 404);
+        $product = Product::with('manufacturer_product')->find($id);
+        if(!$product){
+            return response()->json(['status' => false, 'message' => "Product Not Found!"], 404);
         }
+
+        $product = [
+            'id' => $product->id,
+            'manufacturer' => $product->manufacturer_product->manufacturer->name,
+            'category' => $product->manufacturer_product->sub_category->category->name,
+            'subcategory' => $product->manufacturer_product->sub_category->name,
+            'image' => $product->manufacturer_product->image,   
+            'name' => $product->manufacturer_product->name,
+            'description' => $product->manufacturer_product->description,
+            'unit' => $product->unit->name,
+            'batch_number' => $product->batch_number,
+            'quantity' => $product->quantity,
+            'unit_price' => $product->unit_price,
+            'agent_price' => $product->agent_price,
+            'stock_date' => $product->stock_date,
+            'low_stock' => $product->low_stock(),
+            'created_at' => Carbon::parse($product->created_at)->format('M j, Y, g:ia'),
+            'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
+        ];
+
+        return response()->json(['status' => true, 'message' => "Product details", "data" => ['product' => $product]], 200);
+
+      
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
             'product_id' => 'required',
-            'category_id' => 'required',
-            'sub_category_id' => 'required',
-            'unit_id' => 'required',
-            'manufacturer' => 'required',
-            'name' => 'required',
+            'manufacturer_product_id' => 'required',
             'quantity' => 'required|integer',
+            'unit_id' => 'required',
             'unit_price' => 'required|numeric',
             'agent_price' => 'required|numeric',
-            'description' => 'nullable',
             'stock_date' => 'required|date',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+            return $this->error($validator->errors()->first(), 422);
         }
+
 
         $product = Product::find($request->product_id);
 
         if($product){
 
             $product->update([
-                'category_id' => $request->category_id,
-                'sub_category_id' => $request->sub_category_id,
-                'vendor_id' => Auth::user()->vendor->id,
-                'unit_id' => $request->unit_id,
-                'manufacturer' => $request->manufacturer,
-                'name' => $request->name,
+                'product_id' => $request->product_id,
+                'manufacturer_product_id' => $request->manufacturer_product_id,
                 'quantity' => $request->quantity,
+                'unit_id' => $request->unit_id,
                 'unit_price' => $request->unit_price,
                 'agent_price' => $request->agent_price,
-                'description' => $request->description,
-                'quantity' => $request->quantity,
                 'stock_date' => $request->stock_date,
             ]);
 
-            // Reload the product with relationships
-            $updatedProduct = Product::with(['category', 'subcategory', 'unit'])->find($product->id);
-
-            // Format the response
-            $formattedProduct = [
-                'id' => $updatedProduct->id,
-                'category_id' =>$updatedProduct->category->id,
-                'category' => $updatedProduct->category->name,
-                'sub_category_id' =>$updatedProduct->subcategory->id,
-                'subcategory' => $updatedProduct->subcategory->name,
-                'vendor_id' => $updatedProduct->vendor_id,
-                'vendor' => $updatedProduct->vendor->user->firstname.' '.$updatedProduct->vendor->user->lastname,
-                'manufacturer' => $updatedProduct->manufacturer,
-                'name' => $updatedProduct->name,
-                'batch_number' => $updatedProduct->batch_number,
-                'quantity' => $updatedProduct->quantity,
-                'unit_id' => $updatedProduct->unit_id,
-                'unit' =>$updatedProduct->unit->name,
-                'unit_price' => $updatedProduct->unit_price,
-                'agent_price' => $updatedProduct->agent_price,
-                'description' => $updatedProduct->description,
-                'stock_date' => $updatedProduct->stock_date,
-                'created_at' => $updatedProduct->created_at,
-                'updated_at' => $updatedProduct->updated_at,
-            ];
-
-            return response()->json([
-                'status' => true,
-                'message' => "Product Updated Successfully",
-                'data' => ['product' => $formattedProduct]
-            ], 200);
+            return $this->success('Product updated successfully', 200);
+        }else{
+            return $this->error('Product not found', 404);
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         $product = Product::find($id);
 
         if($product){
-
             $product->delete();
-            return response()->json([
-                'status' => 200,
-                'message' => "Product Deleted Successfully"
-            ], 404);
-
+            return $this->success('Product removed successfully', 200);
         }else{
-            return response()->json([
-                'status' => 404,
-                'message' => "Product Not Found!"
-            ], 404);
-
+            return $this->error('Product not found', 404);
         }
-    }
-
-    public function categories(){
-        $categories = Category::where('status', 1)->get()->makeHidden(['created_at', 'deleted_at','updated_at']);
-        if($categories){
-            return response()->json(['status' => true, 'message' => "Category list", "data" => ["categories" => $categories]], 200);
-        }else{
-            return response()->json(['status' => false, 'message' => "No available categories!"], 404);
-        }
-    }
-
-    public function category($id){
-        $category = Category::where(['status' => 1, 'id' => $id])->with('subcategories')->first()->makeHidden(['created_at', 'deleted_at','updated_at']);
-        if($category){
-            return response()->json(['status' => true, 'message' => "Category", "data" => ["category" => $category]], 200);
-        }else{
-            return response()->json(['status' => false, 'message' => "Can not find category!"], 404);
-        }
-    }
-
-    public function CatRequest(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-
-        ]);
-
-        if($validator->fails()){
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
-        }else{
-
-            $category = Category::create([
-                'name' => $request->name,
-                'status' => 0
-            ]);
-
-        }
-
-        if($category){
-            return response()->json(['status' => true, 'message' => "Request Sent successfully", "data" => $category], 200);
-        }else{
-            return response()->json(['status' => false, 'message' => "Something went wrong!"], 500);
-        }
-
-
     }
 
     public function productStats() 
@@ -436,7 +191,7 @@ class ProductController extends Controller
         $vendor = Auth::user()->vendor;
 
         if (!$vendor) {
-            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+            return $this->error('Vendor not found', 404);
         }
 
         // product statistics
@@ -447,19 +202,15 @@ class ProductController extends Controller
         ')->first();
 
         // Return the response
-        return response()->json([
-            'status' => true,
-            'message' => 'Product statistics retrieved successfully',
-            'data' => [
-                'total_products' => $products->total_products ?? 0,
-                'available_stocks' => $products->available_stocks ?? 0,
-                'product_value' => $products->product_value ?? 0,
-            ]
-        ], 200);
+        return $this->success([
+            'total_products' => $products->total_products ?? 0,
+            'available_stocks' => $products->available_stocks ?? 0,
+            'product_value' => $products->product_value ?? 0,
+        ], 'Product statistics retrieved successfully', 200);
 
     }
 
-    public function lowStockProducts()
+    public function inventoryBreakdown()
     {
         $vendor = auth()->user()->vendor;
 
@@ -467,47 +218,104 @@ class ProductController extends Controller
             return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
         }
 
+        // Get products grouped by manufacturer product category
+        $products = $vendor->products()
+            ->with(['manufacturer_product.sub_category.category'])
+            ->get()
+            ->groupBy(function($product) {
+                return $product->manufacturer_product->sub_category->category->name;
+            })
+            ->map(function($categoryProducts, $categoryName) {
+                return [
+                    'category' => $categoryName,
+                    'total_products' => $categoryProducts->count(),
+                    'total_quantity' => $categoryProducts->sum('quantity'),
+                    'total_value' => $categoryProducts->sum(function($product) {
+                        return $product->quantity * $product->unit_price;
+                    }),
+                    // 'products' => $categoryProducts->map(function($product) {
+                    //     return [
+                    //         'id' => $product->id,
+                    //         'name' => $product->manufacturer_product->name,
+                    //         'subcategory' => $product->manufacturer_product->sub_category->name,
+                    //         'quantity' => $product->quantity,
+                    //         'unit_price' => $product->unit_price,
+                    //         'total_value' => $product->quantity * $product->unit_price
+                    //     ];
+                    // })
+                ];
+            })
+            ->values();
+
+        return $this->success(['inventory_breakdown' => $products], 'Inventory breakdown', 200);
+
+    }
+
+    public function manufacturerProducts()
+    {
+        $vendor = auth()->user()->vendor;
+
+        if (!$vendor) {
+            return $this->error('Vendor not found', 404); 
+        }
+
+        $manufacturers = Manufacturer::with('manufacturer_products')->get();
+
+        $manufacturers = $manufacturers->map(function($manufacturer) {
+            return [
+                'id' => $manufacturer->id,
+                'name' => $manufacturer->name,
+                'products' => $manufacturer->manufacturer_products->map(function($product) {
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name
+                    ];
+                })
+            ];
+        });
+        return $this->success($manufacturers, 'Manufacturers & products', 200);
+    }
+
+    public function lowStockProducts()
+    {
+        $vendor = auth()->user()->vendor;
+
+        if (!$vendor) {
+            return $this->error('Vendor not found', 404);
+        }
+
         // Defining low stock threshold
-        $lowStockThreshold = 3;
+        $stock_tracker = StockTracker::first();
 
         // getting products with low stock
         $lowStockProducts = $vendor->products()
             ->where('quantity', '>', 0)
-            ->where('quantity', '<=', $lowStockThreshold)
-            ->with(['category', 'subcategory', 'unit']) // Eager load relationships
+            ->where('quantity', '<=', $stock_tracker->quantity)
+            ->with(['manufacturer_product.manufacturer', 'manufacturer_product.sub_category.category']) // Eager load relationships
             ->get();
 
             $Products = $lowStockProducts->map(function ($product) {
                 return [
                     'id' => $product->id,
-                    'category_id' => $product->category_id,
-                    'category' => $product->category ? $product->category->name : null,
-                    'sub_category_id' => $product->subcategory->id,
-                    'sub_category' => $product->subcategory ? $product->subcategory->name : null,
-                    'vendor_id' => $product->vendor_id,
-                    'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                    'manufacturer' => $product->manufacturer,
-                    'name' => $product->name,
-                    'unit_id' => $product->unit_id,
-                    'unit' => $product->unit ? $product->unit->name : null,
+                    'manufacturer' => $product->manufacturer_product->manufacturer->name,
+                    'category' => $product->manufacturer_product->sub_category->category->name,
+                    'subcategory' => $product->manufacturer_product->sub_category->name,
+                    'image' => $product->manufacturer_product->image,   
+                    'name' => $product->manufacturer_product->name,
+                    'description' => $product->manufacturer_product->description,
+                    'unit' => $product->unit->name,
                     'batch_number' => $product->batch_number,
                     'quantity' => $product->quantity,
                     'unit_price' => $product->unit_price,
                     'agent_price' => $product->agent_price,
-                    'description' => $product->description,
                     'stock_date' => $product->stock_date,
-                    'created_at' => $product->created_at,
-                    'updated_at' => $product->updated_at,
+                    'low_stock' => $product->low_stock(),
+                    'created_at' => Carbon::parse($product->created_at)->format('M j, Y, g:ia'),
+                    'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
                 ];
             });
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Low stock products',
-            'data' => [
-                'low_stock_products' => $Products
-            ]
-        ], 200);
+        return $this->success(['low_stock_products' => $Products], 'Low stock products', 200);
 
     }
 
@@ -516,46 +324,37 @@ class ProductController extends Controller
         $vendor = auth()->user()->vendor;
     
         if (!$vendor) {
-            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+            return $this->error('Vendor not found', 404);
         }
     
         // get products that are out of stock
         $outOfStockProducts = $vendor->products()
             ->where('quantity', 0)
-            ->with(['category', 'subcategory', 'unit']) // Eager load relationships
+            ->with(['manufacturer_product.manufacturer', 'manufacturer_product.sub_category.category']) // Eager load relationships
             ->get();
 
             $Products = $outOfStockProducts->map(function ($product) {
                 return [
                     'id' => $product->id,
-                    'category_id' => $product->category_id,
-                    'category' => $product->category ? $product->category->name : null,
-                    'sub_category_id' => $product->subcategory->id,
-                    'sub_category' => $product->subcategory ? $product->subcategory->name : null,
-                    'vendor_id' => $product->vendor_id,
-                    'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-                    'manufacturer' => $product->manufacturer,
-                    'name' => $product->name,
-                    'unit_id' => $product->unit_id,
-                    'unit' => $product->unit ? $product->unit->name : null,
+                    'manufacturer' => $product->manufacturer_product->manufacturer->name,
+                    'category' => $product->manufacturer_product->sub_category->category->name,
+                    'subcategory' => $product->manufacturer_product->sub_category->name,
+                    'image' => $product->manufacturer_product->image,   
+                    'name' => $product->manufacturer_product->name,
+                    'description' => $product->manufacturer_product->description,
+                    'unit' => $product->unit->name,
                     'batch_number' => $product->batch_number,
                     'quantity' => $product->quantity,
                     'unit_price' => $product->unit_price,
                     'agent_price' => $product->agent_price,
-                    'description' => $product->description,
                     'stock_date' => $product->stock_date,
-                    'created_at' => $product->created_at,
-                    'updated_at' => $product->updated_at,
+                    'low_stock' => $product->low_stock(),
+                    'created_at' => Carbon::parse($product->created_at)->format('M j, Y, g:ia'),
+                    'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
                 ];
             });
     
-        return response()->json([
-            'status' => true,
-            'message' => 'Out of stock products',
-            'data' => [
-                'out_of_stock_products' => $Products
-            ]
-        ], 200);
+        return $this->success(['out_of_stock_products' => $Products], 'Out of stock products', 200);
     }
 
     public function restockProduct(Request $request)
@@ -567,14 +366,14 @@ class ProductController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+            return $this->error($validator->errors()->first(), 422);
         }
 
         // Find the product
-        $product = Product::with(['category', 'subCategory', 'unit'])->find($request->product_id);
+        $product = Product::with(['manufacturer_product.manufacturer', 'manufacturer_product.sub_category.category'])->find($request->product_id);
         
         if (!$product) {
-            return response()->json(['status' => false, 'message' => 'Product not found'], 404);
+            return $this->error('Product not found', 404);
         }
 
         // Update the product's quantity
@@ -583,61 +382,23 @@ class ProductController extends Controller
 
         $formattedProduct = [
             'id' => $product->id,
-            'category_id' => $product->category_id,
-            'category' => $product->category ? $product->category->name : null,
-            'sub_category_id' => $product->subcategory->id,
-            'sub_category' => $product->subcategory ? $product->subcategory->name : null,
-            'vendor_id' => $product->vendor_id,
-            'vendor' => $product->vendor->user->firstname.' '.$product->vendor->user->lastname,
-            'manufacturer' => $product->manufacturer,
-            'name' => $product->name,
-            'unit_id' => $product->unit_id,
-            'unit' => $product->unit ? $product->unit->name : null,
+            'manufacturer' => $product->manufacturer_product->manufacturer->name,
+            'category' => $product->manufacturer_product->sub_category->category->name,
+            'subcategory' => $product->manufacturer_product->sub_category->name,
+            'image' => $product->manufacturer_product->image,   
+            'name' => $product->manufacturer_product->name,
+            'description' => $product->manufacturer_product->description,
+            'unit' => $product->unit->name,
             'batch_number' => $product->batch_number,
             'quantity' => $newQuantity,
             'unit_price' => $product->unit_price,
             'agent_price' => $product->agent_price,
-            'description' => $product->description,
             'stock_date' => $product->stock_date,
             'created_at' => $product->created_at,
             'updated_at' => $product->updated_at,
         ];
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Your product has been successfully restocked',
-            'data' => [
-                'product' => $formattedProduct,
-                'new_quantity' => $newQuantity
-            ]
-        ], 200);
+        return $this->success(['product' => $formattedProduct, 'new_quantity' => $newQuantity], 'Product restocked successfully', 200);
     }
-
-    public function inventoryBreakdown()
-    {
-        $vendor = auth()->user()->vendor;
-
-        if (!$vendor) {
-            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
-        }
-
-        // Fetch inventory breakdown grouped by category
-        $inventoryBreakdown = $vendor->products()
-            ->selectRaw('
-                categories.name as category_name,
-                SUM(products.quantity) as total_quantity,
-                SUM(products.quantity * products.unit_price) as total_amount
-            ')
-            ->join('categories', 'products.category_id', '=', 'categories.id')
-            ->groupBy('categories.name')
-            ->get();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Inventory breakdown retrieved successfully',
-            'data' => [
-                'inventory_breakdown' => $inventoryBreakdown
-            ]
-        ], 200);
-    }
+    
 }

@@ -1,16 +1,20 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\LocationController;
-use App\Http\Controllers\Api\NotificationController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\PaystackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\StatsController;
-use App\Http\Controllers\Api\VendorsController;
+use App\Http\Controllers\Api\TransactionsController;
 use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\VendorsController;
+use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\OrderAcceptController;
+use App\Http\Controllers\Api\PaystackController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Api\OrderDeclineController;
+use App\Http\Controllers\Api\OrderSupplyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,8 +67,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Product start
     Route::post('/add-product', [ProductController::class, 'store']);
-    Route::post('/product/add-image', [ProductController::class, 'addImage']);
-    Route::post('/product/delete-image', [ProductController::class, 'deleteImage']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/product/{id}', [ProductController::class, 'show']);
     Route::post('/product/update', [ProductController::class, 'update']);
@@ -74,6 +76,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/products-out-of-stock', [ProductController::class, 'outOfStockProducts']);
     Route::post('/product/restock', [ProductController::class, 'restockProduct']);
     Route::get('/products/inventory-breakdown', [ProductController::class, 'inventoryBreakdown']);
+
+    Route::get('/manufacturer-products', [ProductController::class, 'manufacturerProducts']);
     // Product end
 
     //Export Products
@@ -87,26 +91,42 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/category/request', [ProductController::class, 'CatRequest'])->name('CatRequest');
 
     //Orders
-    Route::get('/order/{order_id}/accept', [OrderController::class, 'accept']);
-    Route::get('/order/{order_id}/decline', [OrderController::class, 'decline']);
-    Route::get('/order/{order_id}/supplied', [OrderController::class, 'supplied']);
-    Route::get('/orders/pending', [OrderController::class, 'pendingOrders']);
-    Route::get('/orders/accepted', [OrderController::class, 'acceptedOrders']);
-    Route::get('/orders/declined', [OrderController::class, 'declinedOrders']);
-    Route::get('/orders/supplied', [OrderController::class, 'suppliedOrders']);
-    Route::get('/orders/{vendor_id}', [OrderController::class, 'index']);
+    Route::get('/order/{order_id}', [OrderController::class, 'singleOrder']);
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::post('/order/{id}/update-status', [OrderController::class, 'updateOrderStatus']);
+
+    Route::get('/sales-record', [OrderController::class, 'salesRecord']);
+    Route::get('/sales-detail/{id}', [OrderController::class, 'salesDetail']);
+
 
     //Export User Orders
-    Route::get('order/export', [OrderController::class, 'exportOrder'])
-    ->name('order.export');
+    Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
-    // Wallet
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
-    Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
-    Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
-    Route::get('/recent-transactions', [WalletController::class, 'transactions']);
-    //transactions Export
-    Route::get('/export-transactions', [WalletController::class, 'exportTransactions']);
+    Route::get('/wallet-enquiry', [WalletController::class, 'walletEnquiry']);
+    Route::get('/wallet-transactions', [WalletController::class, 'walletTransactions']);
+    Route::get('/wallet-transaction/{transaction_id}', [WalletController::class, 'walletTransaction']);
+
     // Dashboard stats
-    Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
+    Route::get('/dashboard-stat', [StatsController::class, 'orderStats']);
+
+    // Notification routes
+    Route::post('/notifications/token', [NotificationController::class, 'storeToken']);
+    Route::post('/notifications/send', [NotificationController::class, 'sendNotification']);
+    Route::post('/notifications/test', [NotificationController::class, 'testNotification']);
+
+    // Push Notification Routes
+    Route::prefix('notifications')->group(function () {
+        Route::post('/send', [NotificationController::class, 'sendNotification']);
+        Route::post('/test', [NotificationController::class, 'testNotification']);
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/{id}', [NotificationController::class, 'show']);
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+        Route::get('/statistics', [NotificationController::class, 'statistics']);
+    });
+
+
+
 });

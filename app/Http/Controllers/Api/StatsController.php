@@ -7,97 +7,64 @@ use App\Models\Bank;
 use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Traits\ApiResponder;
+use App\Models\Product;
 
 class StatsController extends Controller
 {
+    use ApiResponder;
 
-    public function dashboardStats()
+    public function orderStats()
     {
         $vendor = auth()->user()->vendor;
 
-        if ($vendor) {
-            // Fetch products with order counts
-            $products = $vendor->products()
-                ->withCount([
-                    'orders as confirmed_orders_count' => function ($query) {
-                        $query->where('status', 'confirmed');
-                    },
-                    'orders as supplied_orders_count' => function ($query) {
-                        $query->where('status', 'supplied');
-                    },
-                    'orders as pending_orders_count' => function ($query) {
-                        $query->where('status', 'pending');
-                    },
-                    'orders as accepted_orders_count' => function ($query) {
-                        $query->where('status', 'accepted');
-                    },
-                    'orders'
-                ])
-                ->get();
-
-            // Calculate total order counts
-            $totalConfirmedOrders = $products->sum('confirmed_orders_count');
-            $totalSuppliedOrders = $products->sum('supplied_orders_count');
-            $totalPendingOrders = $products->sum('pending_orders_count');
-            $totalAcceptedOrders = $products->sum('accepted_orders_count');
-            $totalOrders = $products->sum('orders_count');
-            
-            // Calculate total earnings
-            $totalEarnings = Order::where('status', 'completed')->whereHas('product', function ($query){
-                $query->where('vendor_id', auth()->user()->vendor->id);
-            })
-            ->selectRaw('SUM(orders.quantity * agent_price) as total_earned')
-            ->join('products', 'orders.product_id', '=', 'products.id')
-            ->value('total_earned');
-
-            if($totalEarnings == NULL){
-                $totalEarnings = "0";
-            };
-
-            // Calculate monthly earnings
-            $currentMonth = Carbon::now()->month;
-            $currentYear = Carbon::now()->year;
-
-            $monthlyEarnings  = Order::where('status', 'completed')->whereHas('product', function ($query){
-                $query->where('vendor_id', auth()->user()->vendor->id);
-            })
-            ->whereYear('orders.created_at', $currentYear)
-            ->whereMonth('orders.created_at', $currentMonth)
-            ->selectRaw('SUM(orders.quantity * agent_price) as monthly_total_earned')
-            ->join('products', 'orders.product_id', '=', 'products.id')
-            ->value('monthly_total_earned');
-
-            if($monthlyEarnings  == NULL){
-                $monthlyEarnings = "0";
-            };
-
-            // Count low stock and out of stock products
-            $lowStockThreshold = 3; 
-            $outOfStockCount = $vendor->products()->where('quantity', 0)->count();
-            $lowStockCount = $vendor->products()->where('quantity', '>', 0)
-                ->where('quantity', '<=', $lowStockThreshold)
-                ->count();
-
-            // Return the response
-            return response()->json([
-                'status' => true,
-                'message' => 'Vendor statistics',
-                'data' => [
-                    'total_confirmed_orders' => $totalConfirmedOrders,
-                    'total_supplied_orders' => $totalSuppliedOrders,
-                    'total_pending_orders' => $totalPendingOrders,
-                    'total_accepted_orders' => $totalAcceptedOrders,
-                    'total_orders' => $totalOrders,
-                    'total_earnings' => $totalEarnings,
-                    'monthly_earnings' => $monthlyEarnings,
-                    'total_products' => auth()->user()->vendor->products->count(),
-                    'out_of_stock_products' => $outOfStockCount,
-                    'low_stock_products' => $lowStockCount,
-                    ]
-            ], 200);
+        if (!$vendor) {
+            return $this->error('Vendor not found', 404);
         }
 
-        return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
-    }
+        // Get all orders for the vendor
+        $allOrders = Order::where('vendor_id', $vendor->id)->get(); 
 
+        // Get orders by status
+        $completedOrders = (clone $allOrders)->where('status', 'completed')->count();
+        $pendingOrders = (clone $allOrders)->where('status', 'pending')->count();
+        $acceptedOrders = (clone $allOrders)->where('status', 'accepted')->count();
+        $suppliedOrders = (clone $allOrders)->where('status', 'supplied')->count();
+        $totalOrders = $allOrders->count();
+
+        // Calculate earnings
+        $totalEarnings = Order::where('status', 'completed')->where('vendor_id', $vendor->id)->sum('total_amount');
+
+        // Calculate monthly earnings
+        $monthlyEarnings = Order::where('status', 'completed')->where('vendor_id', $vendor->id)->whereMonth('created_at', Carbon::now()->month)->whereYear('created_at', Carbon::now()->year)->sum('total_amount');
+
+        // Calculate weekly earnings
+        $weeklyEarnings = Order::where('status', 'completed')->where('vendor_id', $vendor->id)->whereBetween('created_at', [
+                Carbon::now()->startOfWeek(),
+                Carbon::now()->endOfWeek()
+            ])
+            ->sum('total_amount');
+
+        // Get low stock count
+        $lowStockCount = Product::where('vendor_id', $vendor->id)
+            ->where('quantity', '>', 0)
+            ->where('quantity', '<=', 3) // Assuming 3 is the low stock threshold
+            ->count();
+
+        return $this->success([
+            'orders' => [
+                'total' => $totalOrders,
+                'completed' => $completedOrders,
+                'pending' => $pendingOrders,
+                'accepted' => $acceptedOrders,
+                'supplied' => $suppliedOrders
+            ],
+            'earnings' => [
+                'total' => $totalEarnings,
+                'monthly' => $monthlyEarnings,
+                'weekly' => $weeklyEarnings
+            ],
+            'low_stock_count' => $lowStockCount
+        ], 'Statistics retrieved successfully');
+    }
 }

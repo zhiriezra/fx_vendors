@@ -20,16 +20,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ForgotPasswordMail;
 use Illuminate\Support\Facades\Cache;
+use App\Services\PushNotificationService;
 
 class AuthController extends Controller
 {
 
     use ApiResponder;
     protected $otpService;
+    protected $pushNotificationService;
 
-    public function __construct(OTPService $otpService)
+    public function __construct(OTPService $otpService, PushNotificationService $pushNotificationService)
     {
         $this->otpService = $otpService;
+        $this->pushNotificationService = $pushNotificationService;
     }
 
     public function signup(Request $request)
@@ -57,6 +60,15 @@ class AuthController extends Controller
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
+            $title = 'Welcome to FarmEx';
+            $body = 'Complete your profile and start supporting your farmers!';
+            $data = [
+                'type' => 'single',
+                'user_id' => $user->id
+            ];
+
+            $this->pushNotificationService->sendToUser($user, $title, $body, $data);
+
             return $this->success([
                 'user' => $user,
                 'token' => $token
@@ -78,13 +90,13 @@ class AuthController extends Controller
             'business_name' => 'nullable|string',
             'marital_status' =>'nullable|string',
             'dob' => 'nullable|string',
-            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone',
+            'phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . request()->user()->id,
             'nin' => 'nullable|digits:11',
             'bvn' => 'nullable|digits:11',
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(), 'Validation failed', 422);
+            return $this->error($validator->errors()->first(), 'Validation failed', 422);
         }
 
         if(auth()->user()->user_type_id != 2){
@@ -102,7 +114,7 @@ class AuthController extends Controller
                 'phone' => $request->phone,
             ]);
 
-            $vendor = Vendor ::updateOrCreate([
+            $vendor = Vendor::updateOrCreate([
                 'user_id' => $user->id,
             ], [
                 'gender' => $request->gender,
@@ -229,16 +241,16 @@ class AuthController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'business_email' => 'nullable|email', 
-            'business_mobile' => 'nullable|string', 
-            'business_name' => 'nullable|string', 
-            'business_address' => 'nullable|string', 
-            'registration_no' => 'nullable|string', 
-            'tin' => 'nullable|string', 
-            'business_type' => 'nullable', 
+            'business_email' => 'nullable|email',
+            'business_mobile' => 'nullable|string',
+            'business_name' => 'nullable|string',
+            'business_address' => 'nullable|string',
+            'registration_no' => 'nullable|string',
+            'tin' => 'nullable|string',
+            'business_type' => 'nullable',
             'bank' => 'nullable',
-            'account_no' => 'nullable|string', 
-            'account_name' => 'nullable|string', 
+            'account_no' => 'nullable|string',
+            'account_name' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -284,29 +296,33 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|exists:users,email',
-            'password' => 'required',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|exists:users,email',
+                'password' => 'required',
+            ]);
 
-        if($validator->fails())
-        {
-            return $this->validation($validator->errors(), 'Invalid Email address or password', 422);
-        }
-
-        // Look for user
-        $user = User::where(['email' => $request->email, 'user_type_id' => 2])->first();
-
-        if($user)
-        {
-            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
-                $user->tokens()->delete(); // Delete old tokens
-                return $this->success(['token' => $user->createToken('auth-token')->plainTextToken], 'Success', 200);
-            }else{
-                return $this->error(null, 'Invalid Email address or Password', 401);
+            if($validator->fails())
+            {
+                return $this->validation($validator->errors()->first(), 'Invalid Email address or password', 422);
             }
-        }else{
-            return $this->error(null, 'Error logging in, user not found', 404);
+
+            // Look for user
+            $user = User::where(['email' => $request->email, 'user_type_id' => 2])->first();
+
+            if($user)
+            {
+                if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+                    $user->tokens()->delete(); // Delete old tokens
+                    return $this->success(['token' => $user->createToken('auth-token')->plainTextToken], 'Success', 200);
+                }else{
+                    return $this->error(null, 'Invalid Email address or Password', 401);
+                }
+            }else{
+                return $this->error(null, 'Error logging in, user not found', 404);
+            }
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 'Login failed', 500);
         }
     }
 
@@ -349,8 +365,8 @@ class AuthController extends Controller
                 'marital_status' => $user->vendor->marital_status,
                 'current_location' => $user->vendor->current_location,
                 'permanent_address' => $user->vendor->permanent_address,
-                'country_id' => $user->vendor->country_id,
-                'country' => $user->vendor->country->name,
+                'country_id' => $user->vendor->state->country_id,
+                'country' => $user->vendor->state->country->name,
                 'state_id' => $user->vendor->state_id,
                 'state' => $user->vendor->state->name,
                 'lga_id' => $user->vendor->lga_id,
@@ -419,8 +435,8 @@ class AuthController extends Controller
             $user->save();
 
             return response()->json([
-                'status'=> true, 
-                'message' => 'Profile image uploaded successfully', 
+                'status'=> true,
+                'message' => 'Profile image uploaded successfully',
                 'data' => [
                 'profile_image' => url($fullImagePath)
                 ]
@@ -455,11 +471,11 @@ class AuthController extends Controller
             $user->save();
 
             return response()->json([
-                'status'=> true, 
-                'message' => 'Signature uploaded successfully', 
+                'status'=> true,
+                'message' => 'Signature uploaded successfully',
                 'data' => [
                 'profile_image' => url($fullImagePath)
-                ] 
+                ]
             ], 200);
         }
 
@@ -471,7 +487,7 @@ class AuthController extends Controller
             'current_password' => 'required',
             'new_password' => 'required|min:8|confirmed',
         ]);
-
+        
         if ($validator->fails()) {
             return $this->error($validator->errors(), 'Validation failed', 422);
         }
@@ -506,7 +522,7 @@ class AuthController extends Controller
         }
 
         try {
-           
+
             $user = User::where('email', $request->email)->first();
 
              // Check if the user is an Vendor
@@ -528,7 +544,7 @@ class AuthController extends Controller
 
             // Email channel
             if ($request->channel === 'email') {
-    
+
                 Mail::to($user->email)->send(new ForgotPasswordMail($otp)
                 );
             } elseif ($request->channel === 'sms') {
@@ -595,7 +611,7 @@ class AuthController extends Controller
                 'status' => true,
                 'message' => 'OTP verified successfully',
                 'data' => [
-                    'token' => $token 
+                    'token' => $token
                 ]
             ], 200);
 
@@ -613,8 +629,8 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|min:8|confirmed', 
-            'token' => 'required|string', 
+            'password' => 'required|min:8|confirmed',
+            'token' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -638,12 +654,12 @@ class AuthController extends Controller
                     'status' => false,
                     'message' => 'Invalid or expired token',
                     'errors' => null
-                ], 403); 
+                ], 403);
             }
 
             // Update the user's password
             $user->update([
-                'password' => bcrypt($request->password) 
+                'password' => bcrypt($request->password)
             ]);
 
             // Clear the cached token
@@ -662,5 +678,5 @@ class AuthController extends Controller
                 'errors' => null
             ], 500);
         }
-    }    
+    }
 }
