@@ -19,24 +19,25 @@ class ProductsExport implements FromCollection, WithHeadings, WithMapping
     {
         $userId = Auth::user()->vendor->id;
 
-            return Product::leftJoin('categories', 'products.category_id', '=', 'categories.id')
-            ->leftJoin('sub_categories', 'products.sub_category_id', '=', 'sub_categories.id')
-            ->leftJoin('units', 'products.unit_id', '=', 'units.id')
+        return Product::with(['manufacturer_product.manufacturer', 'manufacturer_product.sub_category.category', 'unit'])
             ->where('vendor_id', $userId)
-            ->select(
-                'products.name',
-                'products.batch_number',
-                'products.manufacturer',
-                'categories.name as category_name', 
-                'sub_categories.name as subcategory_name',
-                'units.name as unit_name',
-                'products.quantity',
-                'products.unit_price',
-                'products.agent_price',
-                'products.description',
-                'products.stock_date'
-            )
-            ->get();
+            ->get()
+            ->map(function($product) {
+                return (object)[
+                    'name' => $product->manufacturer_product->name, 
+                    'batch_number' => $product->batch_number,
+                    'manufacturer' => $product->manufacturer_product->manufacturer->name,
+                    'category_name' => $product->manufacturer_product->sub_category->category->name,
+                    'subcategory_name' => $product->manufacturer_product->sub_category->name,
+                    'unit_name' => $product->unit->name,
+                    'quantity' => $product->quantity,
+                    'unit_price' => $product->unit_price,
+                    'agent_price' => $product->agent_price,
+                    'description' => $product->manufacturer_product->description,
+                    'stock_date' => $product->stock_date
+                ];
+            });
+        
     }
 
     public function map($product): array

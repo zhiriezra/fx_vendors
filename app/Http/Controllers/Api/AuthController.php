@@ -296,30 +296,33 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|exists:users,email',
-            'password' => 'required',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|exists:users,email',
+                'password' => 'required',
+            ]);
 
-        if($validator->fails())
-        {
-            return $this->validation($validator->errors()->first(), 'Invalid Email address or password', 422);
-        }
-
-        // Look for user
-        $user = User::where(['email' => $request->email, 'user_type_id' => 2])->first();
-
-        if($user)
-        {
-
-            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
-                $user->tokens()->delete(); // Delete old tokens
-                return $this->success(['token' => $user->createToken('auth-token')->plainTextToken], 'Success', 200);
-            }else{
-                return $this->error(null, 'Invalid Email address or Password', 401);
+            if($validator->fails())
+            {
+                return $this->validation($validator->errors()->first(), 'Invalid Email address or password', 422);
             }
-        }else{
-            return $this->error(null, 'Error logging in, user not found', 404);
+
+            // Look for user
+            $user = User::where(['email' => $request->email, 'user_type_id' => 2])->first();
+
+            if($user)
+            {
+                if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+                    $user->tokens()->delete(); // Delete old tokens
+                    return $this->success(['token' => $user->createToken('auth-token')->plainTextToken], 'Success', 200);
+                }else{
+                    return $this->error(null, 'Invalid Email address or Password', 401);
+                }
+            }else{
+                return $this->error(null, 'Error logging in, user not found', 404);
+            }
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 'Login failed', 500);
         }
     }
 
