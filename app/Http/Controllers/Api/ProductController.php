@@ -80,7 +80,7 @@ class ProductController extends Controller
         
 
         if ($validator->fails()) {
-            return $this->error($validator->errors()->first(), 422);
+            return $this->validation($validator->errors(), $validator->errors()->first(), 422);
         }
 
         $product = Product::create([
@@ -109,7 +109,7 @@ class ProductController extends Controller
     {
         $product = Product::with('manufacturer_product')->find($id);
         if(!$product){
-            return response()->json(['status' => false, 'message' => "Product Not Found!"], 404);
+            return $this->error("Product Not Found!", 404);
         }
 
         $product = [
@@ -131,7 +131,7 @@ class ProductController extends Controller
             'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
         ];
 
-        return response()->json(['status' => true, 'message' => "Product details", "data" => ['product' => $product]], 200);
+        return $this->success("Product details", ['product' => $product], 200);
 
       
     }
@@ -215,7 +215,7 @@ class ProductController extends Controller
         $vendor = auth()->user()->vendor;
 
         if (!$vendor) {
-            return response()->json(['status' => false, 'message' => 'Vendor not found'], 404);
+            return $this->error('Vendor not found', 404);
         }
 
         // Get products grouped by manufacturer product category
