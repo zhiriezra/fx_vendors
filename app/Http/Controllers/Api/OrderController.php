@@ -282,9 +282,8 @@ class OrderController extends Controller
         $products = $order->orderItems->map(function ($item) {
             $product = $item->product;
             return [
-                'product_name' => optional($product)->name,
-                'product_image' => optional(optional($product)->product_images->first())->image_path
-                    ?? env('APP_URL') . '/default.png',
+                'product_name' => $product->manufacturer_product->name,
+                'first_image' => $product->manufacturer_product->image ?? env('APP_URL').'/default.png',
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'total_price' => (float) $item->quantity * $item->unit_price,
@@ -337,8 +336,8 @@ class OrderController extends Controller
                 $total = (float) $order->quantity * $order->unit_price;
                 return [
                     'id' => $order->product->id,
-                    'product_name' => optional($order->product)->name,
-                    'product_image' => optional($order->product)->product_images && optional($order->product->product_images->first())->image_path ? optional($order->product->product_images->first())->image_path : env('APP_URL') . '/default.png',
+                    'product_name' => $order->product->manufacturer_product->name,
+                    'first_image' => $order->product->manufacturer_product->image ?? env('APP_URL').'/default.png',
                     'quantity' => $order->quantity,
                     'unit_price' => (float) $order->unit_price,
                     'agent_price' => (float) $order->agent_price,

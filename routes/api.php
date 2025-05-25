@@ -67,8 +67,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Product start
     Route::post('/add-product', [ProductController::class, 'store']);
-    Route::post('/product/add-image', [ProductController::class, 'addImage']);
-    Route::post('/product/delete-image', [ProductController::class, 'deleteImage']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/product/{id}', [ProductController::class, 'show']);
     Route::post('/product/update', [ProductController::class, 'update']);
@@ -78,6 +76,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/products-out-of-stock', [ProductController::class, 'outOfStockProducts']);
     Route::post('/product/restock', [ProductController::class, 'restockProduct']);
     Route::get('/products/inventory-breakdown', [ProductController::class, 'inventoryBreakdown']);
+
+    Route::get('/manufacturer-products', [ProductController::class, 'manufacturerProducts']);
     // Product end
 
     //Export Products
@@ -102,27 +102,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     //Export User Orders
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
-    // Wallet
-
-    //Route::post('/request-payout', [WalletController::class, 'requestWithdrawal']);
-    //Route::get('/withdrawal-requests', [WalletController::class, 'withdrawalRequests']);
-
-
     Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
     Route::get('/wallet-enquiry', [WalletController::class, 'walletEnquiry']);
-    Route::get('/recent-transactions', [WalletController::class, 'transactions']);
     Route::get('/wallet-transactions', [WalletController::class, 'walletTransactions']);
     Route::get('/wallet-transaction/{transaction_id}', [WalletController::class, 'walletTransaction']);
-    Route::post('/withdrawal-requests', [WalletController::class, 'fundWithdraw']);
-
-
-    //transactions Export
-    Route::get('/transactions/export', [TransactionsController::class, 'exportTransactions'])
-    ->name('transactions.export');
 
     // Dashboard stats
-    Route::get('/dashboard-stat', [StatsController::class, 'dashboardStats']);
-
+    Route::get('/dashboard-stat', [StatsController::class, 'orderStats']);
 
     // Notification routes
     Route::post('/notifications/token', [NotificationController::class, 'storeToken']);
