@@ -51,7 +51,7 @@ class ProductController extends Controller
         });
 
         if($products){
-            return $this->success('Product list', ['products' => $products], 200);
+            return $this->success($products, 'Product list', 200);
         }else{
             return $this->error('Something went wrong!', 500);
         }
@@ -131,7 +131,7 @@ class ProductController extends Controller
             'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
         ];
 
-        return $this->success("Product details", ['product' => $product], 200);
+        return $this->success($product, "Product details", 200);
 
       
     }
