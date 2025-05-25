@@ -73,10 +73,11 @@ class ProductController extends Controller
             'quantity' => 'required|integer',
             'unit_id' => 'required',
             'unit_price' => 'required|numeric',
-            'agent_price' => 'required|numeric',
+            'agent_price' => 'required|numeric|lt:unit_price',
             'stock_date' => 'required|date',
         ]);
 
+        
 
         if ($validator->fails()) {
             return $this->error($validator->errors()->first(), 422);
