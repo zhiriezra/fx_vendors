@@ -114,12 +114,14 @@ class ProductController extends Controller
 
         $product = [
             'id' => $product->id,
+            'manufacturer_product_id' => $product->manufacturer_product_id,
             'manufacturer' => $product->manufacturer_product->manufacturer->name,
             'category' => $product->manufacturer_product->sub_category->category->name,
             'subcategory' => $product->manufacturer_product->sub_category->name,
             'image' => $product->manufacturer_product->image,   
             'name' => $product->manufacturer_product->name,
             'description' => $product->manufacturer_product->description,
+            'unit_id' => $product->unit_id,
             'unit' => $product->unit->name,
             'batch_number' => $product->batch_number,
             'quantity' => $product->quantity,
