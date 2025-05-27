@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponder;
 use App\Models\Product;
-
+use App\Models\StockTracker;
 class StatsController extends Controller
 {
     use ApiResponder;
@@ -30,6 +30,8 @@ class StatsController extends Controller
         $pendingOrders = (clone $allOrders)->where('status', 'pending')->count();
         $acceptedOrders = (clone $allOrders)->where('status', 'accepted')->count();
         $suppliedOrders = (clone $allOrders)->where('status', 'supplied')->count();
+        $cancelledOrders = (clone $allOrders)->where('status', 'cancelled')->count();
+
         $totalOrders = $allOrders->count();
 
         // Calculate earnings
@@ -45,10 +47,16 @@ class StatsController extends Controller
             ])
             ->sum('total_amount');
 
+        $stockTracker = StockTracker::first();
         // Get low stock count
         $lowStockCount = Product::where('vendor_id', $vendor->id)
             ->where('quantity', '>', 0)
-            ->where('quantity', '<=', 3) // Assuming 3 is the low stock threshold
+            ->where('quantity', '<=', $stockTracker->quantity) // Assuming 3 is the low stock threshold
+            ->count();
+
+        // Get out of stock count
+        $outOfStockCount = Product::where('vendor_id', $vendor->id)
+            ->where('quantity', 0)
             ->count();
 
         return $this->success([
@@ -57,13 +65,15 @@ class StatsController extends Controller
                 'completed' => $completedOrders,
                 'pending' => $pendingOrders,
                 'accepted' => $acceptedOrders,
-                'supplied' => $suppliedOrders
+                'supplied' => $suppliedOrders,
+                'cancelled' => $cancelledOrders
             ],
             'earnings' => [
                 'total' => $totalEarnings,
                 'monthly' => $monthlyEarnings,
                 'weekly' => $weeklyEarnings
             ],
+            'out_of_stock_count' => $outOfStockCount,
             'low_stock_count' => $lowStockCount
         ], 'Statistics retrieved successfully');
     }
