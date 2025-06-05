@@ -37,6 +37,63 @@ class WalletController extends Controller
         });
     }
 
+    public function createWallet()
+    {
+        try {
+            // Get user's country based on their type (agent or vendor)
+            $userCountry = $this->user->vendor->state->country->name;
+
+            // For now, only allow wallet creation for Nigeria
+            if ($userCountry !== 'Nigeria') {
+                return $this->error('Wallet creation is currently only available for users in Nigeria.', 400);
+            }
+
+            // Check if user already has a wallet
+            $existingWallet = Wallet::where('user_id', $this->user->id)
+                ->where('slug', $this->defaultProvider)
+                ->first();
+
+            if ($existingWallet) {
+                return $this->error(null, 'Wallet already exists for this user.', 400);
+            }
+
+            // Create wallet using the default provider for Nigeria (NPSB)
+            $response = $this->walletService->createUserWallet($this->user);
+            
+            // If the response is already a JsonResponse, return it directly
+            if ($response instanceof \Illuminate\Http\JsonResponse) {
+                return $response;
+            }
+
+            // If we got a Wallet model instance, format and return it
+            if ($response instanceof \App\Models\Wallet) {
+                $formattedWallet = [
+                    'id'          => $response->id,
+                    'name'        => $response->name,
+                    'slug'        => $response->slug,
+                    'meta'        => $response->meta,
+                    'balance'     => 0.00, // New wallet starts with zero balance
+                    'account_name' => $response->account_name,
+                    'account_number' => $response->account_number,
+                    'reference' => $response->reference,
+                    'customerId' => $response->customerId,
+                    'response_code' => $response->response_code,
+                    'created_at'  => Carbon::parse($response->created_at)->format('M j, Y, g:ia'),
+                    'updated_at'  => Carbon::parse($response->updated_at)->format('M j, Y, g:ia'),
+                ];
+
+                return $this->success([
+                    'wallet' => $formattedWallet
+                ], 'Wallet created successfully.');
+            }
+
+            return $this->error(null,'Failed to create wallet. Please try again later.', 500);
+
+        } catch (\Exception $e) {
+            return $this->error(null, 'Failed to create wallet: ' . $e->getMessage(), 500);
+        }
+    }
+
     /**
      * Retrieve the user's wallet balance or create a wallet if none exists.
      */

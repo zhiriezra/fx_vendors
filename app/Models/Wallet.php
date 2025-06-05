@@ -17,7 +17,7 @@ class Wallet extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'holder_id');
+        return $this->belongsTo(User::class);
     }
 
     public function walletType()
