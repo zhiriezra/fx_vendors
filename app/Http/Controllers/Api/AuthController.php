@@ -296,36 +296,77 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|exists:users,email',
-                'password' => 'required',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|exists:users,email',
+            'password' => 'required',
+        ],
+        [
+            'email.exists' => 'Email does not exist on this platform',
+        ]);
 
-            if($validator->fails())
-            {
-                return $this->validation($validator->errors()->first(), 'Invalid Email address or password', 422);
-            }
+        if($validator->fails()){
+            return $this->validation($validator->errors(), $validator->errors()->first(), 422);
+        }
 
-            // Look for user
-            $user = User::where(['email' => $request->email, 'user_type_id' => 2])->first();
+        $user = User::where('email', $request->email)->first();
+        // Check if the user is a Vendor
+        if ($user->user_type_id !== 2) {
+            return $this->error(null, 'You are not Registered as a Vendor', 403); // Forbidden
+        }
 
-            if($user)
-            {
-                if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
-                    $user->tokens()->delete(); // Delete old tokens
-                    return $this->success(['token' => $user->createToken('auth-token')->plainTextToken], 'Success', 200);
-                }else{
-                    return $this->error(null, 'Invalid Email address or Password', 401);
+        if($user){
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+                try {
+                    $user->generateTwoFactorCode();
+                    return $this->success(['user_id' => $user->id],'2FA code  sent', 200);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Login failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+                    return $this->error($e->getMessage(), 'Unable to process login. Please try again later.', 500);
                 }
             }else{
-                return $this->error(null, 'Error logging in, user not found', 404);
+                return $this->error(null, 'Invalid email or password', 401);
             }
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage(), 'Login failed', 500);
+        }else{
+            return $this->error(null, 'User not found', 404);
         }
+        
     }
 
+    public function verify2FA(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+            'otp' => 'required|numeric|digits:5'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
+        }
+
+        try {
+            $user = User::where('id', $request->user_id)->first();
+
+            // Check if OTP matches and is not expired
+            if ($user->otp !== $request->otp || $user->otp_expires_at < now()) {
+                return $this->error(null, 'Invalid or expired OTP', 400);
+            }
+
+            // Clear the OTP
+            $user->update([
+                'otp' => null,
+                'otp_expires_at' => null
+            ]);
+
+            // Generate a unique token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return $this->success(['token' => $token], 'OTP verified successfully', 200);
+
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 'Error verifying OTP', 500);
+        }
+    }
+    
     public function getUser(Request $request)
     {
         $user = User::with('vendor')->where('id', $request->user()->id)->first();

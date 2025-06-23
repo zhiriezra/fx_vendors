@@ -31,6 +31,10 @@ Route::prefix('v1')->group(function() {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/login', [AuthController::class, 'login']);
 
+    Route::post('/verify-2fa', [AuthController::class, 'verify2FA']);
+    Route::post('/resend-2fa', [AuthController::class, 'resend2FA']);
+
+
     // Password reset routes
     Route::post('/password/reset/send-otp', [AuthController::class, 'sendForgotPasswordOTP']);
     Route::post('/password/reset/verify-otp', [AuthController::class, 'verifyForgotPasswordOTP']);
@@ -54,6 +58,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/delete-account', [AuthController::class, 'delete']);
     Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
     // user routes end
+
+
 
     // routes to update profiles start
     Route::post('/update-bio', [AuthController::class, 'updateBio']);
