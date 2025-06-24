@@ -167,4 +167,28 @@ class WalletController extends Controller
 
         return Excel::download(new TransactionsExport, $fileName);
     }
+
+    public function withdraw(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:100',
+        ]);
+
+        $wallet = Wallet::where('user_id', $this->user->id)->where('slug', $this->defaultProvider)->first();
+
+        if (!$wallet) {
+            return $this->error('Wallet not found', 404);
+        }
+
+        $balance = $this->user->walletBalance($this->user->id, $this->defaultProvider);
+
+        if ($request->amount > $balance) {
+            return $this->error('Insufficient balance', 400);
+        }
+
+        $response = $this->walletService->withdraw($this->user, $request->amount);
+
+        return $this->success(['response' => $response], 'Withdrawal successful.');
+        
+    }
 }

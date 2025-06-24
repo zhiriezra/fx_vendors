@@ -113,6 +113,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/wallet-transactions', [WalletController::class, 'walletTransactions']);
     Route::get('/wallet-transaction/{transaction_id}', [WalletController::class, 'walletTransaction']);
     Route::post('/create-wallet', [WalletController::class, 'createWallet']);
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
 
 
     // Dashboard stats
