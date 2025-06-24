@@ -321,7 +321,7 @@ class AuthController extends Controller
                     return $this->success(['user_id' => $user->id],'2FA code  sent', 200);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Login failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-                    return $this->error($e->getMessage(), 'Unable to process login. Please try again later.', 500);
+                    return $this->error($e->getMessage(), 'Server error. Unable to process login. Please try again later.', 500);
                 }
             }else{
                 return $this->error(null, 'Invalid email or password', 401);
