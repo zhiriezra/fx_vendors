@@ -6,19 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Traits\ApiResponder;
 
 class NotificationController extends Controller
 {
+    use ApiResponder;
+
     public function storeToken(Request $request){
         $this->validate($request, [
             'fcm_token' => 'required',
         ]);
 
+        User::where('fcm_token', $request->fcm_token)->update(['fcm_token' => '']);
+
         $user = $request->user();
         $user->fcm_token = $request->fcm_token;
         $user->save();
 
-        return response()->json(['status' => true, 'message' => 'success', 'data' => ['fcm_token' => $user->fcm_token]], 200);
+        return $this->success(['fcm_token' => $user->fcm_token], 'Token updated successfully', 200);
 
     }
 
