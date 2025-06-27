@@ -320,11 +320,11 @@ class AuthController extends Controller
                 $otp = $user->generateTwoFactorCode();
                 try {
                     Mail::to($request->email)->send(new SendOtpMail($otp));
-                    return $this->success(['user_id' => $user->id, 'otp' => 'use this temporarily: ' . $otp], '2FA code sent', 200);
+                    return $this->success(['user_id' => $user->id, 'otp' => $otp], '2FA code sent', 200);
 
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Login failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-                    return $this->error(['error' => $e->getMessage(), 'otp' => 'use this temporarily: ' .$otp], 'Server error: Unable to send 2FA code. Please try again later.', 500);
+                    return $this->error($e->getMessage(), 'Server error: Unable to send 2FA code. Please try again later.', 500);
                 }
             }else{
                 return $this->error(null, 'Invalid email or password', 401);
