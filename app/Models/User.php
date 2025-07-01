@@ -10,8 +10,6 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Services\PushNotificationService;
 use App\Models\WalletTransaction;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\sendOtpMail;
 
 class User extends Authenticatable
 {
@@ -121,10 +119,7 @@ class User extends Authenticatable
             'otp_expires_at' => now()->addMinutes(5) // OTP expires after 5 minutes
         ]);
 
-        // Send OTP via email using Laravel's Mail facade
-        Mail::to($this->email)->send(new sendOtpMail($otp));
-        // Send OTP via SMS
-
+        return $otp;
     }
 
 }

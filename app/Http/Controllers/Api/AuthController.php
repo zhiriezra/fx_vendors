@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ForgotPasswordMail;
 use Illuminate\Support\Facades\Cache;
 use App\Services\PushNotificationService;
+use App\Mail\SendOtpMail;
 
 class AuthController extends Controller
 {
@@ -313,15 +314,17 @@ class AuthController extends Controller
         if ($user->user_type_id !== 2) {
             return $this->error(null, 'You are not Registered as a Vendor', 403); // Forbidden
         }
-
+        
         if($user){
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+                $otp = $user->generateTwoFactorCode();
                 try {
-                    $user->generateTwoFactorCode();
-                    return $this->success(['user_id' => $user->id],'2FA code  sent', 200);
+                    Mail::to($request->email)->send(new SendOtpMail($otp));
+                    return $this->success(['user_id' => $user->id, 'otp' => $otp], '2FA code sent', 200);
+
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Login failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-                    return $this->error($e->getMessage(), 'Unable to process login. Please try again later.', 500);
+                    return $this->error($e->getMessage(), 'Server error: Unable to send 2FA code. Please try again later.', 500);
                 }
             }else{
                 return $this->error(null, 'Invalid email or password', 401);
@@ -330,6 +333,19 @@ class AuthController extends Controller
             return $this->error(null, 'User not found', 404);
         }
         
+    }
+
+    public function resend2FA(Request $request){
+        $user = User::where('id', $request->user_id)->first();
+        $otp = $user->generateTwoFactorCode();
+        try {
+            Mail::to($request->email)->send(new SendOtpMail($otp));
+            return $this->success(['user_id' => $user->id, 'otp' => $otp], '2FA code sent', 200);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Login failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return $this->error($e->getMessage(), 'Server error: Unable to send 2FA code. Please try again later.', 500);
+        }
     }
 
     public function verify2FA(Request $request)
