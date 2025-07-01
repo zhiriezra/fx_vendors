@@ -335,6 +335,19 @@ class AuthController extends Controller
         
     }
 
+    public function resend2FA(Request $request){
+        $user = User::where('id', $request->user_id)->first();
+        $otp = $user->generateTwoFactorCode();
+        try {
+            Mail::to($request->email)->send(new SendOtpMail($otp));
+            return $this->success(['user_id' => $user->id, 'otp' => $otp], '2FA code sent', 200);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Login failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return $this->error($e->getMessage(), 'Server error: Unable to send 2FA code. Please try again later.', 500);
+        }
+    }
+
     public function verify2FA(Request $request)
     {
         $validator = Validator::make($request->all(), [
