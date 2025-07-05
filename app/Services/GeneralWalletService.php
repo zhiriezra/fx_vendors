@@ -482,7 +482,7 @@ class GeneralWalletService
                 'user_id' => $user->id,
                 'name' => $defaultProvider,
                 'slug' => $defaultProvider,
-                'balance' => $walletData['data']['balance'] ?? 0,
+                'balance' => $walletData['data']['availableBalance'] ?? 0,
                 'meta' => json_encode($walletData['data'] ?? []),
                 'account_name' => $walletData['data']['fullName'] ?? null,
                 'account_number' => $walletData['data']['accountNumber'] ?? null,
