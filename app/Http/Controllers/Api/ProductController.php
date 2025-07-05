@@ -378,7 +378,7 @@ class ProductController extends Controller
             'manufacturer' => $product->manufacturer_product->manufacturer->name,
             'category' => $product->manufacturer_product->sub_category->category->name,
             'subcategory' => $product->manufacturer_product->sub_category->name,
-            'image' => url('storage/' . $product->manufacturer_product->image),   
+            '   ' => url('storage/' . $product->manufacturer_product->image),   
             'name' => $product->manufacturer_product->name,
             'description' => $product->manufacturer_product->description,
             'unit' => $product->unit->name,
