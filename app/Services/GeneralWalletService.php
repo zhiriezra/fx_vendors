@@ -460,11 +460,7 @@ class GeneralWalletService
                 );
             }
 
-            return $this->error(
-                'An unexpected error occurred while creating your wallet. Please try again later.',
-                'INTERNAL_ERROR',
-                500
-            );
+            return $this->error($e->getMessage(), 'An unexpected error occurred while creating your wallet. Please try again later. INTERNAL_ERROR', 500);
         }
     }
 
@@ -483,7 +479,8 @@ class GeneralWalletService
                 'user_id' => $user->id,
                 'name' => $defaultProvider,
                 'slug' => $defaultProvider,
-                'meta' => json_encode($walletData['data'] ?? []),
+                'balance' => 0,
+                'meta' => json_encode($walletData['data'] ?? []),   
                 'account_name' => $walletData['data']['fullName'] ?? null,
                 'account_number' => $walletData['data']['accountNumber'] ?? null,
                 'reference' => $walletData['data']['orderRef'] ?? null,
