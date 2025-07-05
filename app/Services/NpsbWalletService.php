@@ -173,7 +173,7 @@ class NpsbWalletService
                         'description' => 'Wallet Withdrawal',
                 ],
                 'transaction' => [
-                    // 'reference' => $reference,
+                    'reference' => $reference,
                 ],
                 'merchant' => [
                     'isFee'              => false,
@@ -185,6 +185,11 @@ class NpsbWalletService
             // Use the NpsbWalletApiClient to make the API call
             $response = $this->walletApiClient->post('/wallet_other_banks', $payload);
 
+            if (!isset($response['responseCode'])) {
+                // Transport fine, but payload malformed
+                throw new Exception('Malformed response from NPSB.', 502);
+            }
+    
             return $response;
         
     }

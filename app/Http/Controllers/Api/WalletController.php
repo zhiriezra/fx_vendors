@@ -183,18 +183,17 @@ class WalletController extends Controller
 
         $wallet = Wallet::where('user_id', $this->user->id)->where('slug', $this->defaultProvider)->first();
         if (!$wallet || empty($wallet->account_number) || empty($wallet->account_name)) {
-            return $this->error('Wallet not found or incomplete', 40);
+            return $this->error(null, 'Wallet not found or incomplete', 404);
         }
 
         $balance = $this->user->walletBalance($this->user->id, $this->defaultProvider);
         if ($request->amount > $balance) {
-            return $this->error('Insufficient balance', 400);
+            return $this->error(null, 'Insufficient balance', 400);
         }
         
         $response = $this->walletService->walletFundWithdrawal($this->user, $request->amount, $wallet, $bank);
 
         if($response['status']){
-        
             return $this->success($response['data'], $response['message'], 201);
         }
         else{
