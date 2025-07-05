@@ -51,7 +51,7 @@ class NpsbWalletService
         // Generate the payload using a private method
         $payload = $this->generateWalletPayload($userId);
         // Call the /open_wallet API
-         return $this->walletApiClient->post('/open_wallet', $payload);
+        return $this->walletApiClient->post('/open_wallet', $payload);
     }
 
     public function createWalletold(int $userId): array
