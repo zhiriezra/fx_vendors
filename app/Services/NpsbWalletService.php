@@ -45,7 +45,16 @@ class NpsbWalletService
      * @return array
      * @throws \Exception
      */
+
     public function createWallet(int $userId): array
+    {
+        // Generate the payload using a private method
+        $payload = $this->generateWalletPayload($userId);
+        // Call the /open_wallet API
+         return $this->walletApiClient->post('/open_wallet', $payload);
+    }
+
+    public function createWalletold(int $userId): array
     {
         try {
             // Generate the payload using a private method
