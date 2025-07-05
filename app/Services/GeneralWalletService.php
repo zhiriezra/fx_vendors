@@ -362,7 +362,7 @@ class GeneralWalletService
                     'missing_fields' => $missingFields
                 ]);
 
-                return $this->error(
+                return $this->error(null,
                     'Unable to create user wallet. Please update your profile. Missing fields: ' . implode(', ', $missingFields),
                     'VALIDATION_ERROR',
                     400
@@ -372,6 +372,7 @@ class GeneralWalletService
             try {
                 // Create the wallet
                 $walletData = $walletService->createWallet($user->id);
+                
             } catch (\Exception $e) {
                 // Check if the error is about existing wallet (response code 42)
                 if (strpos($e->getMessage(), '"responseCode":"42"') !== false) {
@@ -482,7 +483,6 @@ class GeneralWalletService
                 'user_id' => $user->id,
                 'name' => $defaultProvider,
                 'slug' => $defaultProvider,
-                'balance' => $walletData['data']['availableBalance'] ?? 0,
                 'meta' => json_encode($walletData['data'] ?? []),
                 'account_name' => $walletData['data']['fullName'] ?? null,
                 'account_number' => $walletData['data']['accountNumber'] ?? null,
