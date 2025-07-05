@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 use App\Factories\WalletProviderFactory;
 use App\Models\User;
 use App\Traits\ApiResponder;
+use App\Models\WalletTransaction;
+use App\Models\Bank;
 
 class GeneralWalletService
 {
@@ -500,33 +502,49 @@ class GeneralWalletService
 
     }
 
-    public function walletFundWithdrawal(array $param){
+    public function walletFundWithdrawal(User $user, $amount, $wallet, $bank){
+        
+        // Determine the default wallet provider for the user's country
+        $defaultProvider = $this->getDefaultWalletProviderForUser($user);
+        
+        
+        $reference = 'WDL-'.uniqid();
+        $walletTransaction = WalletTransaction::create([
+            'wallet_id' => $wallet->id,
+            'amount' => $amount,
+            'type' => 'withdraw',
+            'status' => 'pending',
+            'description' => 'Wallet Withdrawal',
+            'payment_reference' => $reference,
+        ]);
 
-        $user = auth()->user();
+        // Resolve the wallet service for the default provider
+        $walletService = $this->walletProviderFactory->make($defaultProvider);
 
-         try {
-            // Determine the default wallet provider for the user's country
-            $defaultProvider = $this->getDefaultWalletProviderForUser($user);
+        // Call the wallet service to debit the wallet from the API call
+        $result = $walletService->walletWithdrawal($user, $amount, $reference, $wallet, $bank);
 
-            // Resolve the wallet service for the default provider
-            $walletService = $this->walletProviderFactory->make($defaultProvider);
-
-            // Call the wallet service to debit the wallet from the API call
-            $result = $walletService->walletWithdrawal($param);
-
-            return $result;
-
-        } catch (\Exception $e) {
-            // Log the error
-            Log::error('Failed to debit wallet', [
-                'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+        if($result['responseCode'] == '00'){
+            $walletTransaction->update([
+                'status' => 'success',
             ]);
 
-            return response()->json([
-                'status'  => false,
-                'message' => 'Failed to debit wallet: ' . $e->getMessage(),
-            ], 500);
+            return $data = [
+                'status' => true,
+                'message' => 'Withdrawal successful',
+                'data' => $result,
+            ];
+        }
+        else{
+            $walletTransaction->update([
+                'status' => 'failed',
+            ]);
+
+            return $data = [
+                'status' => false,
+                'message' => 'Withdrawal failed',
+                'data' => $result,
+            ];
         }
 
     }

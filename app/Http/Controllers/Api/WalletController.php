@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
 use Illuminate\Support\Facades\Validator;
 use App\Models\WalletTransaction;
+use App\Models\Bank;
 
 class WalletController extends Controller
 {
@@ -174,21 +175,31 @@ class WalletController extends Controller
             'amount' => 'required|numeric|min:100',
         ]);
 
-        $wallet = Wallet::where('user_id', $this->user->id)->where('slug', $this->defaultProvider)->first();
+        $vendor = auth()->user()->vendor;
+        $bank = Bank::where('id', $vendor->bank)->first();
+        if(empty($bank) || empty($vendor->account_name) || empty($vendor->account_no)){
+            return $this->error(null, 'bank not found, please update your banking info', 404);
+        }
 
-        if (!$wallet) {
-            return $this->error('Wallet not found', 404);
+        $wallet = Wallet::where('user_id', $this->user->id)->where('slug', $this->defaultProvider)->first();
+        if (!$wallet || empty($wallet->account_number) || empty($wallet->account_name)) {
+            return $this->error('Wallet not found or incomplete', 40);
         }
 
         $balance = $this->user->walletBalance($this->user->id, $this->defaultProvider);
-
         if ($request->amount > $balance) {
             return $this->error('Insufficient balance', 400);
         }
+        
+        $response = $this->walletService->walletFundWithdrawal($this->user, $request->amount, $wallet, $bank);
 
-        $response = $this->walletService->withdraw($this->user, $request->amount);
-
-        return $this->success(['response' => $response], 'Withdrawal successful.');
+        if($response['status']){
+        
+            return $this->success($response['data'], $response['message'], 201);
+        }
+        else{
+            return $this->error(null,'Withdrawal failed', 400);
+        }
         
     }
 }
