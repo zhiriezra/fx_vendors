@@ -40,77 +40,19 @@ class WalletController extends Controller
 
     public function createWallet()
     {
-    $vendor = $this->user->vendor;
-    $requiredFields = ['dob', 'bvn', 'nin', 'permanent_address'];
-    foreach ($requiredFields as $field) {
-        if ($vendor->$field === NULL || $vendor->$field === '') {
-            return $this->error(
-                [$field => ucfirst(str_replace('_', ' ', $field)) . ' is required'],
-                ucfirst(str_replace('_', ' ', $field)) . ' is required',
-                400
-            );
+        $requiredFields = ['dob', 'bvn', 'nin', 'permanent_address'];
+        foreach ($requiredFields as $field) {
+            if ($this->user->vendor->$field === NULL || $this->user->vendor->$field === '') {
+                return $this->error(
+                    [$field => ucfirst(str_replace('_', ' ', $field)) . ' is required'],
+                    ucfirst(str_replace('_', ' ', $field)) . ' is required',
+                    400
+                );
+            }
         }
-    }
 
-    try {
-            // Get user's country based on their type (agent)
-            $userCountry = $this->user->vendor->state->country->name;
-
-            // For now, only allow wallet creation for Nigeria
-            if ($userCountry !== 'Nigeria') {
-                return $this->error('Wallet creation is currently only available for users in Nigeria.', 400);
-            }
-
-            // Check if user already has a wallet
-            $existingWallet = Wallet::where('user_id', $this->user->id)
-                ->where('slug', $this->defaultProvider)
-                ->first();
-
-            if ($existingWallet) {
-                return $this->error(null, 'Wallet already exists for this user.', 400);
-            }
-
-            // Create wallet using the default provider for Nigeria (NPSB)
-            $response = $this->walletService->createUserWallet($this->user);
-            
-            // If the response is already a JsonResponse, return it directly
-            if ($response instanceof \Illuminate\Http\JsonResponse) {
-                return $response;
-            }
-
-            // If we got a Wallet model instance, format and return it
-            if ($response instanceof \App\Models\Wallet) {
-                $formattedWallet = [
-                    'id'          => $response->id,
-                    'name'        => $response->name,
-                    'slug'        => $response->slug,
-                    'meta'        => $response->meta,
-                    'balance'     => 0.00, // New wallet starts with zero balance
-                    'account_name' => $response->account_name,
-                    'account_number' => $response->account_number,
-                    'reference' => $response->reference,
-                    'customerId' => $response->customerId,
-                    'response_code' => $response->response_code,
-                    'created_at'  => Carbon::parse($response->created_at)->format('M j, Y, g:ia'),
-                    'updated_at'  => Carbon::parse($response->updated_at)->format('M j, Y, g:ia'),
-                ];
-
-                return $this->success([
-                    'wallet' => $formattedWallet
-                ], 'Wallet created successfully.');
-            }
-
-            return $this->error(null,'Failed to create wallet. Please try again later.', 500);
-
-        } catch (\Exception $e) {
-            return $this->error(null, 'Failed to create wallet: ' . $e->getMessage(), 500);
-        }
-    }
-
-    public function createWalletOld()
-    {
         try {
-            // Get user's country based on their type (agent or vendor)
+            // Get user's country based on their type (vendor)
             $userCountry = $this->user->vendor->state->country->name;
 
             // For now, only allow wallet creation for Nigeria
@@ -170,18 +112,45 @@ class WalletController extends Controller
     public function getBalance(Request $request)
     {
 
+        // get local wallet
         $wallet = Wallet::where('user_id', $this->user->id)
             ->where('slug', $this->defaultProvider)
             ->first();
 
-        if ($wallet) {
-
-            $balance = $this->user->walletBalance($this->user->id, $this->defaultProvider);
-
-            return $this->success(['balance' => $balance], 'User wallet balance.');
+        if (!$wallet) {
+            return $this->error(null, 'Wallet not found for this user', 404);
         }
 
-        return $this->walletService->createUserWallet($this->user);
+        try {
+            // check 9PSB Wallet
+            $response = $this->walletService->getActualBalance($this->user, $this->defaultProvider, $wallet->account_number);
+
+            if($response['responseCode'] == '00'){
+                // compare balance with local
+                if($wallet->balance !== $response['data']['availableBalance']){
+                    $wallet->balance = $response['data']['availableBalance'];
+                    $wallet->save();
+                }     
+                
+                $formattedWallet = [
+                    'wallet' => $wallet->name,
+                    'account_number' => $wallet->account_number,
+                    'account_name' => $wallet->account_name,
+                    'balance' => $wallet->balance,
+                    'status' => $wallet->status,
+                    'last_updated' => $wallet->updated_at
+                ];
+
+                return $this->success($formattedWallet, 'User wallet balance.', 200);
+            }else{
+                return $this->error($response, $response['message'], 400);
+            }
+        } catch (\Exception $e) {
+    
+            return $this->error($e, $e->getMessage(), 500);
+        }      
+
+        // return $this->walletService->createUserWallet($this->user);
     }
 
     /**

@@ -547,4 +547,20 @@ class GeneralWalletService
         }
     }
 
+    public function getActualBalance($user, $defaultProvider, $account_number)
+    {
+       
+
+            // Determine the default wallet provider for the user's country
+            $defaultProvider = $this->getDefaultWalletProviderForUser($user);
+
+            // Resolve the wallet service for the default provider
+            $walletService = $this->walletProviderFactory->make($defaultProvider);
+
+            // Call the wallet service to get the actual balance
+            return $walletService->getActualBalance($user, $account_number);
+
+        
+    }
+
 }

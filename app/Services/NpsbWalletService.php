@@ -376,4 +376,14 @@ class NpsbWalletService
             'address'                => $vendor->permanent_address,
         ];
     }
+
+    public function getActualBalance($user, $account_number)
+    {
+        $payload = [
+            'accountNo' => $account_number,
+        ];
+        // Fetch the actual balance from the NPSB API
+        $response = $this->walletApiClient->post('/wallet_enquiry', $payload);
+        return $response;
+    }
 }
