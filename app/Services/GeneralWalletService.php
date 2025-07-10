@@ -519,29 +519,29 @@ class GeneralWalletService
 
             // Call the wallet service to debit the wallet from the API call
             $result = $walletService->walletWithdrawal($user, $amount, $reference, $wallet, $bank);
+            return $result;
+            // if($result['responseCode'] == '00'){
+            //     $walletTransaction->update([
+            //         'status' => 'success',
+            //     ]);
 
-            if($result['responseCode'] == '00'){
-                $walletTransaction->update([
-                    'status' => 'success',
-                ]);
+            //     return $data = [
+            //         'status' => true,
+            //         'message' => 'Withdrawal successful',
+            //         'data' => $result,
+            //     ];
+            // }
+            // else{
+            //     $walletTransaction->update([
+            //         'status' => 'failed',
+            //     ]);
 
-                return $data = [
-                    'status' => true,
-                    'message' => 'Withdrawal successful',
-                    'data' => $result,
-                ];
-            }
-            else{
-                $walletTransaction->update([
-                    'status' => 'failed',
-                ]);
-
-                return $data = [
-                    'status' => false,
-                    'message' => 'Withdrawal failed',
-                    'data' => $result,
-                ];
-            }
+            //     return $data = [
+            //         'status' => false,
+            //         'message' => 'Withdrawal failed',
+            //         'data' => $result,
+            //     ];
+            // }
         }catch(Exception $e){
             $this->error(null, $e->getMessage(), 503);
         }
