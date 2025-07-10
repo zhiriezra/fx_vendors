@@ -235,7 +235,8 @@ class WalletController extends Controller
         }
         
         $response = $this->walletService->walletFundWithdrawal($this->user, $request->amount, $wallet, $bank);
-
+        return $response;
+        
         if($response['status']){
             return $this->success($response['data'], $response['message'], 201);
         }
