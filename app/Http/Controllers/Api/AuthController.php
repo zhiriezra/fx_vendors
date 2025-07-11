@@ -339,7 +339,7 @@ class AuthController extends Controller
         $user = User::where('id', $request->user_id)->first();
         $otp = $user->generateTwoFactorCode();
         try {
-            Mail::to($request->email)->send(new SendOtpMail($otp));
+            Mail::to($user->email)->send(new SendOtpMail($otp));
             return $this->success(['user_id' => $user->id, 'otp' => $otp], '2FA code sent', 200);
 
         } catch (\Exception $e) {
