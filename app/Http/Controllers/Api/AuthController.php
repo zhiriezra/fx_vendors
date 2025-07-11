@@ -374,6 +374,8 @@ class AuthController extends Controller
                 'otp_expires_at' => null
             ]);
 
+            // Delete all previous tokens to ensure only the latest token is valid
+            $user->tokens()->delete(); // Deletes all previous tokens
             // Generate a unique token
             $token = $user->createToken('auth_token')->plainTextToken;
 
