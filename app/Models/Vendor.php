@@ -49,6 +49,11 @@ class Vendor extends Model
     public function escrow(){
         return $this->hasMany(Escrow::class);
     }
+
+    public function vendorBank()
+    {
+        return $this->belongsTo(Bank::class, 'bank');
+    }
 }
 
 
