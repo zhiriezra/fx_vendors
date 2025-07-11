@@ -22,6 +22,7 @@ use App\Mail\ForgotPasswordMail;
 use Illuminate\Support\Facades\Cache;
 use App\Services\PushNotificationService;
 use App\Mail\SendOtpMail;
+use App\Models\Wallet;
 
 class AuthController extends Controller
 {
@@ -386,6 +387,7 @@ class AuthController extends Controller
     public function getUser(Request $request)
     {
         $user = User::with('vendor')->where('id', $request->user()->id)->first();
+        $wallet = Wallet::where('user_id', $user->id)->first();
 
         if (!$user) {
             return response()->json([
@@ -410,6 +412,7 @@ class AuthController extends Controller
             'fcm_token' => $user->fcm_token,
             'company_id' => $user->company_id,
             'active' => $user->active,
+            'wallet_exists' => $wallet ? true : false,
             'profile_completed' => $user->profile_completed,
             'profile_image' => $fullProfileImage, // Full URL for profile image
             'signature' => $fullSignature,       // Full URL for signature
