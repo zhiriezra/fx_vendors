@@ -22,7 +22,7 @@ use App\Models\StockTracker;
 class ProductController extends Controller
 {
     use ApiResponder;
-    
+
     public function index()
     {
         $vendor = auth()->user()->vendor;
@@ -38,7 +38,7 @@ class ProductController extends Controller
                 'manufacturer' => $product->manufacturer_product->manufacturer->name,
                 'category' => $product->manufacturer_product->sub_category->category->name,
                 'subcategory' => $product->manufacturer_product->sub_category->name,
-                'image' => url('storage/' . $product->manufacturer_product->image),  
+                'image' => env('ADMIN_URL') . '/storage/' . $product->manufacturer_product->image,
                 'name' => $product->manufacturer_product->name,
                 'unit' => $product->unit->name,
                 'quantity' => $product->quantity,
@@ -58,12 +58,12 @@ class ProductController extends Controller
 
     }
 
-    //Export user products 
+    //Export user products
     public function export()
     {
         $fileName = 'products_' . date('Y-m-d_H-i-s') . '.xlsx';
-        
-        return Excel::download(new ProductsExport, $fileName);  
+
+        return Excel::download(new ProductsExport, $fileName);
     }
 
     public function store(Request $request)
@@ -77,7 +77,7 @@ class ProductController extends Controller
             'stock_date' => 'required|date',
         ]);
 
-        
+
 
         if ($validator->fails()) {
             return $this->validation($validator->errors(), $validator->errors()->first(), 422);
@@ -96,7 +96,7 @@ class ProductController extends Controller
             'stock_date' => $request->stock_date,
 
         ]);
-        
+
         if($product){
             return $this->success(null, 'Product created successfully', 200);
         }else{
@@ -118,7 +118,7 @@ class ProductController extends Controller
             'manufacturer' => $product->manufacturer_product->manufacturer->name,
             'category' => $product->manufacturer_product->sub_category->category->name,
             'subcategory' => $product->manufacturer_product->sub_category->name,
-            'image' => url('storage/' . $product->manufacturer_product->image),   
+            'image' => env('ADMIN_URL') . '/storage/' . $product->manufacturer_product->image,
             'name' => $product->manufacturer_product->name,
             'description' => $product->manufacturer_product->description,
             'unit_id' => $product->unit_id,
@@ -135,7 +135,7 @@ class ProductController extends Controller
 
         return $this->success($product, "Product details", 200);
 
-      
+
     }
 
     public function update(Request $request)
@@ -188,7 +188,7 @@ class ProductController extends Controller
         }
     }
 
-    public function productStats() 
+    public function productStats()
     {
         $vendor = Auth::user()->vendor;
 
@@ -235,7 +235,7 @@ class ProductController extends Controller
                     'total_value' => $categoryProducts->sum(function($product) {
                         return $product->quantity * $product->unit_price;
                     }),
-                
+
                 ];
             })
             ->values();
@@ -249,7 +249,7 @@ class ProductController extends Controller
         $vendor = auth()->user()->vendor;
 
         if (!$vendor) {
-            return $this->error('Vendor not found', 404); 
+            return $this->error('Vendor not found', 404);
         }
 
         $manufacturers = Manufacturer::with('manufacturer_products')->get();
@@ -293,7 +293,7 @@ class ProductController extends Controller
                     'manufacturer' => $product->manufacturer_product->manufacturer->name,
                     'category' => $product->manufacturer_product->sub_category->category->name,
                     'subcategory' => $product->manufacturer_product->sub_category->name,
-                    'image' => url('storage/' . $product->manufacturer_product->image),   
+                    'image' => env('ADMIN_URL') . '/storage/' . $product->manufacturer_product->image,
                     'name' => $product->manufacturer_product->name,
                     'description' => $product->manufacturer_product->description,
                     'unit' => $product->unit->name,
@@ -315,11 +315,11 @@ class ProductController extends Controller
     public function outOfStockProducts()
     {
         $vendor = auth()->user()->vendor;
-    
+
         if (!$vendor) {
             return $this->error('Vendor not found', 404);
         }
-    
+
         // get products that are out of stock
         $outOfStockProducts = $vendor->products()
             ->where('quantity', 0)
@@ -332,7 +332,7 @@ class ProductController extends Controller
                     'manufacturer' => $product->manufacturer_product->manufacturer->name,
                     'category' => $product->manufacturer_product->sub_category->category->name,
                     'subcategory' => $product->manufacturer_product->sub_category->name,
-                    'image' => url('storage/' . $product->manufacturer_product->image),   
+                    'image' => env('ADMIN_URL') . '/storage/' . $product->manufacturer_product->image,
                     'name' => $product->manufacturer_product->name,
                     'description' => $product->manufacturer_product->description,
                     'unit' => $product->unit->name,
@@ -346,7 +346,7 @@ class ProductController extends Controller
                     'updated_at' => Carbon::parse($product->updated_at)->format('M j, Y, g:ia')
                 ];
             });
-    
+
         return $this->success(['out_of_stock_products' => $products], 'Out of stock products', 200);
     }
 
@@ -364,7 +364,7 @@ class ProductController extends Controller
 
         // Find the product
         $product = Product::with(['manufacturer_product.manufacturer', 'manufacturer_product.sub_category.category'])->find($request->product_id);
-        
+
         if (!$product) {
             return $this->error('Product not found', 404);
         }
@@ -378,7 +378,7 @@ class ProductController extends Controller
             'manufacturer' => $product->manufacturer_product->manufacturer->name,
             'category' => $product->manufacturer_product->sub_category->category->name,
             'subcategory' => $product->manufacturer_product->sub_category->name,
-            '   ' => url('storage/' . $product->manufacturer_product->image),   
+            'image' => env('ADMIN_URL') . '/storage/' . $product->manufacturer_product->image,
             'name' => $product->manufacturer_product->name,
             'description' => $product->manufacturer_product->description,
             'unit' => $product->unit->name,
@@ -393,5 +393,5 @@ class ProductController extends Controller
 
         return $this->success(['product' => $formattedProduct, 'new_quantity' => $newQuantity], 'Product restocked successfully', 200);
     }
-    
+
 }
