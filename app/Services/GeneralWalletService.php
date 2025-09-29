@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 use App\Factories\WalletProviderFactory;
 use App\Models\User;
 use App\Traits\ApiResponder;
+use App\Models\WalletTransaction;
+use App\Models\Bank;
 
 class GeneralWalletService
 {
@@ -360,7 +362,7 @@ class GeneralWalletService
                     'missing_fields' => $missingFields
                 ]);
 
-                return $this->error(
+                return $this->error(null,
                     'Unable to create user wallet. Please update your profile. Missing fields: ' . implode(', ', $missingFields),
                     'VALIDATION_ERROR',
                     400
@@ -370,6 +372,7 @@ class GeneralWalletService
             try {
                 // Create the wallet
                 $walletData = $walletService->createWallet($user->id);
+                
             } catch (\Exception $e) {
                 // Check if the error is about existing wallet (response code 42)
                 if (strpos($e->getMessage(), '"responseCode":"42"') !== false) {
@@ -457,11 +460,7 @@ class GeneralWalletService
                 );
             }
 
-            return $this->error(
-                'An unexpected error occurred while creating your wallet. Please try again later.',
-                'INTERNAL_ERROR',
-                500
-            );
+            return $this->error($e->getMessage(), 'An unexpected error occurred while creating your wallet. Please try again later. INTERNAL_ERROR', 500);
         }
     }
 
@@ -481,7 +480,7 @@ class GeneralWalletService
                 'name' => $defaultProvider,
                 'slug' => $defaultProvider,
                 'balance' => 0,
-                'meta' => json_encode($walletData['data'] ?? []),
+                'meta' => json_encode($walletData['data'] ?? []),   
                 'account_name' => $walletData['data']['fullName'] ?? null,
                 'account_number' => $walletData['data']['accountNumber'] ?? null,
                 'reference' => $walletData['data']['orderRef'] ?? null,
@@ -500,35 +499,47 @@ class GeneralWalletService
 
     }
 
-    public function walletFundWithdrawal(array $param){
+    public function walletFundWithdrawal(User $user, $amount, $wallet, $bank){
+        try{
+            // Determine the default wallet provider for the user's country
+            $defaultProvider = $this->getDefaultWalletProviderForUser($user);
+            
+            $reference = 'WDL-'.uniqid();
+            $walletTransaction = WalletTransaction::create([
+                'wallet_id' => $wallet->id,
+                'amount' => $amount,
+                'type' => 'withdraw',
+                'status' => 'pending',
+                'description' => 'Wallet Withdrawal',
+                'payment_reference' => $reference,
+            ]);
 
-        $user = auth()->user();
+            // Resolve the wallet service for the default provider
+            $walletService = $this->walletProviderFactory->make($defaultProvider);
 
-         try {
+            // Call the wallet service to debit the wallet from the API call
+            $result = $walletService->walletWithdrawal($user, $amount, $reference, $wallet, $bank);
+            return $result;
+            
+        }catch(Exception $e){
+            $this->error(null, $e->getMessage(), 503);
+        }
+    }
+
+    public function getActualBalance($user, $defaultProvider, $account_number)
+    {
+       
+
             // Determine the default wallet provider for the user's country
             $defaultProvider = $this->getDefaultWalletProviderForUser($user);
 
             // Resolve the wallet service for the default provider
             $walletService = $this->walletProviderFactory->make($defaultProvider);
 
-            // Call the wallet service to debit the wallet from the API call
-            $result = $walletService->walletWithdrawal($param);
+            // Call the wallet service to get the actual balance
+            return $walletService->getActualBalance($user, $account_number);
 
-            return $result;
-
-        } catch (\Exception $e) {
-            // Log the error
-            Log::error('Failed to debit wallet', [
-                'user_id' => $user->id,
-                'error'   => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'status'  => false,
-                'message' => 'Failed to debit wallet: ' . $e->getMessage(),
-            ], 500);
-        }
-
+        
     }
 
 }

@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Services\GeneralWalletService;
 use Illuminate\Support\Facades\Validator;
 use App\Models\WalletTransaction;
+use App\Models\Bank;
 
 class WalletController extends Controller
 {
@@ -39,8 +40,19 @@ class WalletController extends Controller
 
     public function createWallet()
     {
+        $requiredFields = ['dob', 'bvn', 'nin', 'permanent_address'];
+        foreach ($requiredFields as $field) {
+            if ($this->user->vendor->$field === NULL || $this->user->vendor->$field === '') {
+                return $this->error(
+                    [$field => ucfirst(str_replace('_', ' ', $field)) . ' is required'],
+                    ucfirst(str_replace('_', ' ', $field)) . ' is required',
+                    400
+                );
+            }
+        }
+
         try {
-            // Get user's country based on their type (agent or vendor)
+            // Get user's country based on their type (vendor)
             $userCountry = $this->user->vendor->state->country->name;
 
             // For now, only allow wallet creation for Nigeria
@@ -100,18 +112,45 @@ class WalletController extends Controller
     public function getBalance(Request $request)
     {
 
+        // get local wallet
         $wallet = Wallet::where('user_id', $this->user->id)
             ->where('slug', $this->defaultProvider)
             ->first();
 
-        if ($wallet) {
-
-            $balance = $this->user->walletBalance($this->user->id, $this->defaultProvider);
-
-            return $this->success(['balance' => $balance], 'User wallet balance.');
+        if (!$wallet) {
+            return $this->error(null, 'Wallet not found for this user', 404);
         }
 
-        return $this->walletService->createUserWallet($this->user);
+        try {
+            // check 9PSB Wallet
+            $response = $this->walletService->getActualBalance($this->user, $this->defaultProvider, $wallet->account_number);
+
+            if($response['responseCode'] == '00'){
+                // compare balance with local
+                if($wallet->balance !== $response['data']['availableBalance']){
+                    $wallet->balance = $response['data']['availableBalance'];
+                    $wallet->save();
+                }     
+                
+                $formattedWallet = [
+                    'wallet' => $wallet->name,
+                    'account_number' => $wallet->account_number,
+                    'account_name' => $wallet->account_name,
+                    'balance' => $wallet->balance,
+                    'status' => $wallet->status,
+                    'last_updated' => $wallet->updated_at
+                ];
+
+                return $this->success($formattedWallet, 'User wallet balance.', 200);
+            }else{
+                return $this->error($response, $response['message'], 400);
+            }
+        } catch (\Exception $e) {
+    
+            return $this->error($e, $e->getMessage(), 500);
+        }      
+
+        // return $this->walletService->createUserWallet($this->user);
     }
 
     /**
@@ -133,6 +172,11 @@ class WalletController extends Controller
             'name'        => $wallet->name,
             'slug'        => $wallet->slug,
             'meta'        => $wallet->meta,
+            'account_name' => $wallet->account_name,
+            'account_number' => $wallet->account_number,
+            'reference' => $wallet->reference,
+            'customerId' => $wallet->customerId,
+            'response_code' => $wallet->response_code,
             'balance'     => $this->user->walletBalance($this->user->id, $this->defaultProvider),
             'created_at'  => Carbon::parse($wallet->created_at)->format('M j, Y, g:ia'),
             'updated_at'  => Carbon::parse($wallet->updated_at)->format('M j, Y, g:ia'),
@@ -166,5 +210,45 @@ class WalletController extends Controller
         $fileName = "transactions_{$date}.xlsx";
 
         return Excel::download(new TransactionsExport, $fileName);
+    }
+
+    public function withdraw(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:100',
+        ]);
+
+        $vendor = auth()->user()->vendor;
+        $bank = Bank::where('id', $vendor->bank)->first();
+        if(empty($bank) || empty($vendor->account_name) || empty($vendor->account_no)){
+            return $this->error(null, 'bank not found, please update your banking info', 404);
+        }
+
+        $wallet = Wallet::where('user_id', $this->user->id)->where('slug', $this->defaultProvider)->first();
+        if (!$wallet || empty($wallet->account_number) || empty($wallet->account_name)) {
+            return $this->error(null, 'Wallet not found or incomplete', 404);
+        }
+
+        $balance = $this->user->walletBalance($this->user->id, $this->defaultProvider);
+        if ($request->amount > $balance) {
+            return $this->error(null, 'Insufficient balance', 400);
+        }
+        
+        $response = $this->walletService->walletFundWithdrawal($this->user, $request->amount, $wallet, $bank);
+        
+        if($response['responseCode'] == '00'){
+            WalletTransaction::where('payment_reference', $response['data']['transaction']['reference'])
+                ->update([
+                    'status' => 'success'
+                ]);
+            return $this->success($response, $response['data']['message'], 201);
+        }else{
+            WalletTransaction::where('payment_reference', $response['data']['transaction']['reference'])
+                ->update([
+                    'status' => 'failed'
+                ]);
+            return $this->error($response, $response['data']['message'], 400);
+        }
+        
     }
 }

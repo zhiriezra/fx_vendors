@@ -110,4 +110,16 @@ class User extends Authenticatable
 
     }
 
+    public function generateTwoFactorCode(){
+        
+        $otp = rand(10000, 99999); // Generate a 5-digit OTP
+        // Store OTP in the database with expiration time
+        $this->update([
+            'otp' => $otp,
+            'otp_expires_at' => now()->addMinutes(5) // OTP expires after 5 minutes
+        ]);
+
+        return $otp;
+    }
+
 }

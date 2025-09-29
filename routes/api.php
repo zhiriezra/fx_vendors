@@ -31,6 +31,10 @@ Route::prefix('v1')->group(function() {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/login', [AuthController::class, 'login']);
 
+    Route::post('/verify-2fa', [AuthController::class, 'verify2FA']);
+    Route::post('/resend-2fa', [AuthController::class, 'resend2FA']);
+
+
     // Password reset routes
     Route::post('/password/reset/send-otp', [AuthController::class, 'sendForgotPasswordOTP']);
     Route::post('/password/reset/verify-otp', [AuthController::class, 'verifyForgotPasswordOTP']);
@@ -54,6 +58,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/delete-account', [AuthController::class, 'delete']);
     Route::post('/save-notification-token', [NotificationController::class, 'storeToken']);
     // user routes end
+
+
 
     // routes to update profiles start
     Route::post('/update-bio', [AuthController::class, 'updateBio']);
@@ -102,11 +108,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     //Export User Orders
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
-    Route::get('/wallet-balance', [WalletController::class, 'getBalance']);
-    Route::get('/wallet-enquiry', [WalletController::class, 'walletEnquiry']);
+    // just call these two functions wallet (wallet balance and wallet enquiry)
+    Route::get('/wallet', [WalletController::class, 'getBalance']);
     Route::get('/wallet-transactions', [WalletController::class, 'walletTransactions']);
     Route::get('/wallet-transaction/{transaction_id}', [WalletController::class, 'walletTransaction']);
     Route::post('/create-wallet', [WalletController::class, 'createWallet']);
+    Route::post('/wallet-withdraw', [WalletController::class, 'withdraw']);
 
 
     // Dashboard stats

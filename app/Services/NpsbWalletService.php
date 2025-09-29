@@ -45,7 +45,16 @@ class NpsbWalletService
      * @return array
      * @throws \Exception
      */
+
     public function createWallet(int $userId): array
+    {
+        // Generate the payload using a private method
+        $payload = $this->generateWalletPayload($userId);
+        // Call the /open_wallet API
+        return $this->walletApiClient->post('/open_wallet', $payload);
+    }
+
+    public function createWalletold(int $userId): array
     {
         try {
             // Generate the payload using a private method
@@ -150,63 +159,48 @@ class NpsbWalletService
      * @return array
      * @throws \Exception
      */
-    public function walletWithdrawal(array $data)
+    public function walletWithdrawal(User $user, $amount, $reference, $wallet, $bank)
     {
-        $user = auth()->user();
 
-        $vendor = auth()->user()->vendor;
+            $narration = $this->getNarration($user->id, 'debit');
+            // Construct the payload specific to the 9PSB API
+            $payload = [
+                'customer' => [
+                    'account' =>[
+                        'bank' => $bank->code,
+                        'name' => auth()->user()->vendor->account_name,
+                        'number' => auth()->user()->vendor->account_no,
+                        'senderaccountnumber' => $wallet->account_number,
+                        'sendername' => $wallet->account_name,
+                    ]
+                ],
+                'narration' => $narration,
+                'order' => [
+                        'amount' => $amount,
+                        'country' => $user->vendor->state->country->code,
+                        'currency' => $user->vendor->state->country->currency,
+                        'description' => 'Wallet Withdrawal',
+                ],
+                'transaction' => [
+                    'reference' => $reference,
+                ],
+                'merchant' => [
+                    'isFee'              => false,
+                    'merchantFeeAccount' => '',
+                    'merchantFeeAmount'  => '',
+                ],
+            ];
 
-        $narration = $this->getNarration($user->id, 'debit');
+            // Use the NpsbWalletApiClient to make the API call
+            $response = $this->walletApiClient->post('/wallet_other_banks', $payload);
 
-        $bank_id = auth()->user()->vendor->bank;
-
-        $wallet = Wallet::where('holder_id', $user->id)->where('slug', 'Npsb')->first();
-
-        $bank = Bank::where('id', $bank_id)->first();
-
-        if($wallet != null){
-
-            if($bank != null){
-
-                // Construct the payload specific to the 9PSB API
-                $payload = [
-                    'customer' => [
-                        'account' =>[
-                            'bank' => $bank->code,
-                            'name' => auth()->user()->vendor->account_name,
-                            'number' => auth()->user()->vendor->account_no,
-                            'senderaccountnumber' => $wallet['meta']['accountNumber'],
-                            'sendername' => $wallet['meta']['fullName'],
-                        ]
-                    ],
-                    'narration' => $narration,
-                    'order' => [
-                            'amount' => $data['amount'],
-                            'country' => $vendor->state->country->code,
-                            'currency' => $vendor->state->country->currency,
-                            'description' => $wallet['meta']['fullName'],
-                    ],
-                    'transaction' => [
-                        'reference' => $data['transaction_id'],
-                    ],
-                    'merchant' => [
-                        'isFee'              => false,
-                        'merchantFeeAccount' => '',
-                        'merchantFeeAmount'  => '',
-                    ],
-                ];
-
-                // Use the NpsbWalletApiClient to make the API call
-                $response = $this->walletApiClient->post('/wallet_other_banks', $payload);
-
-                return $response;
-
+            if (!isset($response['responseCode'])) {
+                // Transport fine, but payload malformed
+                throw new Exception('Malformed response from NPSB.', 502);
             }
-
-        }
-        else{
-            throw new \Exception("User do not have a wallet");
-        }
+    
+            return $response;
+        
     }
 
      /** Debit a user's wallet.
@@ -216,7 +210,8 @@ class NpsbWalletService
      * @return array
      * @throws \Exception
      */
-    public function creditWallet(int $userId, array $data): array
+    
+     public function creditWallet(int $userId, array $data): array
     {
         try {
             $accountNo = $this->getAccountNo($userId);
@@ -278,7 +273,7 @@ class NpsbWalletService
 
     public function getAccountNo($user_id){
 
-        $wallet = Wallet::where('holder_id', $user_id)->where('slug', 'npsb')->first();
+        $wallet = Wallet::where('user_id', $user_id)->where('slug', 'npsb')->first();
 
         $accountNumber = $wallet['meta']['accountNumber'] ?? null;
 
@@ -287,7 +282,7 @@ class NpsbWalletService
 
     public function getFullName($user_id){
 
-        $wallet = Wallet::where('holder_id', $user_id)->where('slug', 'npsb')->first();
+        $wallet = Wallet::where('user_id', $user_id)->where('slug', 'npsb')->first();
 
         $fullName = $wallet['meta']['fullName'] ?? null;
 
@@ -380,5 +375,15 @@ class NpsbWalletService
             'dateOfBirth'            => $dobFormatted,
             'address'                => $vendor->permanent_address,
         ];
+    }
+
+    public function getActualBalance($user, $account_number)
+    {
+        $payload = [
+            'accountNo' => $account_number,
+        ];
+        // Fetch the actual balance from the NPSB API
+        $response = $this->walletApiClient->post('/wallet_enquiry', $payload);
+        return $response;
     }
 }
