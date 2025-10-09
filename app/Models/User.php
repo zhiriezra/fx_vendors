@@ -10,12 +10,27 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Services\PushNotificationService;
 use App\Models\WalletTransaction;
+use Filament\Models\Contracts\HasName;
+use Filament\Models\Contracts\FilamentUser;
 
-class User extends Authenticatable
+
+class User extends Authenticatable implements FilamentUser, HasName
 {
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $pushNotificationService;
+
+    public function getFilamentName(): string
+    {
+        return "{$this->firstname} {$this->lastname}";
+    }
+
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        // Allow access to vendors (user_type_id = 2)
+        // Also check if user is active
+        return in_array($this->user_type_id, [2]);
+    }
 
     public function __construct(array $attributes = [])
     {
@@ -121,5 +136,9 @@ class User extends Authenticatable
 
         return $otp;
     }
+
+    /**
+     * Get the user's full name for Filament authentication
+     */
 
 }
