@@ -32,7 +32,6 @@ class UserPanelProvider extends PanelProvider
             ->id('user')
             ->path('user')
             ->login(CustomLoginPage::class)
-            ->login()
             ->plugins([
                 BreezyCore::make()
                     ->myProfile(), // Enables My Profile page
