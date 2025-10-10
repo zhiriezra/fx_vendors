@@ -11,6 +11,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
+use App\Filament\Pages\Auth\Login as CustomLoginPage;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,7 +29,7 @@ class UserPanelProvider extends PanelProvider
             ->default()
             ->id('user')
             ->path('user')
-            ->login()
+            ->login(CustomLoginPage::class)
             ->colors([
                 'primary' => '#006600',
             ])
