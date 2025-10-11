@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Filament\Widgets;
+
+use Filament\Facades\Filament;
+use App\Models\Product;
+use App\Models\Order;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+
+class DashboardStat extends BaseWidget
+{
+
+   // protected int | string | array $columnSpan = 'full';
+
+    protected function getStats(): array
+    {
+
+          // Get logged-in user
+        $user = Filament::auth()->user();
+
+        // Get the vendor_id of the user
+        $vendorId = $user->vendor_id;
+
+        // Get vendor-specific data
+        $productCount = Product::where('vendor_id', $vendorId)->count();
+        $orderCount = Order::where('vendor_id', $vendorId)->count();
+        $totalCommission = Order::where('vendor_id', $vendorId)->sum('commission');
+
+        return [
+            Stat::make('Products', $productCount)
+                ->description('Total products in inventory')
+                ->descriptionIcon('heroicon-o-cube')
+                ->chart([10, 15, 5, 20, 30])
+                ->icon('heroicon-s-cube')                
+                ->color('gray'),
+
+            Stat::make('Orders', $orderCount)
+                ->description('Total customer orders')
+                ->descriptionIcon('heroicon-o-shopping-cart')
+                ->chart([5, 10, 15, 20, 25])
+                ->icon('heroicon-s-shopping-cart')
+                ->color('info'),
+
+            Stat::make('Commission Earned', '₦' . number_format($totalCommission, 2))
+                ->description('Total Commission Earned')
+                ->descriptionIcon('heroicon-o-banknotes')
+                ->icon('heroicon-s-banknotes')
+                ->chart([5, 10, 10, 30, 60])
+                ->color('success'),            
+        ];
+    }
+
+   
+}
