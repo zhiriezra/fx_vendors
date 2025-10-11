@@ -274,5 +274,13 @@ class Register extends BaseRegister
 
         return $user;
     }
+
+    /**
+     * Override the brand logo to use FarmEx logo instead of Laravel text.
+     */
+    public function getBrandLogo(): string
+    {
+        return asset('images/farmex-logo-main-with-tagline.png');
+    }
 }
 

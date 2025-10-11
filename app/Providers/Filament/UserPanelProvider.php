@@ -41,6 +41,9 @@ class UserPanelProvider extends PanelProvider
             ->colors([
                 'primary' => '#006600',
             ])
+            ->favicon(asset('images/favicon.png'))
+            ->brandLogo(asset('images/farmex-logo-main-with-tagline.png'))
+            ->brandLogoHeight('5rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
