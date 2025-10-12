@@ -22,7 +22,7 @@ use App\Exports\ProductsExport;
 */
 
 Route::get('/', function () {
-    return redirect('/login');
+    return redirect('/user');
 });
 
 // Route::get('/test-email', function () {
