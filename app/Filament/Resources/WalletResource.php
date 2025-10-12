@@ -21,6 +21,12 @@ class WalletResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-wallet';
 
     protected static ?string $navigationGroup = 'Records';
+    
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id());
+    }
 
     public static function form(Form $form): Form
     {
