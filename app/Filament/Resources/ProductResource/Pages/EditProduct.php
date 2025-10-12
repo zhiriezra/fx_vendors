@@ -16,4 +16,10 @@ class EditProduct extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function getRedirectUrl(): string
+    {
+        // Redirect to the view page of the updated product
+        return static::getResource()::getUrl('view', ['record' => $this->record]);
+    }
 }

@@ -82,6 +82,11 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->hasOne(Agent::class);
     }
 
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
      
 
     public function wallet()

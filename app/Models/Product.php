@@ -13,7 +13,7 @@ class Product extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $fillable = ['category_id', 'sub_category_id', 'manufacturer_product_id', 'quantity','unit_id','unit_price','agent_price', 'quantity', 'stock_date', 'vendor_id'];
+    protected $fillable = ['category_id', 'sub_category_id', 'manufacturer_product_id', 'manufacturer_id', 'quantity','unit_id','unit_price','agent_price', 'quantity', 'stock_date', 'vendor_id'];
 
     protected $casts = [
         'images' => 'array', // Cast images to an array
@@ -44,14 +44,19 @@ class Product extends Model
     //     return $this->belongsTo(SubCategory::class, 'sub_category_id');
     // }
 
-    public function manufacturer_product()
-    {
-        return $this->belongsTo(ManufacturerProduct::class);
-    }
-
     public function manufacturer()
     {
-        return $this->belongsTo(Manufacturer::class)->through('manufacturer_product');
+        return $this->belongsTo(Manufacturer::class, 'manufacturer_id');
+    }
+
+    public function manufacturer_product()
+    {
+        return $this->belongsTo(ManufacturerProduct::class, 'manufacturer_product_id');
+    }
+
+    public function getManufacturerIdAttribute()
+    {
+        return $this->manufacturer_product?->manufacturer_id;
     }
 
     public function orders() {

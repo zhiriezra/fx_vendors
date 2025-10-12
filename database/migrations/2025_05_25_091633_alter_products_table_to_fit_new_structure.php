@@ -14,10 +14,21 @@ return new class extends Migration
     public function up()
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('manufacturer');
-            $table->dropColumn('name');
-            $table->dropColumn('description');
-            $table->foreignId('manufacturer_product_id')->after('vendor_id')->constrained('manufacturer_products');
+            // Check if columns exist before dropping them
+            if (Schema::hasColumn('products', 'manufacturer')) {
+                $table->dropColumn('manufacturer');
+            }
+            if (Schema::hasColumn('products', 'name')) {
+                $table->dropColumn('name');
+            }
+            if (Schema::hasColumn('products', 'description')) {
+                $table->dropColumn('description');
+            }
+            
+            // Check if manufacturer_product_id already exists before adding it
+            if (!Schema::hasColumn('products', 'manufacturer_product_id')) {
+                $table->foreignId('manufacturer_product_id')->after('vendor_id')->constrained('manufacturer_products');
+            }
 
             // $table->dropColumn('category_id'); remove manually
             // $table->dropColumn('sub_category_id'); remove manually

@@ -38,9 +38,28 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('manufacturer_id')
+                    ->label('Manufacturer')
+                    ->options(\App\Models\Manufacturer::all()->pluck('name', 'id'))
+                    ->required()
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(fn (Forms\Set $set) => $set('manufacturer_product_id', null)),
+
                 Forms\Components\Select::make('manufacturer_product_id')
                     ->label('Manufacturer Product')
-                    ->options(ManufacturerProduct::all()->pluck('name', 'id'))
+                    ->options(function (Forms\Get $get, ?Product $record) {
+                        $manufacturerId = $get('manufacturer_id');
+                
+                        // If editing and manufacturer_id not yet set, fallback to current product's manufacturer
+                        if (! $manufacturerId && $record?->manufacturer_product) {
+                            $manufacturerId = $record->manufacturer_product->manufacturer_id;
+                        }
+                
+                        return $manufacturerId
+                            ? \App\Models\ManufacturerProduct::where('manufacturer_id', $manufacturerId)->pluck('name', 'id')
+                            : [];
+                    })
                     ->required()
                     ->searchable()
                     ->live()
@@ -53,8 +72,8 @@ class ProductResource extends Resource
                                 $set('category_id', $subCategory ? $subCategory->category_id : null);
                             }
                         }
-                    }),
-                    
+                    })
+                    ->default(fn (?Product $record) => $record?->manufacturer_product_id),
                 Forms\Components\TextInput::make('quantity')
                     ->label('Quantity')
                     ->required()
@@ -114,12 +133,12 @@ class ProductResource extends Resource
                     
                 Tables\Columns\TextColumn::make('unit_price')
                     ->label('Unit Price')
-                    ->money(fn () => auth()->user()->country_id == 1 ? 'NGN' : 'KES')
+                    ->money(fn () => auth()->user()->country?->currency ?? 'NGN')
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('agent_price')
                     ->label('Agent Price')
-                    ->money(fn () => auth()->user()->country_id == 1 ? 'NGN' : 'KES')
+                    ->money(fn () => auth()->user()->country?->currency ?? 'NGN')
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('stock_date')
@@ -131,6 +150,7 @@ class ProductResource extends Resource
                     ->label('Batch Number')
                     ->searchable(),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])
@@ -157,6 +177,9 @@ class ProductResource extends Resource
                             ->height(200)
                             ->width(200),
                             
+                        Infolists\Components\TextEntry::make('manufacturer_product.manufacturer.name')
+                            ->label('Manufacturer'),
+                            
                         Infolists\Components\TextEntry::make('manufacturer_product.name')
                             ->label('Product Name'),
                             
@@ -172,11 +195,11 @@ class ProductResource extends Resource
                     ->schema([
                         Infolists\Components\TextEntry::make('unit_price')
                             ->label('Unit Price')
-                            ->money(fn () => auth()->user()->country_id == 1 ? 'NGN' : 'KES'),
+                            ->money(fn () => auth()->user()->country?->currency ?? 'NGN'),
                             
                         Infolists\Components\TextEntry::make('agent_price')
                             ->label('Agent Price')
-                            ->money(fn () => auth()->user()->country_id == 1 ? 'NGN' : 'KES'),
+                            ->money(fn () => auth()->user()->country?->currency ?? 'NGN'),
                     ])
                     ->columns(2),
                     
@@ -190,11 +213,7 @@ class ProductResource extends Resource
                             ->label('Batch Number'),
                             
                         Infolists\Components\TextEntry::make('created_at')
-                            ->label('Created At')
-                            ->dateTime(),
-                            
-                        Infolists\Components\TextEntry::make('updated_at')
-                            ->label('Updated At')
+                            ->label('Date Created')
                             ->dateTime(),
                     ])
                     ->columns(2),
