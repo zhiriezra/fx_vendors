@@ -31,7 +31,7 @@ class ProductResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('vendor_id', auth()->id());
+            ->where('vendor_id', auth()->user()?->vendor?->id);
     }
 
     public static function form(Form $form): Form
@@ -106,7 +106,9 @@ class ProductResource extends Resource
                     ->default(now()),
                     
                 Forms\Components\Hidden::make('vendor_id')
-                    ->default(fn () => auth()->user()?->vendor_id),
+                    ->default(fn () => auth()->user()?->vendor?->id)
+                    ->required()
+                    ->rule('exists:vendors,id'),
                     
                 Forms\Components\Hidden::make('category_id'),
                     

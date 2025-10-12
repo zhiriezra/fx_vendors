@@ -74,7 +74,7 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     public function vendor()
     {
-        return $this->hasOne(Vendor::class);
+        return $this->hasOne(Vendor::class, 'user_id');
     }
 
     public function agent()
