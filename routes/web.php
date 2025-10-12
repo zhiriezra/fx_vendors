@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\ProductsExport;
 
@@ -59,6 +61,10 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/orders/supplied', [OrderController::class, 'supplied'])->name('orders.supplied');
         //export orders
         Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+        
+        // Wallet routes
+        Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+
     });
 
 
