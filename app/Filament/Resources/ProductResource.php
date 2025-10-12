@@ -106,7 +106,7 @@ class ProductResource extends Resource
                     ->default(now()),
                     
                 Forms\Components\Hidden::make('vendor_id')
-                    ->default(auth()->id()),
+                    ->default(fn () => auth()->user()?->vendor_id),
                     
                 Forms\Components\Hidden::make('category_id'),
                     
