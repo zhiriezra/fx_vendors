@@ -36,6 +36,11 @@ class Vendor extends Model
         return $this->belongsTo(Lga::class);
     }
 
+        public function ward()
+    {
+        return $this->belongsTo(Ward::class);
+    }
+
     public function orders()
     {
         return $this->hasManyThrough(Order::class, Product::class, 'vendor_id', 'product_id', 'id', 'id');
