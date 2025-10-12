@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use Filament\Facades\Filament;
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\Vendor;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -18,6 +19,15 @@ class DashboardStat extends BaseWidget
 
           // Get logged-in user
         $user = Filament::auth()->user();
+
+        $symbol = match ($user?->country_id) {
+            1 => '₦',     // Nigeria
+            2 => 'KSh',   // Kenya
+            default => '₦',
+        };
+
+         $totalCommission = 15000;
+
 
         // Get the vendor_id of the user
         $vendorId = $user->vendor_id;
@@ -42,12 +52,19 @@ class DashboardStat extends BaseWidget
                 ->icon('heroicon-s-shopping-cart')
                 ->color('info'),
 
-            Stat::make('Commission Earned', '₦' . number_format($totalCommission, 2))
-                ->description('Total Commission Earned')
-                ->descriptionIcon('heroicon-o-banknotes')
-                ->icon('heroicon-s-banknotes')
-                ->chart([5, 10, 10, 30, 60])
-                ->color('success'),            
+            // Stat::make('Commission Earned', '₦' . number_format($totalCommission, 2))
+            //     ->description('Total Commission Earned')
+            //     ->descriptionIcon('heroicon-o-banknotes')
+            //     ->icon('heroicon-s-banknotes')
+            //     ->chart([5, 10, 10, 30, 60])
+            //     ->color('success'),          
+            
+        Stat::make('Commission Earned', $symbol . number_format($totalCommission, 2))
+            ->description('Total Commission Earned')
+            ->descriptionIcon('heroicon-o-banknotes')
+            ->icon('heroicon-s-banknotes')
+            ->chart([5, 10, 10, 30, 60])
+            ->color('success'),
         ];
     }
 
