@@ -175,9 +175,9 @@ class Register extends BaseRegister
                                     Select::make('business_type')
                                         ->label('Business Type')
                                         ->options([
-                                            'sole_proprietorship' => 'Sole Proprietorship',
+                                            'sole proprietorship' => 'Sole Proprietorship',
                                             'partnership' => 'Partnership',
-                                            'limited_liability' => 'Limited Liability',
+                                            'limited liability' => 'Limited Liability',
                                         ])
                                         ->required(),
                                     Select::make('bank')
