@@ -6,6 +6,7 @@ use Filament\Facades\Filament;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\Vendor;
+use App\Models\Country;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -19,18 +20,17 @@ class DashboardStat extends BaseWidget
 
           // Get logged-in user
         $user = Filament::auth()->user();
+     
+        $symbol = Country::where('id', $user->country_id)->value('currency_symbol') ?? '₦';
 
-        $symbol = match ($user?->country_id) {
-            1 => '₦',     // Nigeria
-            2 => 'KSh',   // Kenya
-            default => '₦',
-        };
 
          $totalCommission = 15000;
 
 
         // Get the vendor_id of the user
-        $vendorId = $user->vendor_id;
+        //$vendorId = $user->vendor_id;
+ 
+        $vendorId = $user?->vendor?->id;
 
         // Get vendor-specific data
         $productCount = Product::where('vendor_id', $vendorId)->count();
@@ -50,22 +50,15 @@ class DashboardStat extends BaseWidget
                 ->descriptionIcon('heroicon-o-shopping-cart')
                 ->chart([5, 10, 15, 20, 25])
                 ->icon('heroicon-s-shopping-cart')
-                ->color('info'),
-
-            // Stat::make('Commission Earned', '₦' . number_format($totalCommission, 2))
-            //     ->description('Total Commission Earned')
-            //     ->descriptionIcon('heroicon-o-banknotes')
-            //     ->icon('heroicon-s-banknotes')
-            //     ->chart([5, 10, 10, 30, 60])
-            //     ->color('success'),          
+                ->color('info'),          
             
-        Stat::make('Commission Earned', $symbol . number_format($totalCommission, 2))
-            ->description('Total Commission Earned')
-            ->descriptionIcon('heroicon-o-banknotes')
-            ->icon('heroicon-s-banknotes')
-            ->chart([5, 10, 10, 30, 60])
-            ->color('success'),
-        ];
+            Stat::make('Commission Earned', $symbol . number_format($totalCommission, 2))
+                ->description('Total Commission Earned')
+                ->descriptionIcon('heroicon-o-banknotes')
+                ->icon('heroicon-s-banknotes')
+                ->chart([5, 10, 10, 30, 60])
+                ->color('success'),
+            ];
     }
 
    

@@ -54,6 +54,7 @@ class Profile extends BaseProfile
             'bank' => $vendor?->bank,
             'account_name' => $vendor?->account_name,
             'account_no' => $vendor?->account_no,
+            'kra_pin' => $vendor?->kra_pin,
         ]);
     }    
 
@@ -77,8 +78,9 @@ class Profile extends BaseProfile
                     Forms\Components\TextInput::make('current_location')->label('Business Address'),
                     Forms\Components\TextInput::make('business_email')->label('Business Email'),
                     Forms\Components\TextInput::make('business_type')->label('Business Type'),
-                    Forms\Components\TextInput::make('registration_no')->label('CAC Reg. Number'),
-                    Forms\Components\TextInput::make('tin')->label('TIN Number'),
+                    Forms\Components\TextInput::make('registration_no')->label('CAC Reg. Number')->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
+                    Forms\Components\TextInput::make('tin')->label('TIN Number')->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
+                     Forms\Components\TextInput::make('kra_pin')->label('KRA PIN')->visible(fn () => auth()->user()?->country?->name === 'Kenya'),
                 ])
                 ->columns(2),
 
@@ -134,7 +136,9 @@ class Profile extends BaseProfile
                     Forms\Components\TextInput::make('account_name')->label('Account Name'),
                     Forms\Components\TextInput::make('account_no')->label('Account Number'),
                 ])
-                ->columns(2),
+                ->columns(2)
+                ->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
+
 
             Forms\Components\Section::make('Change Password')
                 ->schema([
@@ -176,6 +180,7 @@ class Profile extends BaseProfile
                     'bank' => $data['bank'] ?? $vendor->bank,
                     'account_name' => $data['account_name'] ?? $vendor->account_name,
                     'account_no' => $data['account_no'] ?? $vendor->account_no,
+                    'kra_pin' => $data['kra_pin'] ?? $vendor->kra_pin,
                 ]);
                 $vendor->save();
             }
