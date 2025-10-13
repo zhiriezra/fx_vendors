@@ -17,6 +17,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Components\TextEntry;
 
 class ProductResource extends Resource
 {
@@ -173,11 +174,10 @@ class ProductResource extends Resource
             ->schema([
                 Infolists\Components\Section::make('Product Information')
                     ->schema([
-                        Infolists\Components\ImageEntry::make('manufacturer_product.image')
+                        TextEntry::make('manufacturer_product.image')
                             ->label('Product Image')
-                            ->disk('public')
-                            ->height(200)
-                            ->width(200),
+                            ->formatStateUsing(fn ($state) => $state ? '<img src="' . config('app.admin_url') . '/storage/' . e($state) . '" style="max-width:200px; height:auto;" />' : 'No image')
+                            ->html(),
                             
                         Infolists\Components\TextEntry::make('manufacturer_product.manufacturer.name')
                             ->label('Manufacturer'),
