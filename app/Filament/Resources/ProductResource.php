@@ -174,7 +174,7 @@ class ProductResource extends Resource
             ->schema([
                 Infolists\Components\Section::make('Product Information')
                     ->schema([
-                        ImageEntry::make('image')
+                        Infolists\Components\ImageEntry::make('image')
                             ->label('Product Image')
                             ->url(fn ($record) => 'https://staging.farmex.extensionafrica.com/storage/manufacturer_product/' . $record->image)
                             ->height(200) // optional
