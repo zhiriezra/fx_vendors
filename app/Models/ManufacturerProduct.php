@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ManufacturerProduct extends Model
 {
@@ -18,17 +20,17 @@ class ManufacturerProduct extends Model
         'status',
     ];
 
-    public function manufacturer()
+    public function manufacturer(): BelongsTo
     {
         return $this->belongsTo(Manufacturer::class);
     }
 
-    public function products()
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class);
     }
     
-    public function sub_category()
+    public function sub_category(): BelongsTo
     {
         return $this->belongsTo(SubCategory::class);
     }

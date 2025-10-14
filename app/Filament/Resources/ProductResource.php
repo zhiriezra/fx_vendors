@@ -179,6 +179,7 @@ class ProductResource extends Resource
                             ->url(fn ($record) => 'https://staging.farmex.extensionafrica.com/storage/' . $record->manufacturer_product->image)
                             ->height(200) // optional
                             ->width(200) // optional
+                            ->visibility('public') 
                             ->extraAttributes(['class' => 'rounded-lg shadow']),
                             
                         Infolists\Components\TextEntry::make('manufacturer_product.manufacturer.name')

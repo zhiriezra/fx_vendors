@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Manufacturer extends Model
 {
@@ -19,7 +21,7 @@ class Manufacturer extends Model
         'description',
     ];
 
-    public function manufacturer_products()
+    public function manufacturer_products(): HasMany
     {
         return $this->hasMany(ManufacturerProduct::class);
     }
