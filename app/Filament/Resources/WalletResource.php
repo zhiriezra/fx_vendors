@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,12 @@ class WalletResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where('user_id', auth()->id());
+    }
+
+        public static function canViewAny(): bool
+    {
+        $user = Auth::user();
+        return $user && (int) $user->country_id === 1; // Nigerians only
     }
 
     public static function form(Form $form): Form
