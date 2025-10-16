@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use Filament\Forms;
+use App\Models\Bank;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
@@ -55,6 +56,8 @@ class Profile extends BaseProfile
             'account_name' => $vendor?->account_name,
             'account_no' => $vendor?->account_no,
             'kra_pin' => $vendor?->kra_pin,
+            'state_id' => $vendor?->state_id,
+            'lga_id' => $vendor?->lga_id,    
         ]);
     }    
 
@@ -63,6 +66,8 @@ class Profile extends BaseProfile
          return $form
         ->schema([
             Forms\Components\Section::make('Personal Information')
+                ->description('Basic personal details')
+                ->icon('heroicon-o-user-circle')
                 ->schema([
                     Forms\Components\TextInput::make('firstname')->label('First Name')->disabled(),
                     Forms\Components\TextInput::make('middlename')->label('Middle Name')->disabled(),
@@ -73,74 +78,145 @@ class Profile extends BaseProfile
                 ->columns(2),
 
             Forms\Components\Section::make('Business Information')
+                    ->description('A summary of my business profile')
+                    ->icon('heroicon-o-building-storefront')
+                    //->collapsible()
+                    //->collapsed()
                 ->schema([
                     Forms\Components\TextInput::make('business_name')->label('Business Name'),
                     Forms\Components\TextInput::make('current_location')->label('Business Address'),
                     Forms\Components\TextInput::make('business_email')->label('Business Email'),
-                    Forms\Components\TextInput::make('business_type')->label('Business Type'),
-                    Forms\Components\TextInput::make('registration_no')->label('CAC Reg. Number')->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
-                    Forms\Components\TextInput::make('tin')->label('TIN Number')->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
-                     Forms\Components\TextInput::make('kra_pin')->label('KRA PIN')->visible(fn () => auth()->user()?->country?->name === 'Kenya'),
-                ])
+                    Forms\Components\Select::make('business_type')
+                        ->label('Business Type')
+                        ->options([
+                            'sole proprietorship' => 'Sole Proprietorship',
+                            'partnership' => 'Partnership',
+                            'limited liability' => 'Limited Liability',
+                        ])
+                        ->searchable()
+                        ->required()
+                        ->native(false), 
+                                   ])
                 ->columns(2),
 
             Forms\Components\Section::make('Address Information')
-                ->schema(function () {
-                    $user = auth()->user(); // ensure it's re-evaluated at runtime
-                    $vendor = $user?->vendor;
+                    ->description('Geographical location details')
+                    ->icon('heroicon-o-map-pin')
+                    ->schema(function () {
+                        $user = auth()->user();
+                        $vendor = $user?->vendor;
 
-                    if (!$user || !$vendor) {
-                        return [];
-                    }
+                        if (!$user || !$vendor) {
+                            return [];
+                        }
 
-                    if ((int) $user->country_id === 1) {
+                        // Check country
+                        $isKenya = (int) $user->country_id === 2;
+
+                        // For 🇳🇬 NIGERIA accounts
+                        if (!$isKenya) {
+                            return [
+                                Forms\Components\Select::make('state_id')
+                                    ->label('State')
+                                    ->options(
+                                        \App\Models\State::where('country_id', 1)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->default($vendor?->state_id)
+                                    ->searchable()
+                                    ->preload()
+                                    ->reactive()
+                                    ->required(),
+
+                                Forms\Components\Select::make('lga_id')
+                                    ->label('LGA')
+                                    ->options(function (callable $get) {
+                                        $stateId = $get('state_id');
+                                        if (!$stateId) return [];
+                                        return \App\Models\Lga::where('state_id', $stateId)
+                                            ->pluck('name', 'id');
+                                    })
+                                    ->default($vendor?->lga_id)
+                                    ->searchable()
+                                    ->preload()
+                                    ->required(),
+                            ];
+                        }
+
+                        // For 🇰🇪 KENYA accounts
                         return [
-                            Forms\Components\TextInput::make('state')
-                                ->label('State')
-                                //->disabled()
-                                ->formatStateUsing(fn () => $vendor?->state?->name ?? 'N/A'),
-
-                            Forms\Components\TextInput::make('lga')
-                                ->label('LGA')
-                                //->disabled()
-                                ->formatStateUsing(fn () => $vendor?->lga?->name ?? 'N/A'),
-                        ];
-                    }
-
-                    if ((int) $user->country_id === 2) {
-                        return [
-                            Forms\Components\TextInput::make('county')
+                            Forms\Components\Select::make('state_id')
                                 ->label('County')
-                                //->disabled()
-                                ->formatStateUsing(fn () => $vendor?->state?->name ?? 'N/A'),
+                                ->options(
+                                    \App\Models\State::whereBetween('id', [38, 84])
+                                        ->pluck('name', 'id')
+                                )
+                                ->default($vendor?->state_id)
+                                ->searchable()
+                                ->preload()
+                                ->reactive()
+                                ->required(),
 
-                            Forms\Components\TextInput::make('constituency')
-                                ->label('Constituency')
-                                //->disabled()
-                                ->formatStateUsing(fn () => $vendor?->lga?->name ?? 'N/A'),
+                            Forms\Components\Select::make('lga_id')
+                                ->label('Sub-county')
+                                ->options(function (callable $get) {
+                                    $stateId = $get('state_id');
+                                    if (!$stateId) return [];
+                                    return \App\Models\Lga::where('state_id', $stateId)
+                                        ->where('id', '>=', 741)
+                                        ->pluck('name', 'id');
+                                })
+                                ->default($vendor?->lga_id)
+                                ->searchable()
+                                ->preload()
+                                ->reactive()
+                                ->required(),
 
-                            Forms\Components\TextInput::make('ward')
+                            Forms\Components\Select::make('ward_id')
                                 ->label('Ward')
-                                //->disabled()
-                                ->formatStateUsing(fn () => $vendor?->ward?->name ?? 'N/A'),
+                                ->options(function (callable $get) {
+                                    $lgaId = $get('lga_id');
+                                    if (!$lgaId) return [];
+                                    return \App\Models\Ward::where('lga_id', $lgaId)
+                                        ->pluck('name', 'id');
+                                })
+                                ->default($vendor?->ward_id)
+                                ->searchable()
+                                ->preload()
+                                ->required(),
                         ];
-                    }
-
-                    return [];
-                })
-                ->columns(2),
+                    })
+                    ->columns(2),
 
             Forms\Components\Section::make('Bank Information')
+                    ->description('Banking and tax identification information')
+                    ->icon('heroicon-o-banknotes')
+                    //->collapsible()
+                    //->collapsed()
                 ->schema([
-                    Forms\Components\TextInput::make('bank')->label('Bank Name'),
+                    Forms\Components\Select::make('bank')
+                        ->label('Bank Name')
+                        ->options(fn () => Bank::query()->pluck('name', 'name'))
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                       // ->visible(fn () => auth()->user()?->country_id === 1)
+                        ->native(false),
                     Forms\Components\TextInput::make('account_name')->label('Account Name'),
                     Forms\Components\TextInput::make('account_no')->label('Account Number'),
+                    Forms\Components\TextInput::make('registration_no')->label('CAC Reg. Number')->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
+                    Forms\Components\TextInput::make('tin')->label('TIN Number')->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
+                    Forms\Components\TextInput::make('kra_pin')->label('KRA PIN')->visible(fn () => auth()->user()?->country?->name === 'Kenya'),
+
+                    
                 ])
                 ->columns(2)
                 ->visible(fn () => auth()->user()?->country?->name !== 'Kenya'),
 
 
             Forms\Components\Section::make('Change Password')
+                ->description('Secure your account by updating your password here.')
+                ->icon('heroicon-o-lock-closed')
                 ->schema([
                     Forms\Components\TextInput::make('password')
                         ->label('New Password')
@@ -181,6 +257,8 @@ class Profile extends BaseProfile
                     'account_name' => $data['account_name'] ?? $vendor->account_name,
                     'account_no' => $data['account_no'] ?? $vendor->account_no,
                     'kra_pin' => $data['kra_pin'] ?? $vendor->kra_pin,
+                    'state_id' => $data['state_id'] ?? $vendor->state_id,
+                    'lga_id' => $data['lga_id'] ?? $vendor->lga_id,
                 ]);
                 $vendor->save();
             }
