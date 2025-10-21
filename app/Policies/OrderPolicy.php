@@ -12,19 +12,19 @@ class OrderPolicy
 
     public function view(User $user, Order $order): bool
     {
-        // user can see only their own orders
-        return $user->id === $order->user_id;
+        // user can see only orders for their vendor
+        return $user->vendor && $user->vendor->id === $order->vendor_id;
     }
 
     public function update(User $user, Order $order): bool
     {
-        // user can update only their own orders (if you permit updates at all)
-        return $user->id === $order->user_id;
+        // user can update only orders for their vendor
+        return $user->vendor && $user->vendor->id === $order->vendor_id;
     }
 
     public function delete(User $user, Order $order): bool
     {
-        // same logic – delete only own orders
-        return $user->id === $order->user_id;
+        // user can delete only orders for their vendor
+        return $user->vendor && $user->vendor->id === $order->vendor_id;
     }
 }

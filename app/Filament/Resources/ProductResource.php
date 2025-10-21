@@ -29,6 +29,8 @@ class ProductResource extends Resource
 
     protected static ?string $navigationGroup = 'Products';
 
+    protected static ?int $navigationSort = 3;
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -76,7 +78,7 @@ class ProductResource extends Resource
                     })
                     ->default(fn (?Product $record) => $record?->manufacturer_product_id),
                 Forms\Components\TextInput::make('quantity')
-                    ->label('Quantity')
+                    ->label('QTY')
                     ->required()
                     ->numeric()
                     ->minValue(1),
@@ -127,7 +129,7 @@ class ProductResource extends Resource
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('quantity')
-                    ->label('Quantity')
+                    ->label('QTY')
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('unit.name')
@@ -136,12 +138,12 @@ class ProductResource extends Resource
                     
                 Tables\Columns\TextColumn::make('unit_price')
                     ->label('Unit Price')
-                    ->money(fn () => auth()->user()->country?->currency ?? 'NGN')
+                    ->money(fn () => auth()->user()->country?->currency ?? 'KES')
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('agent_price')
                     ->label('Agent Price')
-                    ->money(fn () => auth()->user()->country?->currency ?? 'NGN')
+                    ->money(fn () => auth()->user()->country?->currency ?? 'KES')
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('stock_date')

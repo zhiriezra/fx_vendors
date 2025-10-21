@@ -39,13 +39,11 @@ class OrderResource extends Resource
 
     protected static ?string $navigationGroup = 'Orders';
 
-    protected static ?int $navigationSort = 4;
-
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->where('vendor_id', auth()->user()->vendor->id)
-            ->with(['agent.user', 'farmer', 'vendor.user', 'orderItems.product.manufacturer_product']);
+            ->with(['agent.user', 'farmer.user', 'vendor.user', 'orderItems.product.manufacturer_product']);
     }
 
     public static function table(Table $table): Table
@@ -59,10 +57,10 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('agent.user.phone')
                     ->label('Agent Phone')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('farmer.fname')
+                Tables\Columns\TextColumn::make('farmer.user.firstname')
                     ->label('Farmer Name')
-                    ->formatStateUsing(fn ($record) => $record->farmer?->fname . ' ' . $record->farmer?->lname)
-                    ->searchable(['farmer.fname', 'farmer.lname'])
+                    ->formatStateUsing(fn ($record) => $record->farmer?->user?->firstname . ' ' . $record->farmer?->user?->lastname)
+                    ->searchable(['farmer.user.firstname', 'farmer.user.lastname'])
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('total_amount')
                     ->money('NGN')
@@ -73,8 +71,7 @@ class OrderResource extends Resource
                         'wallet' => 'success',
                         'cash' => 'warning',
                         default => 'gray',
-                    })
-                    ->visible(fn () => auth()->user()->country_id == 1),
+                    }),
                 Tables\Columns\TextColumn::make('delivery_type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -122,8 +119,7 @@ class OrderResource extends Resource
                     ->options([
                         'wallet' => 'Wallet',
                         'cash' => 'Cash',
-                    ])
-                    ->visible(fn () => auth()->user()->country_id == 1),
+                    ]),
                 Tables\Filters\SelectFilter::make('delivery_type')
                     ->options([
                         'pickup' => 'Pickup',
@@ -147,10 +143,172 @@ class OrderResource extends Resource
                     })
             ])
             ->actions([
+                Action::make('updateStatus')
+                    ->label('Update Status')
+                    ->icon('heroicon-o-pencil')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->label('New Status')
+                            ->options(function ($record) {
+                                $validTransitions = [
+                                    'pending' => ['accepted', 'declined'],
+                                    'accepted' => ['supplied'],
+                                    'supplied' => [],
+                                    'declined' => []
+                                ];
+                                
+                                $currentStatus = strtolower($record->status);
+                                $options = [];
+                                
+                                if (isset($validTransitions[$currentStatus])) {
+                                    foreach ($validTransitions[$currentStatus] as $status) {
+                                        $options[$status] = ucfirst($status);
+                                    }
+                                }
+                                
+                                return $options;
+                            })
+                            ->required()
+                            ->native(false),
+                    ])
+                    ->action(function (array $data, Order $record): void {
+                        $validTransitions = [
+                            'pending' => ['accepted', 'declined'],
+                            'accepted' => ['supplied'],
+                            'supplied' => [],
+                            'declined' => []
+                        ];
+
+                        $currentStatus = strtolower($record->status);
+                        $newStatus = strtolower($data['status']);
+
+                        if (!isset($validTransitions[$currentStatus])) {
+                            Notification::make()
+                                ->title('Invalid Status')
+                                ->body('Invalid current order status.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        if (!in_array($newStatus, $validTransitions[$currentStatus])) {
+                            Notification::make()
+                                ->title('Invalid Transition')
+                                ->body("Invalid status transition from {$currentStatus} to {$newStatus}.")
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        try {
+                            DB::beginTransaction();
+
+                            // Update order status
+                            $record->status = $newStatus;
+                            $record->save();
+
+                            // Handle status-specific logic
+                            if ($newStatus === 'accepted') {
+                                // Send push notification to agent
+                                if ($record->agent && $record->agent->user) {
+                                    $pushNotificationService = app(PushNotificationService::class);
+                                    $title = 'Order Accepted';
+                                    $body = 'Your order has been accepted by the vendor.';
+                                    $data = [
+                                        'type' => 'order',
+                                        'order_id' => $record->id,
+                                        'transaction_id' => $record->transaction_id
+                                    ];
+
+                                    $pushNotificationService->sendToUser($record->agent->user, $title, $body, $data);
+                                }
+                            }
+
+                            if ($newStatus === 'declined') {
+                                // Restore product quantities
+                                foreach ($record->orderItems as $orderItem) {
+                                    $product = $orderItem->product;
+                                    $product->quantity += $orderItem->quantity;
+                                    $product->save();
+                                }
+
+                                // Handle escrow refund if payment type is wallet
+                                if ($record->escrow && $record->payment_type === 'wallet') {
+                                    $agent = $record->agent->user;
+                                    $defaultProvider = app(GeneralWalletService::class)->getDefaultWalletProviderForUser($agent);
+
+                                    $meta = [
+                                        'type' => 'refund',
+                                        'transaction_id' => $record->transaction_id,
+                                        'description' => "Order declined - refund for " . $record->transaction_id
+                                    ];
+
+                                    $agent->walletDeposit($agent->id, $defaultProvider, $record->total_amount, $meta);
+                                }
+
+                                // Mark escrow as cancelled
+                                if ($record->escrow) {
+                                    $record->escrow->status = 'cancelled';
+                                    $record->escrow->save();
+                                }
+
+                                // Send push notification to agent
+                                $pushNotificationService = app(PushNotificationService::class);
+                                $title = 'Order Declined';
+                                $body = "Your order #{$record->id} has been declined by the vendor.";
+                                $data = [
+                                    'type' => 'order',
+                                    'order_id' => $record->id
+                                ];
+
+                                $pushNotificationService->sendToUser($record->agent->user, $title, $body, $data);
+                            }
+
+                            if ($newStatus === 'supplied') {
+                                // Send push notification to agent
+                                if ($record->agent && $record->agent->user) {
+                                    $pushNotificationService = app(PushNotificationService::class);
+                                    $title = 'Order Supplied';
+                                    $body = "Your order #{$record->id} has been supplied by the vendor.";
+                                    $data = [
+                                        'type' => 'order',
+                                        'order_id' => $record->id,
+                                        'transaction_id' => $record->transaction_id
+                                    ];
+
+                                    $pushNotificationService->sendToUser($record->agent->user, $title, $body, $data);
+                                }
+                            }
+
+                            DB::commit();
+
+                            Notification::make()
+                                ->title('Status Updated')
+                                ->body("Order has been {$newStatus} successfully")
+                                ->success()
+                                ->send();
+
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            Log::error('Order status update failed', [
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString()
+                            ]);
+
+                            Notification::make()
+                                ->title('Update Failed')
+                                ->body("Failed to update order status: " . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    })
+                    ->visible(fn ($record) => in_array(strtolower($record->status), ['pending', 'accepted'])),
                 Action::make('viewDetails')
                     ->label('View Details')
                     ->icon('heroicon-o-eye')
-                    ->url(fn ($record) => OrderResource::getUrl('view', ['record' => $record])),
+                    // ->url(fn (Order $record): string => static::getResource()::getUrl('view', ['record' => $record]))
+                    ->url(fn ($record) => OrderResource::getUrl('view', ['record' => $record]))
+                    ->openUrlInNewTab(),
             ])
             
             ->bulkActions([
@@ -163,13 +321,13 @@ class OrderResource extends Resource
                     }),
             ])
             ->headerActions([
-                // Action::make('exportAll')
-                //     ->label('Export')
-                //     ->icon('heroicon-o-arrow-down-tray')
-                //     ->action(function () {
-                //         $fileName = 'orders_' . date('Y-m-d_H-i-s') . '.xlsx';
-                //         return Excel::download(new OrdersExport, $fileName);
-                //     }),
+                Action::make('exportAll')
+                    ->label('Export All Orders')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function () {
+                        $fileName = 'orders_' . date('Y-m-d_H-i-s') . '.xlsx';
+                        return Excel::download(new OrdersExport, $fileName);
+                    }),
             ]);
     }
 
@@ -181,6 +339,10 @@ class OrderResource extends Resource
                     ->schema([
                         Grid::make(2)
                             ->schema([
+                                TextEntry::make('transaction_id')
+                                    ->label('Transaction ID')
+                                    ->copyable()
+                                    ->copyMessage('Transaction ID copied'),
                                 TextEntry::make('status')
                                     ->badge()
                                     ->color(fn (string $state): string => match ($state) {
@@ -193,7 +355,13 @@ class OrderResource extends Resource
                                     }),
                                 TextEntry::make('total_amount')
                                     ->label('Total Amount')
-                                    ->money(fn () => auth()->user()->country?->currency ?? 'KES'),
+                                    ->money('NGN'),
+                                TextEntry::make('commission')
+                                    ->label('Commission')
+                                    ->money('NGN'),
+                                TextEntry::make('service_charge')
+                                    ->label('Service Charge')
+                                    ->money('NGN'),
                                 TextEntry::make('payment_type')
                                     ->label('Payment Type')
                                     ->badge()
@@ -201,8 +369,7 @@ class OrderResource extends Resource
                                         'wallet' => 'success',
                                         'cash' => 'warning',
                                         default => 'gray',
-                                    })
-                                    ->visible(fn () => auth()->user()->country_id == 1),
+                                    }),
                                 TextEntry::make('delivery_type')
                                     ->label('Delivery Type')
                                     ->badge()
@@ -213,7 +380,7 @@ class OrderResource extends Resource
                                     }),
                                 TextEntry::make('created_at')
                                     ->label('Order Date')
-                                    ->date(),
+                                    ->dateTime(),
                             ]),
                     ]),
 
@@ -235,10 +402,10 @@ class OrderResource extends Resource
                     ->schema([
                         Grid::make(2)
                             ->schema([
-                                TextEntry::make('farmer.fname')
+                                TextEntry::make('farmer.user.firstname')
                                     ->label('Farmer Name')
-                                    ->formatStateUsing(fn ($record) => $record->farmer?->fname . ' ' . $record->farmer?->lname),
-                                TextEntry::make('farmer.mobile_no')
+                                    ->formatStateUsing(fn ($record) => $record->farmer?->user?->firstname . ' ' . $record->farmer?->user?->lastname),
+                                TextEntry::make('farmer.user.phone')
                                     ->label('Farmer Phone'),
                             ]),
                     ]),
@@ -252,18 +419,19 @@ class OrderResource extends Resource
                                         TextEntry::make('product.manufacturer_product.name')
                                             ->label('Product Name'),
                                         TextEntry::make('quantity')
-                                            ->label('QTY'),
-                                        TextEntry::make('product.batch_number')
-                                            ->label('Batch Number'),
+                                            ->label('Quantity'),
                                         TextEntry::make('unit_price')
                                             ->label('Unit Price')
-                                            ->money(fn () => auth()->user()->country?->currency ?? 'KES'),
+                                            ->money('NGN'),
                                         TextEntry::make('agent_price')
                                             ->label('Agent Price')
-                                            ->money(fn () => auth()->user()->country?->currency ?? 'KES'),
-                                        TextEntry::make('subtotal')
+                                            ->money('NGN'),
+                                        TextEntry::make('commission')
+                                            ->label('Commission')
+                                            ->money('NGN'),
+                                        TextEntry::make('total')
                                             ->label('Total')
-                                            ->money(fn () => auth()->user()->country?->currency ?? 'KES'),
+                                            ->formatStateUsing(fn ($record) => '₦' . number_format($record->quantity * $record->unit_price, 2)),
                                     ]),
                             ])
                             ->columns(1),

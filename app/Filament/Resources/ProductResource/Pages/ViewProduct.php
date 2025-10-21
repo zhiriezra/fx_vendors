@@ -13,8 +13,10 @@ class ViewProduct extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
-            Actions\DeleteAction::make(),
+            Actions\EditAction::make()
+                ->icon('heroicon-s-pencil-square'),
+            Actions\DeleteAction::make()
+                ->icon('heroicon-s-x-circle'),
         ];
     }
 }
