@@ -46,14 +46,14 @@ class DashboardStat extends BaseWidget
                 ->color('gray'),
 
             Stat::make('Orders', $orderCount)
-                ->description('Total customer orders')
+                ->description('Total orders recieved')
                 ->descriptionIcon('heroicon-o-shopping-cart')
                 ->chart([5, 10, 15, 20, 25])
                 ->icon('heroicon-s-shopping-cart')
                 ->color('info'),          
             
-            Stat::make('Commission Earned', $symbol . number_format($totalCommission, 2))
-                ->description('Total Commission Earned')
+            Stat::make('Total Income', $symbol . number_format($totalCommission, 2))
+                ->description('Total Income from Sales')
                 ->descriptionIcon('heroicon-o-banknotes')
                 ->icon('heroicon-s-banknotes')
                 ->chart([5, 10, 10, 30, 60])
