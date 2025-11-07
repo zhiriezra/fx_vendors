@@ -57,7 +57,8 @@ class Profile extends BaseProfile
             'account_no' => $vendor?->account_no,
             'kra_pin' => $vendor?->kra_pin,
             'state_id' => $vendor?->state_id,
-            'lga_id' => $vendor?->lga_id,    
+            'lga_id' => $vendor?->lga_id, 
+            'ward_id' => $vendor?->ward_id, 
         ]);
     }    
 
@@ -259,6 +260,7 @@ class Profile extends BaseProfile
                     'kra_pin' => $data['kra_pin'] ?? $vendor->kra_pin,
                     'state_id' => $data['state_id'] ?? $vendor->state_id,
                     'lga_id' => $data['lga_id'] ?? $vendor->lga_id,
+                    'ward_id' => $data['ward_id'] ?? $vendor->ward_id,
                 ]);
                 $vendor->save();
             }

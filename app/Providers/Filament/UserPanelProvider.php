@@ -55,9 +55,9 @@ class UserPanelProvider extends PanelProvider
             ->widgets([
                 //Widgets\AccountWidget::class,
                 //Widgets\FilamentInfoWidget::class,
-                DashboardStat::class,
-                SalesChart::class,
-                StockStatusTable::class,
+                \App\Filament\Widgets\DashboardStat::class,
+                \App\Filament\Widgets\SalesChart::class,
+                \App\Filament\Widgets\StockStatusTable::class,
             ])
             ->middleware([
                 EncryptCookies::class,
