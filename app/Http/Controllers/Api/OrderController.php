@@ -323,7 +323,7 @@ class OrderController extends Controller
             'total_amount' => (float) $order->total_amount,
             'payment_type' => $order->payment_type,
             'delivery_type' => $order->delivery_type,
-            'commission' => (float) $order->commission,
+            'commission' => (float) ($order->commission + ($order->exaf_commission ?? 0)),
             'agent' => $order->agent->user->firstname . ' ' . $order->agent->user->lastname,
             'agent_phone' => $order->agent->user->phone,
             'delivery_address' => $order->agent->current_location,
