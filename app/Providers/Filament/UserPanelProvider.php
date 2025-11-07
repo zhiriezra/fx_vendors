@@ -14,6 +14,8 @@ use Filament\Widgets;
 use App\Filament\Pages\Auth\Login as CustomLoginPage;
 use App\Filament\Pages\Auth\Register as CustomRegisterPage;
 use App\Filament\Widgets\DashboardStat;
+use App\Filament\Widgets\SalesChart;
+use App\Filament\Widgets\StockStatusTable;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -53,7 +55,9 @@ class UserPanelProvider extends PanelProvider
             ->widgets([
                 //Widgets\AccountWidget::class,
                 //Widgets\FilamentInfoWidget::class,
-                DashboardStat::class,
+                \App\Filament\Widgets\DashboardStat::class,
+                \App\Filament\Widgets\SalesChart::class,
+                \App\Filament\Widgets\StockStatusTable::class,
             ])
             ->middleware([
                 EncryptCookies::class,
