@@ -295,7 +295,7 @@ class OrderController extends Controller
             $product = $item->product;
             return [
                 'product_name' => $product->manufacturer_product->name,
-                'first_image' => $product->manufacturer_product->image ?? env('APP_URL').'/default.png',
+                'first_image' => ADMIN_URL('storage/'.$product->manufacturer_product->image),
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'total_price' => (float) $item->quantity * $item->unit_price,
@@ -349,7 +349,7 @@ class OrderController extends Controller
                 return [
                     'id' => $order->product->id,
                     'product_name' => $order->product->manufacturer_product->name,
-                    'first_image' => $order->product->manufacturer_product->image ?? env('APP_URL').'/default.png',
+                    'first_image' => ADMIN_URL('storage/'.$order->product->manufacturer_product->image),
                     'quantity' => $order->quantity,
                     'unit_price' => (float) $order->unit_price,
                     'agent_price' => (float) $order->agent_price,
