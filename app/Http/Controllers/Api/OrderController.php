@@ -239,15 +239,27 @@ class OrderController extends Controller
         }
 
         // Calculate totals
-        $walletTotal = $salesRecords->where("payment_type", "wallet")->sum('total_amount');
-        $cashTotal = $salesRecords->where("payment_type", "cash")->sum('total_amount');
+
+        // $walletTotal = $salesRecords->where("payment_type", "wallet")->sum
+        // ('total_amount');
+        // $cashTotal = $salesRecords->where("payment_type", "cash")->sum('total_amount');
+        $walletTotal = $salesRecords
+            ->where("payment_type", "wallet")
+            ->sum(function ($record) {
+                return (float) $record->total_amount + (float) $record->commission + (float) ($record->exaf_commission ?? 0);
+            });
+        $cashTotal = $salesRecords
+            ->where("payment_type", "cash")
+            ->sum(function ($record) {
+                return (float) $record->total_amount + (float) $record->commission + (float) ($record->exaf_commission ?? 0);
+            });
 
         // Format order records
         $formattedSales = $salesRecords->map(function ($record) {
             return [
                 'id' => $record->id,
                 'transaction_id' => $record->transaction_id,
-                'amount' => (float) $record->total_amount,
+                'amount' => (float) ($record->total_amount + $record->commission + ($record->exaf_commission ?? 0)),
                 'payment_type' => $record->payment_type,
                 'created_at_' => $record->created_at->diffForHumans()
             ];
@@ -295,8 +307,8 @@ class OrderController extends Controller
         $formattedOrder = [
             'id' => $order->id,
             'transaction_id' => $order->transaction_id,
-            'transaction_total' => (float) $order->total_amount,
-            'commission' => (float) $order->commission,
+            'transaction_total' => (float) ($order->total_amount + $order->commission + ($order->exaf_commission ?? 0)),
+            'commission' => (float) ($order->commission + ($order->exaf_commission ?? 0)),
             'service_charge' => (float) $order->service_charge,
             'payment_type' => $order->payment_type,
             'created_at_human' => $order->created_at->diffForHumans(),
@@ -320,7 +332,7 @@ class OrderController extends Controller
         return [
             'id' => $order->id,
             'transaction_id' => $order->transaction_id,
-            'total_amount' => (float) $order->total_amount,
+            'total_amount' => (float) ($order->total_amount + $order->commission + ($order->exaf_commission ?? 0)),
             'payment_type' => $order->payment_type,
             'delivery_type' => $order->delivery_type,
             'commission' => (float) ($order->commission + ($order->exaf_commission ?? 0)),

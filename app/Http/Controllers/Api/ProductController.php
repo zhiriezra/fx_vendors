@@ -73,7 +73,7 @@ class ProductController extends Controller
             'quantity' => 'required|integer',
             'unit_id' => 'required',
             'unit_price' => 'required|numeric',
-            'agent_price' => 'required|numeric|lt:unit_price',
+            'agent_price' => 'required|numeric|gt:unit_price',
             'stock_date' => 'required|date',
         ]);
 
@@ -147,7 +147,7 @@ class ProductController extends Controller
             'quantity' => 'required|integer',
             'unit_id' => 'required',
             'unit_price' => 'required|numeric',
-            'agent_price' => 'required|numeric',
+            'agent_price' => 'required|numeric|gt:unit_price',
             'stock_date' => 'required|date',
         ]);
 
