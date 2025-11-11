@@ -101,7 +101,15 @@ class ProductResource extends Resource
                     ->required()
                     ->numeric()
                     ->minValue(0)
-                    ->step(0.01),
+                    ->step(0.01)
+                    ->rule(function (Forms\Get $get) {
+                        $unitPrice = $get('unit_price');
+                        return function ($attribute, $value, $fail) use ($unitPrice) {
+                            if ($value <= $unitPrice) {
+                                $fail('Agent price must be greater than the unit price.');
+                            }
+                        };
+                    }),
                     
                 Forms\Components\DatePicker::make('stock_date')
                     ->label('Stock Date')

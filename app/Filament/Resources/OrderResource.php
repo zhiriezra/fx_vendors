@@ -65,7 +65,7 @@ class OrderResource extends Resource
                     ->searchable(['farmer.fname', 'farmer.lname'])
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('total_amount')
-                    ->money('NGN')
+                    ->money(fn () => auth()->user()->country?->currency ?? 'KES')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('payment_type')
                     ->badge()
@@ -105,7 +105,7 @@ class OrderResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('service_charge')
-                    ->money('NGN')
+                    ->money(fn () => auth()->user()->country?->currency ?? 'KES')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
