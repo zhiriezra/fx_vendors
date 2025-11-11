@@ -210,11 +210,11 @@ class ProductResource extends Resource
                     ->schema([
                         Infolists\Components\TextEntry::make('unit_price')
                             ->label('Unit Price')
-                            ->money(fn () => auth()->user()->country?->currency ?? 'NGN'),
+                            ->money(fn () => auth()->user()->country?->currency ?? 'KES'),
                             
                         Infolists\Components\TextEntry::make('agent_price')
                             ->label('Agent Price')
-                            ->money(fn () => auth()->user()->country?->currency ?? 'NGN'),
+                            ->money(fn () => auth()->user()->country?->currency ?? 'KES'),
                     ])
                     ->columns(2),
                     
@@ -229,7 +229,7 @@ class ProductResource extends Resource
                             
                         Infolists\Components\TextEntry::make('created_at')
                             ->label('Date Created')
-                            ->dateTime(),
+                            ->date(),
                     ])
                     ->columns(2),
             ]);
