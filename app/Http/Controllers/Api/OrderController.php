@@ -295,7 +295,11 @@ class OrderController extends Controller
             $product = $item->product;
             return [
                 'product_name' => $product->manufacturer_product->name,
-                'first_image' => ADMIN_URL('storage/'.$product->manufacturer_product->image),
+                'first_image' => (function ($imagePath) {
+                        $base = rtrim(env('ADMIN_URL', config('app.url')), '/');
+                        $relative = ltrim('storage/' . ltrim($imagePath, '/'), '/');
+                        return $base . '/' . $relative;
+                    })($product->manufacturer_product->image),
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'total_price' => (float) $item->quantity * $item->unit_price,
