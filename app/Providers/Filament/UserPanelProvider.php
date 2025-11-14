@@ -13,6 +13,7 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use App\Filament\Pages\Auth\Login as CustomLoginPage;
 use App\Filament\Pages\Auth\Register as CustomRegisterPage;
+use App\Filament\Pages\Dashboard as CustomDashboard;
 use App\Filament\Widgets\DashboardStat;
 use App\Filament\Widgets\SalesChart;
 use App\Filament\Widgets\StockStatusTable;
@@ -49,7 +50,7 @@ class UserPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                CustomDashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

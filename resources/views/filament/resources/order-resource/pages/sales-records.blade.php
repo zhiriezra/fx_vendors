@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+        <!-- <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
@@ -18,9 +18,9 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+        <!-- <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
@@ -38,21 +38,21 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
+            <div class="p-4">
+                <div class="flex items-center py-2">
+                    <!-- <div class="flex-shrink-0 ">
                         <x-heroicon-o-chart-bar class="h-6 w-6 text-blue-400" />
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
+                    </div> -->
+                    <div class=" w-0 flex-1">
+                        <dl class="pl-2">
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                 Total Sales
                             </dt>
-                            <dd class="text-lg font-medium text-gray-900 dark:text-white">
-                                ₦{{ number_format($this->getSalesSummary()['grand_total'], 2) }}
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white pl-2 ">
+                            KES {{ number_format($this->getSalesSummary()['grand_total'], 2) }}
                             </dd>
                         </dl>
                     </div>
@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+        <!-- <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
@@ -78,7 +78,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 
     {{ $this->table }}

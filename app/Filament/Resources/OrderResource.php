@@ -203,6 +203,7 @@ class OrderResource extends Resource
                                         default => 'gray',
                                     })
                                     ->visible(fn () => auth()->user()->country_id == 1),
+                                
                                 TextEntry::make('delivery_type')
                                     ->label('Delivery Type')
                                     ->badge()
@@ -214,6 +215,10 @@ class OrderResource extends Resource
                                 TextEntry::make('created_at')
                                     ->label('Order Date')
                                     ->date(),
+                                TextEntry::make('transaction_id')
+                                    ->label('Transaction ID')
+                                    ->copyable()
+                                    ->copyMessage('Transaction ID copied'),
                             ]),
                     ]),
 
@@ -282,8 +287,8 @@ class OrderResource extends Resource
     {
         return [
             'index' => Pages\ListOrders::route('/'),
-            'view' => Pages\ViewOrder::route('/{record}'),
             'sales' => Pages\SalesRecords::route('/sales'),
+            'view' => Pages\ViewOrder::route('/{record}'),
         ];
     }
 

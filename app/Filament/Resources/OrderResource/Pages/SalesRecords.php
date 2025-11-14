@@ -4,6 +4,7 @@ namespace App\Filament\Resources\OrderResource\Pages;
 
 use App\Filament\Resources\OrderResource;
 use App\Models\Order;
+use Filament\Actions;
 use Filament\Resources\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -24,6 +25,7 @@ class SalesRecords extends Page implements HasTable
     use InteractsWithTable;
 
     protected static string $resource = OrderResource::class;
+    protected static string $view = 'filament.resources.order-resource.pages.sales-records';
 
 
     protected static ?string $navigationLabel = 'Sales Records';
@@ -37,7 +39,7 @@ class SalesRecords extends Page implements HasTable
                 Order::query()
                     ->where('vendor_id', auth()->user()->vendor->id)
                     ->where('status', 'completed')
-                    ->with(['agent.user', 'farmer.user', 'orderItems.product.manufacturer_product'])
+                    ->with(['agent.user', 'farmer', 'orderItems.product.manufacturer_product'])
             )
             ->columns([
                 Tables\Columns\TextColumn::make('transaction_id')
@@ -54,12 +56,7 @@ class SalesRecords extends Page implements HasTable
                     ->searchable(),
                 Tables\Columns\TextColumn::make('total_amount')
                     ->label('Amount')
-                    ->money('NGN')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('commission')
-                    ->label('Commission')
-                    ->money('NGN')
-                    ->sortable(),
+                    ->money(fn () => auth()->user()->country?->currency ?? 'KES'),
                 Tables\Columns\TextColumn::make('payment_type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -69,7 +66,7 @@ class SalesRecords extends Page implements HasTable
                     }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Sale Date')
-                    ->dateTime()
+                    ->date()
                     ->sortable(),
             ])
             ->filters([
@@ -127,20 +124,13 @@ class SalesRecords extends Page implements HasTable
     public function getHeaderActions(): array
     {
         return [
-            Tables\Actions\Action::make('exportAll')
+            Actions\Action::make('exportAll')
                 ->label('Export All Sales')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action(function () {
                     $fileName = 'sales_records_' . date('Y-m-d_H-i-s') . '.xlsx';
                     return Excel::download(new OrdersExport, $fileName);
                 }),
-        ];
-    }
-
-    protected function getHeaderWidgets(): array
-    {
-        return [
-            \App\Filament\Widgets\SalesSummaryWidget::class,
         ];
     }
 }
