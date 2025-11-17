@@ -52,7 +52,8 @@
                                 Total Sales
                             </dt>
                             <dd class="text-lg font-medium text-gray-900 dark:text-white pl-2 ">
-                            KES {{ number_format($this->getSalesSummary()['grand_total'], 2) }}
+                            <!-- KES {{ number_format($this->getSalesSummary()['grand_total'], 2) }} -->
+                            {{ (fn () => auth()->user()->country?->currency ?? 'KES')() }} {{ number_format($this->getSalesSummary()['grand_total'], 2) }}
                             </dd>
                         </dl>
                     </div>
