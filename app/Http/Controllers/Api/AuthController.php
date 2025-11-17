@@ -191,9 +191,15 @@ class AuthController extends Controller
             'tin' => 'required|string',
             'business_type' => 'required',
             'bank' => 'required',
-            'account_no' => 'required|string',
+            'account_no' => 'required|string|unique:vendors,account_no',
             'account_name' => 'required|string',
         ]);
+
+        $messages = [
+            'account_no.unique' => 'Account number already exists',
+        ];
+
+        $validator->setCustomMessages($messages);
 
         if ($validator->fails()) {
             return $this->error($validator->errors(), 'Validation failed', 422);
