@@ -239,15 +239,27 @@ class OrderController extends Controller
         }
 
         // Calculate totals
-        $walletTotal = $salesRecords->where("payment_type", "wallet")->sum('total_amount');
-        $cashTotal = $salesRecords->where("payment_type", "cash")->sum('total_amount');
+
+        // $walletTotal = $salesRecords->where("payment_type", "wallet")->sum
+        // ('total_amount');
+        // $cashTotal = $salesRecords->where("payment_type", "cash")->sum('total_amount');
+        $walletTotal = $salesRecords
+            ->where("payment_type", "wallet")
+            ->sum(function ($record) {
+                return (float) $record->total_amount + (float) $record->commission + (float) ($record->exaf_commission ?? 0);
+            });
+        $cashTotal = $salesRecords
+            ->where("payment_type", "cash")
+            ->sum(function ($record) {
+                return (float) $record->total_amount + (float) $record->commission + (float) ($record->exaf_commission ?? 0);
+            });
 
         // Format order records
         $formattedSales = $salesRecords->map(function ($record) {
             return [
                 'id' => $record->id,
                 'transaction_id' => $record->transaction_id,
-                'amount' => (float) $record->total_amount,
+                'amount' => (float) ($record->total_amount + $record->commission + ($record->exaf_commission ?? 0)),
                 'payment_type' => $record->payment_type,
                 'created_at_' => $record->created_at->diffForHumans()
             ];
@@ -283,7 +295,11 @@ class OrderController extends Controller
             $product = $item->product;
             return [
                 'product_name' => $product->manufacturer_product->name,
-                'first_image' => $product->manufacturer_product->image ?? env('APP_URL').'/default.png',
+                'first_image' => (function ($imagePath) {
+                        $base = rtrim(env('ADMIN_URL', config('app.url')), '/');
+                        $relative = ltrim('storage/' . ltrim($imagePath, '/'), '/');
+                        return $base . '/' . $relative;
+                    })($product->manufacturer_product->image),
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'total_price' => (float) $item->quantity * $item->unit_price,
@@ -295,8 +311,8 @@ class OrderController extends Controller
         $formattedOrder = [
             'id' => $order->id,
             'transaction_id' => $order->transaction_id,
-            'transaction_total' => (float) $order->total_amount,
-            'commission' => (float) $order->commission,
+            'transaction_total' => (float) ($order->total_amount + $order->commission + ($order->exaf_commission ?? 0)),
+            'commission' => (float) ($order->commission + ($order->exaf_commission ?? 0)),
             'service_charge' => (float) $order->service_charge,
             'payment_type' => $order->payment_type,
             'created_at_human' => $order->created_at->diffForHumans(),
@@ -320,10 +336,10 @@ class OrderController extends Controller
         return [
             'id' => $order->id,
             'transaction_id' => $order->transaction_id,
-            'total_amount' => (float) $order->total_amount,
+            'total_amount' => (float) ($order->total_amount + $order->commission + ($order->exaf_commission ?? 0)),
             'payment_type' => $order->payment_type,
             'delivery_type' => $order->delivery_type,
-            'commission' => (float) $order->commission,
+            'commission' => (float) ($order->commission + ($order->exaf_commission ?? 0)),
             'agent' => $order->agent->user->firstname . ' ' . $order->agent->user->lastname,
             'agent_phone' => $order->agent->user->phone,
             'delivery_address' => $order->agent->current_location,
@@ -337,7 +353,11 @@ class OrderController extends Controller
                 return [
                     'id' => $order->product->id,
                     'product_name' => $order->product->manufacturer_product->name,
-                    'first_image' => $order->product->manufacturer_product->image ?? env('APP_URL').'/default.png',
+                    'first_image' => (function ($imagePath) {
+                        $base = rtrim(env('ADMIN_URL', config('app.url')), '/');
+                        $relative = ltrim('storage/' . ltrim($imagePath, '/'), '/');
+                        return $base . '/' . $relative;
+                    })($order->product->manufacturer_product->image),
                     'quantity' => $order->quantity,
                     'unit_price' => (float) $order->unit_price,
                     'agent_price' => (float) $order->agent_price,

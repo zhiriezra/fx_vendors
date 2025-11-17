@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Pages;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Widgets;
+use App\Filament\Pages\Auth\Login as CustomLoginPage;
+use App\Filament\Pages\Auth\Register as CustomRegisterPage;
+use App\Filament\Pages\Dashboard as CustomDashboard;
+use App\Filament\Widgets\DashboardStat;
+use App\Filament\Widgets\SalesChart;
+use App\Filament\Widgets\StockStatusTable;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Jeffgreco13\FilamentBreezy\BreezyCore;
+
+class UserPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->sidebarFullyCollapsibleOnDesktop()
+            ->sidebarWidth('15rem')
+            ->default()
+            ->id('user')
+            ->path('user')
+            ->registration(CustomRegisterPage::class)
+            ->login(CustomLoginPage::class)
+            ->plugins([
+                BreezyCore::make()
+                    ->myProfile(), // Enables My Profile page
+            ])
+            ->colors([
+                'primary' => '#006600',
+            ])
+            ->favicon(asset('images/favicon.png'))
+            ->brandLogo(asset('images/farmex-logo-main-with-tagline.png'))
+            ->brandLogoHeight('4rem')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->pages([
+                CustomDashboard::class,
+            ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->widgets([
+                //Widgets\AccountWidget::class,
+                //Widgets\FilamentInfoWidget::class,
+                \App\Filament\Widgets\DashboardStat::class,
+                \App\Filament\Widgets\SalesChart::class,
+                \App\Filament\Widgets\StockStatusTable::class,
+            ])
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+            ]);
+    }
+}

@@ -5,7 +5,7 @@
 @section('content')
 <div class="auth-sidecontent">
     <div class="auth-sidefooter">
-      <img class="img-fluid" src="{{ asset('assets/farmex-logo-white.png')}}" alt="">
+      <img class="img-fluid" src="{{ asset('images/farmex-logo-main-with-tagline.png')}}" alt="">
       <hr class="mb-3 mt-4" />
       <div class="row">
         <div class="col my-1">

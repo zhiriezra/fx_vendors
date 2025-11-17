@@ -1,7 +1,7 @@
       <div class="m-header">
         <a href="/" class="b-brand text-primary">
           <!-- ========   Change your logo from here   ============ -->
-          <img src="{{asset('assets/farmex-logo-main-with-tagline.png')}}" alt="" class="pt-4 img-fluid" />
+          <img src="{{asset('images/farmex-logo-main-with-tagline.png')}}" alt="" class="pt-4 img-fluid" />
         </a>
       </div>
       <div class="mt-4 navbar-content">
