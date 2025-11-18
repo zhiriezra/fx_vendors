@@ -197,37 +197,7 @@ class GeneralWalletService
                 $this->createAndSaveWallet($user, $defaultProvider, $walletData);
             }
             elseif($responseCode == "42"){
-                // Wallet already exists on NPSB but not in local database
-                // Check if the response contains wallet details we can use
-                Log::info('Wallet exists on NPSB, attempting to sync to local database', [
-                    'user_id' => $user->id,
-                    'provider' => $defaultProvider,
-                    'wallet_data' => $walletData
-                ]);
-
-                // If the error response contains account details, save them
-                if(isset($walletData['data']['accountNumber'])){
-                    // Response contains wallet details, save to database
-                    $this->createAndSaveWallet($user, $defaultProvider, $walletData);
-                    
-                    Log::info('Successfully synced existing NPSB wallet to local database', [
-                        'user_id' => $user->id,
-                        'account_number' => $walletData['data']['accountNumber']
-                    ]);
-                } else {
-                    // Response doesn't contain details, need to fetch via account number
-                    // But we don't have the account number if it's not in the response
-                    Log::warning('Wallet exists on NPSB but account details not in response', [
-                        'user_id' => $user->id,
-                        'response' => $walletData
-                    ]);
-                    
-                    return $this->error(
-                        null,
-                        'Your wallet already exists on NPSB. Please contact support to sync your wallet.',
-                        400
-                    );
-                }
+                $this->updateWallet($user, $defaultProvider, $walletData);
             }
             else{
                 // Other error codes
@@ -312,6 +282,37 @@ class GeneralWalletService
             return null;
         }
 
+    }
+
+    private function updateWallet($user, $defaultProvider, $walletData)
+    {
+        $wallet = Wallet::where('user_id', $user->id)->where('slug', $defaultProvider)->first();
+
+        if(!$wallet){
+            return Wallet::create([
+                'user_id' => $user->id,
+                'name' => $defaultProvider,
+                'slug' => $defaultProvider,
+                'balance' => 0,
+                'meta' => json_encode($walletData['data'] ?? []),   
+                'account_name' => $walletData['data']['fullName'] ?? null,
+                'account_number' => $walletData['data']['accountNumber'] ?? null,
+                'reference' => $walletData['data']['orderRef'] ?? null,
+                'customerId' => $walletData['data']['customerID'] ?? null,
+                'response_code' => $walletData['data']['responseCode'] ?? null,
+                'status' => true
+            ]);
+        }
+
+        $wallet->meta = json_encode($walletData['data'] ?? []);
+        $wallet->account_name = $walletData['data']['fullName'] ?? null;
+        $wallet->account_number = $walletData['data']['accountNumber'] ?? null;
+        $wallet->reference = $walletData['data']['orderRef'] ?? null;
+        $wallet->customerId = $walletData['data']['customerID'] ?? null;
+        $wallet->response_code = $walletData['data']['responseCode'] ?? null;
+        $wallet->save();
+        
+        return $wallet;
     }
 
     public function walletFundWithdrawal(User $user, $amount, $wallet, $bank){
