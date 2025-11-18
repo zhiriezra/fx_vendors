@@ -190,18 +190,49 @@ class GeneralWalletService
 
             // Create the wallet
             $walletData = $walletService->createWallet($user->id);
+            $responseCode = $walletData['data']['responseCode'] ?? null;
 
-            if($walletData['data']['responseCode'] == "42"){
+            if($responseCode == "00"){
+                // Success - wallet created on NPSB
                 $this->createAndSaveWallet($user, $defaultProvider, $walletData);
-
-                return $this->success(null, 'Wallet created successfully', 201);
             }
+            elseif($responseCode == "42"){
+                // Wallet already exists on NPSB but not in local database
+                // Check if the response contains wallet details we can use
+                Log::info('Wallet exists on NPSB, attempting to sync to local database', [
+                    'user_id' => $user->id,
+                    'provider' => $defaultProvider,
+                    'wallet_data' => $walletData
+                ]);
 
-            if($walletData['data']['responseCode'] == "00"){
-                $this->createAndSaveWallet($user, $defaultProvider, $walletData);
+                // If the error response contains account details, save them
+                if(isset($walletData['data']['accountNumber'])){
+                    // Response contains wallet details, save to database
+                    $this->createAndSaveWallet($user, $defaultProvider, $walletData);
+                    
+                    Log::info('Successfully synced existing NPSB wallet to local database', [
+                        'user_id' => $user->id,
+                        'account_number' => $walletData['data']['accountNumber']
+                    ]);
+                } else {
+                    // Response doesn't contain details, need to fetch via account number
+                    // But we don't have the account number if it's not in the response
+                    Log::warning('Wallet exists on NPSB but account details not in response', [
+                        'user_id' => $user->id,
+                        'response' => $walletData
+                    ]);
+                    
+                    return $this->error(
+                        null,
+                        'Your wallet already exists on NPSB. Please contact support to sync your wallet.',
+                        400
+                    );
+                }
             }
             else{
-                return $this->error(null, $walletData['message'], 400);
+                // Other error codes
+                $errorMessage = $walletData['message'] ?? 'Failed to create wallet';
+                return $this->error(null, $errorMessage, 400);
             }
 
             // Get wallet balance
