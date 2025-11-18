@@ -195,7 +195,7 @@ class GeneralWalletService
                 $this->createAndSaveWallet($user, $defaultProvider, $walletData);
             }
             else{
-                return $this->error(null, $walletData['data'], 400);
+                return $this->error(null, $walletData['message'], 400);
             }
 
             // Get wallet balance
