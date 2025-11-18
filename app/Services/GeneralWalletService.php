@@ -191,13 +191,11 @@ class GeneralWalletService
             // Create the wallet
             $walletData = $walletService->createWallet($user->id);
 
-            return $this->error(null, $walletData['data'], 400);
-
             if($walletData['data']['responseCode'] == "00"){
                 $this->createAndSaveWallet($user, $defaultProvider, $walletData);
             }
             else{
-                return $this->error(null, $walletData['data']['responseMessage'], 400);
+                return $this->error(null, $walletData['data'], 400);
             }
 
             // Get wallet balance
