@@ -158,7 +158,6 @@ class GeneralWalletService
      */
     public function createUserWallet(User $user): \Illuminate\Http\JsonResponse
     {
-        try {
             Log::info('Starting wallet creation process', ['user_id' => $user->id]);
 
             // Determine the default wallet provider for the user's country
@@ -193,60 +192,95 @@ class GeneralWalletService
             $responseCode = $walletData['data']['responseCode'] ?? null;
 
             if($responseCode == "00"){
-                // Success - wallet created on NPSB
-                $this->createAndSaveWallet($user, $defaultProvider, $walletData);
+                
+                $wallet = Wallet::create([
+                    'user_id' => $user->id,
+                    'name' => $defaultProvider,
+                    'slug' => $defaultProvider,
+                    'balance' => 0,
+                    'meta' => json_encode($walletData['data'] ?? []),   
+                    'account_name' => $walletData['data']['fullName'],
+                    'account_number' => $walletData['data']['accountNumber'],
+                    'reference' => $walletData['data']['orderRef'] ?? null,
+                    'customerId' => $walletData['data']['customerID'] ?? null,
+                    'response_code' => $walletData['data']['responseCode'] ?? null,
+                    'status' => true
+                ]);
+
+                Log::info('Wallet created successfully', [
+                    'user_id' => $user->id,
+                    'default_provider' => $defaultProvider,
+                    'wallet_data' => $walletData,
+                    'wallet' => $wallet,
+                ]);
+
+                return $this->success($wallet, 'Wallet created successfully', 201);
+
+            }elseif($responseCode == "42"){
+               
+                $wallet = Wallet::where('user_id', $user->id)->where('slug', $defaultProvider)->first();
+
+                Log::info('Wallet found', [
+                    'user_id' => $user->id,
+                    'default_provider' => $defaultProvider,
+                    'wallet' => $wallet,
+                ]);
+
+                if(!$wallet){
+
+                    Log::info('Wallet not found', [
+                        'user_id' => $user->id,
+                        'default_provider' => $defaultProvider,
+                        'wallet_data' => $walletData,
+                    ]);
+
+                    return Wallet::create([
+                        'user_id' => $user->id,
+                        'name' => $defaultProvider,
+                        'slug' => $defaultProvider,
+                        'balance' => 0,
+                        'meta' => json_encode($walletData['data'] ?? []),   
+                        'account_name' => $walletData['data']['fullName'] ?? null,
+                        'account_number' => $walletData['data']['accountNumber'] ?? null,
+                        'reference' => $walletData['data']['orderRef'] ?? null,
+                        'customerId' => $walletData['data']['customerID'] ?? null,
+                        'response_code' => $walletData['data']['responseCode'] ?? null,
+                        'status' => true
+                    ]);
+
+                    Log::info('Wallet created', [
+                        'user_id' => $user->id,
+                        'default_provider' => $defaultProvider,
+                        'wallet' => $wallet,
+                    ]);
+
+                    return $this->success($wallet, 'Wallet created successfully', 201);
+                }
+        
+                $wallet->meta = json_encode($walletData['data'] ?? []);
+                $wallet->account_name = $walletData['data']['fullName'] ?? null;
+                $wallet->account_number = $walletData['data']['accountNumber'] ?? null;
+                $wallet->reference = $walletData['data']['orderRef'] ?? null;
+                $wallet->customerId = $walletData['data']['customerID'] ?? null;
+                $wallet->response_code = $walletData['data']['responseCode'] ?? null;
+                $wallet->save();
+
+                Log::info('Wallet updated', [
+                    'user_id' => $user->id,
+                    'default_provider' => $defaultProvider,
+                    'wallet' => $wallet,
+                ]);
+                        
+                return $this->success($wallet, 'Wallet updated successfully', 200);
+
+            }else{
+                Log::error('Failed to create wallet', [
+                    'user_id' => $user->id,
+                    'error'   => $walletData['message'] ?? 'Failed to create wallet',
+                ]);
+                return $this->error(null, $walletData['message'] ?? 'Failed to create wallet', 400);
             }
-            elseif($responseCode == "42"){
-                $this->updateWallet($user, $defaultProvider, $walletData);
-            }
-            else{
-                // Other error codes
-                $errorMessage = $walletData['message'] ?? 'Failed to create wallet';
-                return $this->error(null, $errorMessage, 400);
-            }
 
-            // Get wallet balance
-            $walletBalance = $user->walletBalance($user->id, $defaultProvider);
-            Log::info('Wallet balance retrieved', [
-                'user_id' => $user->id,
-                'balance' => $walletBalance
-            ]);
-
-            $responseData = [
-                'balance' => $walletBalance,
-                'provider' => $defaultProvider,
-                'wallet_data' => $walletData,
-                'is_new_wallet' => true
-            ];
-
-            return $this->success(
-                $responseData,
-                'Wallet created successfully',
-                201
-            );
-
-        } catch (\InvalidArgumentException $e) {
-            Log::error('Invalid argument exception in wallet creation', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return $this->error(null, $e->getMessage(), 422);
-
-        } catch (\Exception $e) {
-            Log::error('Unexpected error in wallet creation', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            // Check if the error message contains a JSON response
-            if (preg_match('/{"status":"(.*?)","message":"(.*?)"}/', $e->getMessage(), $matches)) {
-                return $this->error(null, $matches[2], 422);
-            }
-
-            return $this->error(null, 'An unexpected error occurred while creating your wallet. Please try again later.', 500);
-        }
     }
 
     private function createAndSaveWallet($user, $defaultProvider, $walletData)
@@ -282,37 +316,6 @@ class GeneralWalletService
             return null;
         }
 
-    }
-
-    private function updateWallet($user, $defaultProvider, $walletData)
-    {
-        $wallet = Wallet::where('user_id', $user->id)->where('slug', $defaultProvider)->first();
-
-        if(!$wallet){
-            return Wallet::create([
-                'user_id' => $user->id,
-                'name' => $defaultProvider,
-                'slug' => $defaultProvider,
-                'balance' => 0,
-                'meta' => json_encode($walletData['data'] ?? []),   
-                'account_name' => $walletData['data']['fullName'] ?? null,
-                'account_number' => $walletData['data']['accountNumber'] ?? null,
-                'reference' => $walletData['data']['orderRef'] ?? null,
-                'customerId' => $walletData['data']['customerID'] ?? null,
-                'response_code' => $walletData['data']['responseCode'] ?? null,
-                'status' => true
-            ]);
-        }
-
-        $wallet->meta = json_encode($walletData['data'] ?? []);
-        $wallet->account_name = $walletData['data']['fullName'] ?? null;
-        $wallet->account_number = $walletData['data']['accountNumber'] ?? null;
-        $wallet->reference = $walletData['data']['orderRef'] ?? null;
-        $wallet->customerId = $walletData['data']['customerID'] ?? null;
-        $wallet->response_code = $walletData['data']['responseCode'] ?? null;
-        $wallet->save();
-        
-        return $wallet;
     }
 
     public function walletFundWithdrawal(User $user, $amount, $wallet, $bank){
