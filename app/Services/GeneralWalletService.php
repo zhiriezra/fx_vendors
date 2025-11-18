@@ -191,7 +191,13 @@ class GeneralWalletService
             // Create the wallet
             $walletData = $walletService->createWallet($user->id);
 
-            if($walletData['data']['responseCode'] == "00" || $walletData['data']['responseCode'] == "42"){
+            if($walletData['data']['responseCode'] == "42"){
+                $this->createAndSaveWallet($user, $defaultProvider, $walletData);
+
+                return $this->success(null, 'Wallet created successfully', 201);
+            }
+
+            if($walletData['data']['responseCode'] == "00"){
                 $this->createAndSaveWallet($user, $defaultProvider, $walletData);
             }
             else{
