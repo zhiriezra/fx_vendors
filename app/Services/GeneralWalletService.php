@@ -156,7 +156,7 @@ class GeneralWalletService
      * @param \App\Models\User $user
      * @return \Illuminate\Http\JsonResponse
      */
-    public function createUserWallet(User $user): \Illuminate\Http\JsonResponse
+    public function createUserWallet(User $user)
     {
             Log::info('Starting wallet creation process', ['user_id' => $user->id]);
 
@@ -189,6 +189,7 @@ class GeneralWalletService
 
             // Create the wallet
             $walletData = $walletService->createWallet($user->id);
+
             $responseCode = $walletData['data']['responseCode'] ?? null;
 
             if($responseCode == "00"){

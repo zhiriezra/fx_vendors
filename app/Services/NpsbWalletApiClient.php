@@ -25,15 +25,11 @@ class NpsbWalletApiClient
      * @return array
      * @throws \Exception
      */
-    public function post(string $endpoint, array $payload): array
+    public function post(string $endpoint, array $payload)
     {
         $headers = $this->getAuthorizationHeaders();
 
         $response = Http::withHeaders($headers)->post($this->baseUrl . $endpoint, $payload);
-
-        if (!$response->successful()) {
-            throw new \Exception("API request to '$endpoint' failed: " . $response->body());
-        }
 
         return $response->json();
     }
