@@ -46,7 +46,7 @@ class NpsbWalletService
      * @throws \Exception
      */
 
-    public function createWallet(int $userId): array
+    public function createWallet(int $userId)
     {
         // Generate the payload using a private method
         $payload = $this->generateWalletPayload($userId);
