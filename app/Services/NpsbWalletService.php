@@ -46,53 +46,12 @@ class NpsbWalletService
      * @throws \Exception
      */
 
-    public function createWallet(int $userId): array
+    public function createWallet(int $userId)
     {
         // Generate the payload using a private method
         $payload = $this->generateWalletPayload($userId);
         // Call the /open_wallet API
         return $this->walletApiClient->post('/open_wallet', $payload);
-    }
-
-    public function createWalletold(int $userId): array
-    {
-        try {
-            // Generate the payload using a private method
-            $payload = $this->generateWalletPayload($userId);
-
-            // Call the /open_wallet API
-            $response = $this->walletApiClient->post('/open_wallet', $payload);
-
-            // Check for specific NPSB response codes
-            if (isset($response['data']['responseCode'])) {
-                $responseCode = $response['data']['responseCode'];
-                
-                if ($responseCode === self::RESPONSE_WALLET_EXISTS) {
-                    // Extract wallet data from existing wallet response
-                    return [
-                        'status' => false,
-                        'message' => self::ERROR_MESSAGES[self::RESPONSE_WALLET_EXISTS],
-                        'data' => $response['data']
-                    ];
-                }
-
-                if ($responseCode !== self::RESPONSE_SUCCESS) {
-                    throw new \Exception(
-                        self::ERROR_MESSAGES[$responseCode] ?? 'Unknown error occurred',
-                        $responseCode
-                    );
-                }
-            }
-
-            return $response;
-        } catch (\Exception $e) {
-            $this->logError('Failed to create wallet', [
-                'user_id' => $userId,
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
-            throw $e;
-        }
     }
 
     /**

@@ -108,7 +108,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     //Export User Orders
     Route::get('orders/export', [OrderController::class, 'exportOrders']);
 
-    // just call these two functions wallet (wallet balance and wallet enquiry)
     Route::get('/wallet', [WalletController::class, 'getBalance']);
     Route::get('/wallet-transactions', [WalletController::class, 'walletTransactions']);
     Route::get('/wallet-transaction/{transaction_id}', [WalletController::class, 'walletTransaction']);
