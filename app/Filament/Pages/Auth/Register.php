@@ -197,6 +197,25 @@ class Register extends BaseRegister
                                         ->label('KRA PIN')
                                         ->visible(fn ($get) => (int) ($get('country_id') ?? 0) === 2),
                                 ]),
+
+                            Wizard\Step::make('Privacy Policy')
+                                ->schema([
+                                    Section::make('Privacy Policy')
+                                        ->schema([
+                                            \Filament\Forms\Components\View::make('auth.privacy-policy-text'),
+
+                                            \Filament\Forms\Components\Checkbox::make('privacy_accepted')
+                                                ->label('I have read and agree to the Privacy Policy')
+                                                ->rules(['accepted']) 
+                                                ->required() 
+                                                ->dehydrated(false) 
+                                                ->validationMessages([
+                                                    'privacy_accepted.accepted' => 'You must accept the privacy policy before continuing.',
+                                                ]),
+                                        ])
+                                        ->columnSpanFull()
+                                ])
+                               // ->skippable(false)
                         ])
                             ->columnSpanFull(),
                     ])
